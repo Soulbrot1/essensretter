@@ -35,3 +35,12 @@ class DeleteFoodEvent extends FoodEvent {
   @override
   List<Object> get props => [id];
 }
+
+class ToggleConsumedEvent extends FoodEvent {
+  final String id;
+
+  const ToggleConsumedEvent(this.id);
+
+  @override
+  List<Object> get props => [id];
+}

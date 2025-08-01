@@ -7,6 +7,7 @@ class Food extends Equatable {
   final DateTime addedDate;
   final String? category;
   final String? notes;
+  final bool isConsumed;
 
   const Food({
     required this.id,
@@ -15,6 +16,7 @@ class Food extends Equatable {
     required this.addedDate,
     this.category,
     this.notes,
+    this.isConsumed = false,
   });
 
   int get daysUntilExpiry {
@@ -43,6 +45,26 @@ class Food extends Equatable {
     }
   }
 
+  Food copyWith({
+    String? id,
+    String? name,
+    DateTime? expiryDate,
+    DateTime? addedDate,
+    String? category,
+    String? notes,
+    bool? isConsumed,
+  }) {
+    return Food(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      expiryDate: expiryDate ?? this.expiryDate,
+      addedDate: addedDate ?? this.addedDate,
+      category: category ?? this.category,
+      notes: notes ?? this.notes,
+      isConsumed: isConsumed ?? this.isConsumed,
+    );
+  }
+
   @override
-  List<Object?> get props => [id, name, expiryDate, addedDate, category, notes];
+  List<Object?> get props => [id, name, expiryDate, addedDate, category, notes, isConsumed];
 }

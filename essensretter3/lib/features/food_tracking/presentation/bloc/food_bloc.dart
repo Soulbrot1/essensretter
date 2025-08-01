@@ -24,6 +24,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     on<AddFoodFromTextEvent>(_onAddFoodFromText);
     on<FilterFoodsByExpiryEvent>(_onFilterFoodsByExpiry);
     on<DeleteFoodEvent>(_onDeleteFood);
+    on<ToggleConsumedEvent>(_onToggleConsumed);
   }
 
   Future<void> _onLoadFoods(
@@ -127,6 +128,38 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       },
       (_) => add(LoadFoodsEvent()),
     );
+  }
+
+  Future<void> _onToggleConsumed(
+    ToggleConsumedEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FoodLoaded) return;
+
+    final updatedFoods = currentState.foods.map((food) {
+      if (food.id == event.id) {
+        return food.copyWith(isConsumed: !food.isConsumed);
+      }
+      return food;
+    }).toList();
+
+    final sortedFoods = _sortFoodsByExpiry(updatedFoods);
+    
+    List<Food> filteredFoods;
+    if (currentState.activeFilter != null) {
+      filteredFoods = sortedFoods
+          .where((food) => food.expiresInDays(currentState.activeFilter!))
+          .toList();
+    } else {
+      filteredFoods = sortedFoods;
+    }
+
+    emit(FoodLoaded(
+      foods: sortedFoods,
+      filteredFoods: filteredFoods,
+      activeFilter: currentState.activeFilter,
+    ));
   }
 
   List<Food> _sortFoodsByExpiry(List<Food> foods) {

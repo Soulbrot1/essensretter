@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/food.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
+import 'food_tips_dialog.dart';
 
 class FoodCard extends StatelessWidget {
   final Food food;
@@ -21,43 +22,131 @@ class FoodCard extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: urgencyColor.withValues(alpha: 0.2),
-          child: Icon(
-            _getCategoryIcon(food.category),
-            color: urgencyColor,
-          ),
-        ),
-        title: Text(
-          food.name,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            decoration: isExpired ? TextDecoration.lineThrough : null,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
           children: [
-            Text(
-              food.expiryStatus,
-              style: TextStyle(
-                color: urgencyColor,
-                fontWeight: FontWeight.w500,
+            GestureDetector(
+              onTap: () {
+                context.read<FoodBloc>().add(ToggleConsumedEvent(food.id));
+              },
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: food.isConsumed ? Colors.green : Colors.grey,
+                    width: 2,
+                  ),
+                  color: food.isConsumed ? Colors.green : Colors.transparent,
+                ),
+                child: food.isConsumed
+                    ? const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 16,
+                      )
+                    : null,
               ),
             ),
-            if (food.category != null)
-              Text(
-                food.category!,
-                style: Theme.of(context).textTheme.bodySmall,
+            const SizedBox(width: 12),
+            CircleAvatar(
+              backgroundColor: urgencyColor.withValues(alpha: 0.2),
+              child: Icon(
+                _getCategoryIcon(food.category),
+                color: urgencyColor,
               ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    food.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      decoration: food.isConsumed || isExpired 
+                          ? TextDecoration.lineThrough 
+                          : null,
+                      color: food.isConsumed ? Colors.grey : null,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (food.category != null)
+                    Text(
+                      food.category!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: food.isConsumed ? Colors.grey : null,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: urgencyColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    food.expiryStatus,
+                    style: TextStyle(
+                      color: urgencyColor,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => FoodTipsDialog(foodName: food.name),
+                    );
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Colors.blue,
+                      size: 18,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    _showDeleteConfirmation(context, food);
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () {
-            _showDeleteConfirmation(context, food);
-          },
         ),
       ),
     );

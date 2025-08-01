@@ -8,6 +8,7 @@ class FoodModel extends Food {
     required super.addedDate,
     super.category,
     super.notes,
+    super.isConsumed = false,
   });
 
   factory FoodModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class FoodModel extends Food {
       addedDate: DateTime.parse(json['addedDate'] as String),
       category: json['category'] as String?,
       notes: json['notes'] as String?,
+      isConsumed: json['isConsumed'] as bool? ?? false,
     );
   }
 
@@ -29,6 +31,7 @@ class FoodModel extends Food {
       'addedDate': addedDate.toIso8601String(),
       'category': category,
       'notes': notes,
+      'isConsumed': isConsumed,
     };
   }
 
@@ -40,6 +43,7 @@ class FoodModel extends Food {
       addedDate: food.addedDate,
       category: food.category,
       notes: food.notes,
+      isConsumed: food.isConsumed,
     );
   }
 }
