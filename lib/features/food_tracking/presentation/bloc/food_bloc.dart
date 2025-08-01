@@ -37,6 +37,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     on<DeleteFoodEvent>(_onDeleteFood);
     on<ToggleConsumedEvent>(_onToggleConsumed);
     on<UpdateFoodEvent>(_onUpdateFood);
+    on<SortFoodsEvent>(_onSortFoods);
   }
 
   Future<void> _onLoadFoods(
@@ -50,10 +51,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     result.fold(
       (failure) => emit(FoodError(failure.message)),
       (foods) {
-        final sortedFoods = _sortFoodsByExpiry(foods);
+        final currentState = state;
+        final sortOption = currentState is FoodLoaded ? currentState.sortOption : SortOption.date;
+        final sortedFoods = _sortFoods(foods, sortOption);
         emit(FoodLoaded(
           foods: sortedFoods,
           filteredFoods: sortedFoods,
+          sortOption: sortOption,
         ));
       },
     );
@@ -69,6 +73,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foods: currentState.foods,
         filteredFoods: currentState.filteredFoods,
         activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
       ));
     }
 
@@ -110,6 +115,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foods: currentState.foods,
         filteredFoods: currentState.filteredFoods,
         activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
       )),
     );
   }
@@ -137,6 +143,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
           foods: currentState.foods,
           filteredFoods: currentState.filteredFoods,
           activeFilter: currentState.activeFilter,
+          sortOption: currentState.sortOption,
         ));
       },
       (_) async {
@@ -155,7 +162,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     if (event.daysUntilExpiry == null) {
       emit(currentState.copyWith(
         filteredFoods: currentState.foods,
-        activeFilter: null,
+        clearActiveFilter: true,
       ));
     } else {
       final filtered = currentState.foods
@@ -179,6 +186,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foods: currentState.foods,
         filteredFoods: currentState.filteredFoods,
         activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
       ));
     }
 
@@ -209,7 +217,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       return food;
     }).toList();
 
-    final sortedFoods = _sortFoodsByExpiry(updatedFoods);
+    final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
     
     List<Food> filteredFoods;
     if (currentState.activeFilter != null) {
@@ -224,6 +232,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       foods: sortedFoods,
       filteredFoods: filteredFoods,
       activeFilter: currentState.activeFilter,
+      sortOption: currentState.sortOption,
     ));
   }
 
@@ -237,6 +246,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foods: currentState.foods,
         filteredFoods: currentState.filteredFoods,
         activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
       ));
     }
 
@@ -253,15 +263,63 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     );
   }
 
-  List<Food> _sortFoodsByExpiry(List<Food> foods) {
+  Future<void> _onSortFoods(
+    SortFoodsEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FoodLoaded) return;
+
+    final sortedFoods = _sortFoods(currentState.foods, event.sortOption);
+    
+    List<Food> filteredFoods;
+    if (currentState.activeFilter != null) {
+      filteredFoods = sortedFoods
+          .where((food) => food.expiresInDays(currentState.activeFilter!))
+          .toList();
+    } else {
+      filteredFoods = sortedFoods;
+    }
+
+    emit(currentState.copyWith(
+      foods: sortedFoods,
+      filteredFoods: filteredFoods,
+      sortOption: event.sortOption,
+    ));
+  }
+
+  List<Food> _sortFoods(List<Food> foods, SortOption sortOption) {
     final sorted = List<Food>.from(foods);
-    sorted.sort((a, b) {
-      // Foods without expiry date go to the end
-      if (a.expiryDate == null && b.expiryDate == null) return 0;
-      if (a.expiryDate == null) return 1;
-      if (b.expiryDate == null) return -1;
-      return a.expiryDate!.compareTo(b.expiryDate!);
-    });
+    
+    switch (sortOption) {
+      case SortOption.alphabetical:
+        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case SortOption.date:
+        sorted.sort((a, b) {
+          // Foods without expiry date go to the end
+          if (a.expiryDate == null && b.expiryDate == null) return 0;
+          if (a.expiryDate == null) return 1;
+          if (b.expiryDate == null) return -1;
+          return a.expiryDate!.compareTo(b.expiryDate!);
+        });
+        break;
+      case SortOption.category:
+        sorted.sort((a, b) {
+          final categoryA = a.category ?? 'Sonstiges';
+          final categoryB = b.category ?? 'Sonstiges';
+          final categoryCompare = categoryA.compareTo(categoryB);
+          if (categoryCompare != 0) return categoryCompare;
+          // If same category, sort by name
+          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        break;
+    }
+    
     return sorted;
+  }
+
+  List<Food> _sortFoodsByExpiry(List<Food> foods) {
+    return _sortFoods(foods, SortOption.date);
   }
 }

@@ -50,20 +50,6 @@ class RecipeGenerationButton extends StatelessWidget {
                   ),
                   tooltip: 'Lebensmittel hinzufügen',
                 ),
-                // Filter-Button
-                IconButton(
-                  onPressed: () => _showFilterDialog(context),
-                  icon: const Icon(Icons.filter_list, size: 20),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    foregroundColor: Theme.of(context).colorScheme.primary,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  tooltip: 'Filter',
-                ),
                 // Rezepte Button (nur Icon)
                 IconButton(
                   onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
@@ -183,115 +169,8 @@ class RecipeGenerationButton extends StatelessWidget {
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    final foodBloc = context.read<FoodBloc>();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => BlocProvider.value(
-        value: foodBloc,
-        child: const FilterBottomSheet(),
-      ),
-    );
-  }
 }
 
-class FilterBottomSheet extends StatelessWidget {
-  const FilterBottomSheet({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Title
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.filter_list,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Filter nach Ablaufdatum',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Filter Options
-            BlocBuilder<FoodBloc, FoodState>(
-              builder: (context, state) {
-                final activeFilter = state is FoodLoaded ? state.activeFilter : null;
-                
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      _buildFilterOption(context, 'Alle', null, activeFilter),
-                      _buildFilterOption(context, 'Heute', 0, activeFilter),
-                      _buildFilterOption(context, 'Morgen', 1, activeFilter),
-                      _buildFilterOption(context, 'Übermorgen', 2, activeFilter),
-                      _buildFilterOption(context, '3 Tage', 3, activeFilter),
-                      _buildFilterOption(context, '4 Tage', 4, activeFilter),
-                      _buildFilterOption(context, '5 Tage', 5, activeFilter),
-                      _buildFilterOption(context, '6 Tage', 6, activeFilter),
-                      _buildFilterOption(context, '7 Tage', 7, activeFilter),
-                    ],
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterOption(BuildContext context, String label, int? days, int? activeFilter) {
-    final isSelected = days == activeFilter;
-    
-    return ListTile(
-      leading: Icon(
-        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
-      ),
-      title: Text(label),
-      onTap: () {
-        context.read<FoodBloc>().add(
-          FilterFoodsByExpiryEvent(days),
-        );
-        Navigator.pop(context);
-      },
-      tileColor: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) : null,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-    );
-  }
-}
 
 class AddFoodBottomSheet extends StatefulWidget {
   const AddFoodBottomSheet({super.key});

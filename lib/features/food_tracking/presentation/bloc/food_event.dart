@@ -72,3 +72,14 @@ class UpdateFoodEvent extends FoodEvent {
   @override
   List<Object> get props => [food];
 }
+
+enum SortOption { alphabetical, date, category }
+
+class SortFoodsEvent extends FoodEvent {
+  final SortOption sortOption;
+
+  const SortFoodsEvent(this.sortOption);
+
+  @override
+  List<Object> get props => [sortOption];
+}

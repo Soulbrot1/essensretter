@@ -6,6 +6,7 @@ import '../bloc/food_state.dart';
 import '../widgets/food_card.dart';
 import '../widgets/food_preview_dialog.dart';
 import '../widgets/recipe_generation_button.dart';
+import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
 
@@ -88,6 +89,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
       ),
       body: Column(
         children: [
+          const FoodFilterBar(),
           Expanded(
             child: BlocListener<FoodBloc, FoodState>(
               listener: (context, state) {
