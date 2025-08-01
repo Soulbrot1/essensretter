@@ -21,27 +21,17 @@ class OpenAIFoodTipsService implements FoodTipsService {
 
     try {
       final prompt = '''
-Du bist ein Experte für Lebensmittellagerung. Gib spezifische, praktische Tipps zur optimalen Lagerung von "$foodName" auf Deutsch.
+Gib 4 kurze, präzise Lagerungstipps für "$foodName" auf Deutsch.
 
-Antworte NUR mit praktischen Tipps im folgenden Format (ohne zusätzliche Erklärungen):
-• [Tipp 1]
-• [Tipp 2] 
-• [Tipp 3]
-• [Tipp 4]
+Format: Nur • + kurzer Stichpunkt (max. 6 Wörter)
 
-Die Tipps sollen spezifisch für "$foodName" sein und folgende Aspekte abdecken:
-- Optimale Lagertemperatur und -ort
-- Verpackung/Behältnis
-- Besondere Hinweise für längere Haltbarkeit
-- Was zu vermeiden ist
+Beispiele:
+• In feuchtes Tuch wickeln
+• Von Wärmequellen fernhalten
+• Im Kühlschrank lagern
+• Luftdicht verschließen
 
-Beispiel für Äpfel:
-• Im Kühlschrank im Gemüsefach aufbewahren
-• Getrennt von anderen Früchten lagern
-• Druckstellen sofort entfernen
-• Nicht bei Raumtemperatur lagern
-
-Gib maximal 4 präzise, umsetzbare Tipps.
+Antworte NUR mit 4 Bullet Points für "$foodName":
 ''';
 
       final response = await http.post(
@@ -59,7 +49,7 @@ Gib maximal 4 präzise, umsetzbare Tipps.
             }
           ],
           'temperature': 0.1,
-          'max_tokens': 300,
+          'max_tokens': 150,
         }),
       );
 
@@ -95,25 +85,25 @@ Gib maximal 4 präzise, umsetzbare Tipps.
     final name = foodName.toLowerCase();
     
     if (name.contains('apfel') || name.contains('äpfel')) {
-      return '• Im Kühlschrank aufbewahren\n• Getrennt von anderen Früchten lagern\n• Ethylen-Gas lässt andere Früchte schneller reifen\n• Druckstellen vermeiden';
+      return '• Im Kühlschrank lagern\n• Getrennt von anderen Früchten\n• Druckstellen vermeiden\n• In Plastikbeutel aufbewahren';
     } else if (name.contains('brot')) {
-      return '• Bei Raumtemperatur in Brotkasten aufbewahren\n• Nicht im Kühlschrank lagern\n• In Papiertüte oder Brotbeutel\n• Angeschnittene Seite nach unten legen';
+      return '• In Brotkasten aufbewahren\n• Nicht im Kühlschrank\n• In Papiertüte lagern\n• Angeschnittene Seite nach unten';
     } else if (name.contains('milch')) {
-      return '• Immer im Kühlschrank aufbewahren (4°C)\n• Original-Verpackung verwenden\n• Nicht in der Kühlschranktür lagern\n• Nach dem Öffnen schnell verbrauchen';
+      return '• Im Kühlschrank lagern\n• Original-Verpackung nutzen\n• Nicht in Kühlschranktür\n• Schnell verbrauchen';
     } else if (name.contains('banane')) {
-      return '• Bei Raumtemperatur lagern\n• Nicht im Kühlschrank aufbewahren\n• Getrennt von anderen Früchten\n• Grüne Bananen reifen bei Wärme schneller';
+      return '• Bei Raumtemperatur lagern\n• Nicht im Kühlschrank\n• Getrennt von anderen Früchten\n• Von Wärmequellen fernhalten';
     } else if (name.contains('tomate')) {
-      return '• Bei Raumtemperatur lagern\n• Nicht im Kühlschrank aufbewahren\n• Stielansatz nach unten\n• Getrennt von anderen Gemüsesorten';
+      return '• Bei Raumtemperatur lagern\n• Nicht im Kühlschrank\n• Stielansatz nach unten\n• Getrennt von anderem Gemüse';
     } else if (name.contains('salat') || name.contains('kopfsalat')) {
-      return '• Im Kühlschrank im Gemüsefach\n• In perforierter Plastiktüte\n• Nicht waschen vor der Lagerung\n• Welke Blätter entfernen';
+      return '• Im Kühlschrank lagern\n• In feuchtes Tuch wickeln\n• Nicht vor Lagerung waschen\n• Welke Blätter entfernen';
     } else if (name.contains('kartoffel')) {
-      return '• Kühl, dunkel und trocken lagern\n• Nicht im Kühlschrank\n• Getrennt von Zwiebeln\n• Grüne Stellen entfernen';
+      return '• Kühl und dunkel lagern\n• Nicht im Kühlschrank\n• Getrennt von Zwiebeln\n• Grüne Stellen entfernen';
     } else if (name.contains('fleisch') || name.contains('wurst')) {
-      return '• Im kältesten Teil des Kühlschranks\n• Original-Verpackung verwenden\n• Bei 0-4°C lagern\n• Getrennt von anderen Lebensmitteln';
+      return '• Im Kühlschrank lagern\n• Original-Verpackung nutzen\n• Bei 0-4°C aufbewahren\n• Getrennt von anderen Lebensmitteln';
     } else if (name.contains('käse')) {
-      return '• Im Kühlschrank aufbewahren\n• In Käsepapier oder Pergament\n• Nicht in Plastik einwickeln\n• Hart- und Weichkäse getrennt lagern';
+      return '• Im Kühlschrank lagern\n• In Käsepapier wickeln\n• Nicht in Plastik\n• Hart- und Weichkäse trennen';
     } else {
-      return '• An einem kühlen, trockenen Ort lagern\n• Original-Verpackung beachten\n• Mindesthaltbarkeitsdatum prüfen\n• Bei Zweifeln an Geruch und Aussehen orientieren';
+      return '• Kühl und trocken lagern\n• Original-Verpackung beachten\n• Haltbarkeitsdatum prüfen\n• An Geruch orientieren';
     }
   }
 }
