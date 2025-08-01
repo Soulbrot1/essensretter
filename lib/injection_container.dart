@@ -15,6 +15,12 @@ import 'features/food_tracking/domain/usecases/get_all_foods.dart';
 import 'features/food_tracking/domain/usecases/get_foods_by_expiry.dart';
 import 'features/food_tracking/domain/usecases/parse_foods_from_text.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
+import 'features/recipes/data/datasources/recipe_service.dart';
+import 'features/recipes/data/datasources/openai_recipe_service.dart';
+import 'features/recipes/data/repositories/recipe_repository_impl.dart';
+import 'features/recipes/domain/repositories/recipe_repository.dart';
+import 'features/recipes/domain/usecases/generate_recipes.dart';
+import 'features/recipes/presentation/bloc/recipe_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -30,6 +36,12 @@ Future<void> init() async {
       deleteFood: sl(),
     ),
   );
+  
+  sl.registerFactory(
+    () => RecipeBloc(
+      generateRecipes: sl(),
+    ),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => GetAllFoods(sl()));
@@ -41,6 +53,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddFoods(sl()));
   sl.registerLazySingleton(() => ParseFoodsFromText(sl()));
   sl.registerLazySingleton(() => DeleteFood(sl()));
+  sl.registerLazySingleton(() => GenerateRecipes(sl()));
 
   // Repositories
   sl.registerLazySingleton<FoodRepository>(
@@ -52,6 +65,10 @@ Future<void> init() async {
     () => OpenAITextParserRepositoryImpl(openAITextParserService: sl()),
     // Fallback auf einfachen Parser:
     // () => TextParserRepositoryImpl(textParserService: sl<TextParserService>()),
+  );
+  
+  sl.registerLazySingleton<RecipeRepository>(
+    () => RecipeRepositoryImpl(recipeService: sl()),
   );
 
   // Data sources
@@ -69,5 +86,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<FoodTipsService>(
     () => OpenAIFoodTipsService(localDataSource: sl()),
+  );
+  sl.registerLazySingleton<RecipeService>(
+    () => OpenAIRecipeService(),
   );
 }

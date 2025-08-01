@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../recipes/presentation/bloc/recipe_bloc.dart';
+import '../../../recipes/presentation/bloc/recipe_event.dart';
+import '../../../recipes/presentation/pages/bookmarked_recipes_page.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import '../bloc/food_state.dart';
@@ -7,6 +10,8 @@ import '../widgets/expiry_filter_chips.dart';
 import '../widgets/food_card.dart';
 import '../widgets/food_input_field.dart';
 import '../widgets/food_preview_dialog.dart';
+import '../widgets/recipe_generation_button.dart';
+import '../../../../injection_container.dart' as di;
 
 class FoodTrackingPage extends StatefulWidget {
   const FoodTrackingPage({super.key});
@@ -28,12 +33,20 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
       appBar: AppBar(
         title: const Text('Essensretter 3'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.bookmark),
+            onPressed: () => _showBookmarkedRecipes(context),
+            tooltip: 'Gespeicherte Rezepte',
+          ),
+        ],
       ),
       body: Column(
         children: [
           const FoodInputField(),
           const Divider(),
           const ExpiryFilterChips(),
+          const RecipeGenerationButton(),
           const SizedBox(height: 8),
           Expanded(
             child: BlocListener<FoodBloc, FoodState>(
@@ -154,6 +167,20 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showBookmarkedRecipes(BuildContext context) {
+    final recipeBloc = di.sl<RecipeBloc>();
+    recipeBloc.add(LoadBookmarkedRecipesEvent());
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: recipeBloc,
+          child: const BookmarkedRecipesPage(),
+        ),
       ),
     );
   }
