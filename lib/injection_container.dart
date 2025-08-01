@@ -17,9 +17,13 @@ import 'features/food_tracking/domain/usecases/parse_foods_from_text.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/recipes/data/datasources/recipe_service.dart';
 import 'features/recipes/data/datasources/openai_recipe_service.dart';
+import 'features/recipes/data/datasources/recipe_local_data_source.dart';
 import 'features/recipes/data/repositories/recipe_repository_impl.dart';
 import 'features/recipes/domain/repositories/recipe_repository.dart';
 import 'features/recipes/domain/usecases/generate_recipes.dart';
+import 'features/recipes/domain/usecases/get_bookmarked_recipes.dart';
+import 'features/recipes/domain/usecases/save_bookmarked_recipe.dart';
+import 'features/recipes/domain/usecases/remove_bookmarked_recipe.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
 
 final sl = GetIt.instance;
@@ -40,6 +44,9 @@ Future<void> init() async {
   sl.registerFactory(
     () => RecipeBloc(
       generateRecipes: sl(),
+      getBookmarkedRecipes: sl(),
+      saveBookmarkedRecipe: sl(),
+      removeBookmarkedRecipe: sl(),
     ),
   );
 
@@ -54,6 +61,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ParseFoodsFromText(sl()));
   sl.registerLazySingleton(() => DeleteFood(sl()));
   sl.registerLazySingleton(() => GenerateRecipes(sl()));
+  sl.registerLazySingleton(() => GetBookmarkedRecipes(sl()));
+  sl.registerLazySingleton(() => SaveBookmarkedRecipe(sl()));
+  sl.registerLazySingleton(() => RemoveBookmarkedRecipe(sl()));
 
   // Repositories
   sl.registerLazySingleton<FoodRepository>(
@@ -68,7 +78,10 @@ Future<void> init() async {
   );
   
   sl.registerLazySingleton<RecipeRepository>(
-    () => RecipeRepositoryImpl(recipeService: sl()),
+    () => RecipeRepositoryImpl(
+      recipeService: sl(),
+      localDataSource: sl(),
+    ),
   );
 
   // Data sources
@@ -89,5 +102,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<RecipeService>(
     () => OpenAIRecipeService(),
+  );
+  sl.registerLazySingleton<RecipeLocalDataSource>(
+    () => RecipeLocalDataSourceImpl(),
   );
 }

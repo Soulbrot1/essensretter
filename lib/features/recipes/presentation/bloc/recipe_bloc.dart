@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../domain/entities/recipe.dart';
 import '../../domain/usecases/generate_recipes.dart';
 import '../../domain/usecases/get_bookmarked_recipes.dart';
 import '../../domain/usecases/save_bookmarked_recipe.dart';

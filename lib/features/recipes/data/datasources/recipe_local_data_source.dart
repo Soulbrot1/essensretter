@@ -31,12 +31,21 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
         (r) => r.title == recipe.title,
       );
       
+      final recipeModel = RecipeModel(
+        title: recipe.title,
+        cookingTime: recipe.cookingTime,
+        vorhanden: recipe.vorhanden,
+        ueberpruefen: recipe.ueberpruefen,
+        instructions: recipe.instructions,
+        isBookmarked: true,
+      );
+      
       if (existingIndex >= 0) {
         // Update existing recipe
-        _bookmarkedRecipes[existingIndex] = recipe.copyWith(isBookmarked: true);
+        _bookmarkedRecipes[existingIndex] = recipeModel;
       } else {
         // Add new recipe
-        _bookmarkedRecipes.add(recipe.copyWith(isBookmarked: true));
+        _bookmarkedRecipes.add(recipeModel);
       }
 
       debugPrint('Saved recipe: ${recipe.title}. Total bookmarks: ${_bookmarkedRecipes.length}');
