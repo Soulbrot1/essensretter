@@ -1,0 +1,207 @@
+# EssensRetter - Cursor Rules
+
+## Projekt-Kontext
+Du arbeitest an EssensRetter, einer Flutter-App zum Tracking von Lebensmitteln und deren Haltbarkeit. Die App nutzt KI zur Extraktion von Lebensmitteln aus Texteingaben und folgt Clean Architecture.
+
+## Architektur-Richtlinien
+
+### Clean Architecture
+- Strikte Trennung zwischen Presentation, Domain und Data Layer
+- Dependencies zeigen nur nach innen (Presentation → Domain ← Data)
+- Keine direkten Abhängigkeiten zwischen Presentation und Data
+
+### Ordnerstruktur
+```
+lib/
+├── core/
+│   ├── constants/
+│   ├── error/
+│   ├── usecases/
+│   ├── utils/
+│   └── widgets/
+├── features/
+│   └── [feature_name]/
+│       ├── data/
+│       │   ├── datasources/
+│       │   ├── models/
+│       │   └── repositories/
+│       ├── domain/
+│       │   ├── entities/
+│       │   ├── repositories/
+│       │   └── usecases/
+│       └── presentation/
+│           ├── bloc/
+│           ├── pages/
+│           └── widgets/
+```
+
+## Code-Style
+
+### Naming Conventions
+- Klassen: `UpperCamelCase`
+- Dateien: `snake_case.dart`
+- Variablen/Funktionen: `lowerCamelCase`
+- Konstanten: `UPPER_SNAKE_CASE` oder `lowerCamelCase`
+- Private Members: `_privateVariable`
+
+### Import-Reihenfolge
+1. Dart SDK imports
+2. Flutter imports
+3. Package imports (alphabetisch)
+4. Projekt imports (relativ)
+
+### Formatierung
+- Maximale Zeilenlänge: 80 Zeichen
+- Immer trailing commas bei Multi-Line Konstrukten
+- 2 Spaces Einrückung
+
+## Best Practices
+
+### State Management (BLoC)
+```dart
+// Event
+class LoadFoodsEvent extends FoodEvent {}
+
+// State
+class FoodsLoadedState extends FoodState {
+  final List<Food> foods;
+  FoodsLoadedState(this.foods);
+}
+
+// BLoC
+class FoodBloc extends Bloc<FoodEvent, FoodState> {
+  FoodBloc() : super(FoodInitial()) {
+    on<LoadFoodsEvent>(_onLoadFoods);
+  }
+}
+```
+
+### Error Handling
+```dart
+// Verwende Either<Failure, Success> für Fehlerbehandlung
+Either<Failure, List<Food>> getFoods();
+
+// Custom Exceptions
+class ServerException implements Exception {}
+class CacheException implements Exception {}
+```
+
+### Use Cases
+```dart
+// Ein Use Case = Eine Geschäftslogik
+class GetExpiringFoods {
+  final FoodRepository repository;
+  
+  GetExpiringFoods(this.repository);
+  
+  Future<Either<Failure, List<Food>>> call(int daysUntilExpiry) {
+    return repository.getExpiringFoods(daysUntilExpiry);
+  }
+}
+```
+
+## Widget Guidelines
+
+### Stateless vs Stateful
+- Bevorzuge StatelessWidget wenn möglich
+- StatefulWidget nur für lokalen UI-State
+- Business Logic gehört in BLoCs
+
+### Widget Komposition
+```dart
+// Kleine, wiederverwendbare Widgets
+class FoodCard extends StatelessWidget {
+  final Food food;
+  
+  const FoodCard({Key? key, required this.food}) : super(key: key);
+  
+  @override
+  Widget build(BuildContext context) {
+    // Widget implementation
+  }
+}
+```
+
+## Testing
+
+### Test-Struktur
+- Spiegle die Projektstruktur in `test/`
+- Ein Test-File pro Implementierungs-File
+- Benenne Tests beschreibend
+
+### Test-Pattern
+```dart
+void main() {
+  group('FoodBloc', () {
+    test('should emit [Loading, Loaded] when data is gotten successfully', () {
+      // arrange
+      // act
+      // assert
+    });
+  });
+}
+```
+
+## Performance
+
+### Listen
+- Verwende `ListView.builder` für lange Listen
+- Implementiere Lazy Loading für Datenbank-Abfragen
+
+### Bilder
+- Lazy Loading für Bilder
+- Caching implementieren
+- Optimierte Bildgrößen verwenden
+
+## Sicherheit
+
+### Datenschutz
+- Keine sensiblen Daten loggen
+- Verschlüsselung für lokale Datenbank erwägen
+- Permissions nur wenn nötig anfordern
+
+### Input Validation
+- Validiere alle User-Inputs
+- Sanitize Text vor Speicherung
+- Verwende Type-Safety
+
+## KI-Integration
+
+### Text-Parsing
+- Klare Prompts für KI-Modelle
+- Fallback für fehlgeschlagene Extraktion
+- User-Feedback zur Verbesserung nutzen
+
+### Offline-First
+- Lokale Modelle bevorzugen
+- Cache KI-Responses
+- Graceful Degradation bei fehlendem Internet
+
+## Flutter-Spezifisch
+
+### Platform-Aware Code
+```dart
+if (Platform.isIOS) {
+  // iOS-spezifischer Code
+} else if (Platform.isAndroid) {
+  // Android-spezifischer Code
+}
+```
+
+### Responsive Design
+- Verwende MediaQuery für Größenanpassungen
+- LayoutBuilder für adaptive Layouts
+- Teste auf verschiedenen Bildschirmgrößen
+
+## Git Commit Messages
+- Präfix: feat:, fix:, docs:, style:, refactor:, test:, chore:
+- Präsens verwenden
+- Max 50 Zeichen für Zusammenfassung
+
+## Automatische Korrekturen
+
+Wenn du Code siehst, der diese Regeln verletzt:
+1. Korrigiere Formatierung automatisch
+2. Refactore zu Clean Architecture wenn nötig
+3. Füge fehlende Tests hinzu
+4. Dokumentiere Änderungen
