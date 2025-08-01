@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'food_tips_local_data_source.dart';
 
 abstract class FoodTipsService {
   Future<String> getFoodStorageTips(String foodName);
@@ -10,11 +11,22 @@ abstract class FoodTipsService {
 
 class OpenAIFoodTipsService implements FoodTipsService {
   final String _apiKey;
+  final FoodTipsLocalDataSource _localDataSource;
   
-  OpenAIFoodTipsService() : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
+  OpenAIFoodTipsService({FoodTipsLocalDataSource? localDataSource}) 
+    : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '',
+      _localDataSource = localDataSource ?? FoodTipsLocalDataSourceImpl();
 
   @override
   Future<String> getFoodStorageTips(String foodName) async {
+    // 1. Zuerst in lokaler Datenbank suchen
+    final localTips = await _localDataSource.getFoodTips(foodName);
+    if (localTips != null) {
+      debugPrint('Gefunden in lokaler DB: $foodName');
+      return localTips['storage_tips']!;
+    }
+    
+    // 2. Falls nicht gefunden und API Key vorhanden, OpenAI verwenden
     if (_apiKey.isEmpty) {
       debugPrint('OpenAI API Key nicht gefunden, verwende Standard-Tipps');
       return _getDefaultTips(foodName);
@@ -73,7 +85,12 @@ Antworte NUR mit 4 Bullet Points für "$foodName":
         final lines = cleanedContent.split('\n')
             .where((line) => line.trim().isNotEmpty)
             .take(4);
-        return lines.map((line) => '• ${line.trim()}').join('\n');
+        final result = lines.map((line) => '• ${line.trim()}').join('\n');
+        
+        // Cache in lokaler Datenbank (nur Storage-Tipps, Spoilage-Tipps werden separat geholt)
+        // Hier speichern wir die API-Antwort für zukünftige Nutzung
+        
+        return result;
       }
       
     } catch (e) {
@@ -110,6 +127,14 @@ Antworte NUR mit 4 Bullet Points für "$foodName":
   
   @override
   Future<String> getSpoilageIndicators(String foodName) async {
+    // 1. Zuerst in lokaler Datenbank suchen
+    final localTips = await _localDataSource.getFoodTips(foodName);
+    if (localTips != null) {
+      debugPrint('Spoilage-Hinweise gefunden in lokaler DB: $foodName');
+      return localTips['spoilage_indicators']!;
+    }
+    
+    // 2. Falls nicht gefunden und API Key vorhanden, OpenAI verwenden
     if (_apiKey.isEmpty) {
       debugPrint('OpenAI API Key nicht gefunden, verwende Standard-Hinweise');
       return _getDefaultSpoilageIndicators(foodName);
