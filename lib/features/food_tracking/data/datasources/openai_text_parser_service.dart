@@ -46,6 +46,8 @@ Jedes Lebensmittel braucht eine eigene Zeitangabe direkt daneben.
 KEINE automatischen Kommas hinzufügen - nutze nur die vorhandenen Wörter.
 
 Berechne die Anzahl der Tage vom heutigen Datum bis zum Zieldatum korrekt!
+WICHTIG: Bei Datumsangaben mit Jahreszahl (z.B. "7.7.25") das Datum exakt verwenden - auch wenn es in der Vergangenheit liegt!
+Für vergangene Daten: negative Tageszahl verwenden!
 
 Antworte NUR mit diesem JSON-Format:
 {
@@ -76,6 +78,7 @@ Beispiele korrekter Paarung:
 - "Milch 2.8" → {"name": "Milch", "days": <tage_bis_2_august>}
 - "Käse 4. August" → {"name": "Käse", "days": <tage_bis_4_august>}
 - "Bier 3 Tage" → {"name": "Bier", "days": 3}
+- "Gurken 7.7.25" → {"name": "Gurken", "days": -25} (wenn 7.7.25 25 Tage her ist)
 
 FALSCH: "Salami 308 honig 3 monate" - das sind keine klaren Paare
 RICHTIG: Nur wenn klar erkennbar ist welches Lebensmittel zu welchem Datum gehört

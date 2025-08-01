@@ -33,15 +33,15 @@ class Food extends Equatable {
   String get expiryStatus {
     final days = daysUntilExpiry;
     if (isExpired) {
-      return 'Abgelaufen vor ${-days} Tag${days == -1 ? '' : 'en'}';
+      return 'vor ${-days} Tag${days == -1 ? '' : 'en'}';
     } else if (days == 0) {
-      return 'Läuft heute ab';
+      return 'heute';
     } else if (days == 1) {
       return 'Morgen';
     } else if (days == 2) {
       return 'Übermorgen';
     } else {
-      return 'In $days Tagen';
+      return '$days Tage';
     }
   }
 

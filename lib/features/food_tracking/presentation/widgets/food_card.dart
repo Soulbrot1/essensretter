@@ -140,8 +140,8 @@ class FoodCard extends StatelessWidget {
   }
 
   Color _getUrgencyColor(int days, bool isExpired) {
-    if (isExpired) return Colors.red;
-    if (days <= 0) return Colors.red;
+    if (isExpired) return Colors.red.shade700;
+    if (days <= 0) return Colors.red.shade700;
     if (days <= 1) return Colors.orange;
     if (days <= 3) return Colors.amber;
     return Colors.green;

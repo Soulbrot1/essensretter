@@ -113,19 +113,27 @@ class TextParserServiceImpl implements TextParserService {
           // Datum "4.08" oder "4.8" oder "4.08.2025"
           final day = int.tryParse(match.group(2)!) ?? 1;
           final month = int.tryParse(match.group(3)!) ?? 1;
-          final year = match.group(4) != null 
-              ? int.tryParse(match.group(4)!) ?? DateTime.now().year
-              : DateTime.now().year;
+          var year = DateTime.now().year;
+          
+          // Behandle Jahresangabe
+          if (match.group(4) != null) {
+            final yearInput = int.tryParse(match.group(4)!) ?? DateTime.now().year;
+            // 2-stellige Jahre: 00-30 = 2000-2030, 31-99 = 1931-1999
+            if (yearInput < 100) {
+              year = yearInput <= 30 ? 2000 + yearInput : 1900 + yearInput;
+            } else {
+              year = yearInput;
+            }
+          }
           
           try {
             final now = DateTime.now();
             var targetDate = DateTime(year, month, day);
-            // Wenn das Datum in der Vergangenheit liegt und kein Jahr angegeben war, nimm nächstes Jahr
+            // Nur bei fehlender Jahresangabe: Wenn das Datum in der Vergangenheit liegt, nimm nächstes Jahr
             if (targetDate.isBefore(now) && match.group(4) == null) {
               targetDate = DateTime(year + 1, month, day);
             }
             days = targetDate.difference(now).inDays;
-            if (days < 0) days = 0; // Vergangene Daten = heute ablaufend
           } catch (e) {
             days = 7; // Fallback bei ungültigem Datum
           }
