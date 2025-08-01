@@ -15,13 +15,8 @@ class RecipeGenerationButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<FoodBloc, FoodState>(
       builder: (context, state) {
-        if (state is! FoodLoaded) {
-          return const SizedBox.shrink();
-        }
-
-        if (state.foods.isEmpty) {
-          return const SizedBox.shrink();
-        }
+        final bool hasFood = state is FoodLoaded && state.foods.isNotEmpty;
+        final List availableFoods = state is FoodLoaded ? state.foods : [];
 
         return Container(
           padding: const EdgeInsets.all(16.0),
@@ -40,11 +35,11 @@ class RecipeGenerationButton extends StatelessWidget {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => _generateRecipes(context, state.foods),
+                    onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
                     icon: const Icon(Icons.restaurant_menu),
                     label: const Text('Rezepte generieren'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: hasFood ? Colors.green : Colors.grey,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
