@@ -100,9 +100,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   
-  # Environment files
+  # Environment files and images
   assets:
     - .env
+    - assets/images/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

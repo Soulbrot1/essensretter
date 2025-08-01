@@ -29,7 +29,34 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Essensretter 3'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/image.png',
+              height: 40,
+              width: 40,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 40,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.shopping_bag,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    size: 20,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            const Text('Food Rescue'),
+          ],
+        ),
         centerTitle: true,
         actions: [
           IconButton(
