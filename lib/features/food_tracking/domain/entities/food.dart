@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class Food extends Equatable {
   final String id;
   final String name;
-  final DateTime expiryDate;
+  final DateTime? expiryDate;
   final DateTime addedDate;
   final String? category;
   final String? notes;
@@ -12,7 +12,7 @@ class Food extends Equatable {
   const Food({
     required this.id,
     required this.name,
-    required this.expiryDate,
+    this.expiryDate,
     required this.addedDate,
     this.category,
     this.notes,
@@ -20,17 +20,22 @@ class Food extends Equatable {
   });
 
   int get daysUntilExpiry {
+    if (expiryDate == null) return 999; // Large number for foods without date
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final expiry = DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
+    final expiry = DateTime(expiryDate!.year, expiryDate!.month, expiryDate!.day);
     return expiry.difference(today).inDays;
   }
 
-  bool get isExpired => daysUntilExpiry < 0;
+  bool get isExpired => expiryDate != null && daysUntilExpiry < 0;
 
-  bool expiresInDays(int days) => daysUntilExpiry <= days;
+  bool expiresInDays(int days) => expiryDate != null && daysUntilExpiry <= days;
 
   String get expiryStatus {
+    if (expiryDate == null) {
+      return 'ohne Datum';
+    }
+    
     final days = daysUntilExpiry;
     if (isExpired) {
       return 'vor ${-days} Tag${days == -1 ? '' : 'en'}';
@@ -53,11 +58,12 @@ class Food extends Equatable {
     String? category,
     String? notes,
     bool? isConsumed,
+    bool? clearExpiryDate,
   }) {
     return Food(
       id: id ?? this.id,
       name: name ?? this.name,
-      expiryDate: expiryDate ?? this.expiryDate,
+      expiryDate: clearExpiryDate == true ? null : (expiryDate ?? this.expiryDate),
       addedDate: addedDate ?? this.addedDate,
       category: category ?? this.category,
       notes: notes ?? this.notes,

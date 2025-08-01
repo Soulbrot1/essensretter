@@ -14,6 +14,7 @@ import 'features/food_tracking/domain/usecases/delete_food.dart';
 import 'features/food_tracking/domain/usecases/get_all_foods.dart';
 import 'features/food_tracking/domain/usecases/get_foods_by_expiry.dart';
 import 'features/food_tracking/domain/usecases/parse_foods_from_text.dart';
+import 'features/food_tracking/domain/usecases/update_food.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/recipes/data/datasources/recipe_service.dart';
 import 'features/recipes/data/datasources/openai_recipe_service.dart';
@@ -38,6 +39,7 @@ Future<void> init() async {
       addFoods: sl(),
       parseFoodsFromText: sl(),
       deleteFood: sl(),
+      updateFood: sl(),
     ),
   );
   
@@ -60,6 +62,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddFoods(sl()));
   sl.registerLazySingleton(() => ParseFoodsFromText(sl()));
   sl.registerLazySingleton(() => DeleteFood(sl()));
+  sl.registerLazySingleton(() => UpdateFood(sl()));
   sl.registerLazySingleton(() => GenerateRecipes(sl()));
   sl.registerLazySingleton(() => GetBookmarkedRecipes(sl()));
   sl.registerLazySingleton(() => SaveBookmarkedRecipe(sl()));

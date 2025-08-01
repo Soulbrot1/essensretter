@@ -14,7 +14,7 @@ abstract class FoodLocalDataSource {
 class FoodLocalDataSourceImpl implements FoodLocalDataSource {
   static const String _databaseName = 'essensretter.db';
   static const String _tableName = 'foods';
-  static const int _databaseVersion = 2;
+  static const int _databaseVersion = 3;
 
   Database? _database;
 
@@ -39,7 +39,7 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
       CREATE TABLE $_tableName(
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
-        expiryDate TEXT NOT NULL,
+        expiryDate TEXT,
         addedDate TEXT NOT NULL,
         category TEXT,
         notes TEXT,
@@ -52,6 +52,24 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
     if (oldVersion < 2) {
       // Migration von Version 1 zu 2: isConsumed Spalte hinzufügen
       await db.execute('ALTER TABLE $_tableName ADD COLUMN isConsumed INTEGER NOT NULL DEFAULT 0');
+    }
+    if (oldVersion < 3) {
+      // Migration von Version 2 zu 3: expiryDate nullable machen
+      // SQLite unterstützt ALTER COLUMN nicht, daher müssen wir die Tabelle neu erstellen
+      await db.execute('ALTER TABLE $_tableName RENAME TO ${_tableName}_old');
+      await db.execute('''
+        CREATE TABLE $_tableName(
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          expiryDate TEXT,
+          addedDate TEXT NOT NULL,
+          category TEXT,
+          notes TEXT,
+          isConsumed INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      await db.execute('INSERT INTO $_tableName SELECT * FROM ${_tableName}_old');
+      await db.execute('DROP TABLE ${_tableName}_old');
     }
   }
 

@@ -86,7 +86,9 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      'bis ${DateFormat('d.M.yyyy').format(food.expiryDate)}',
+                                      food.expiryDate != null 
+                                        ? 'bis ${DateFormat('d.M.yyyy').format(food.expiryDate!)}'
+                                        : 'ohne Datum',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey[600],

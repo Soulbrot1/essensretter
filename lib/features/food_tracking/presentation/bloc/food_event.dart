@@ -63,3 +63,12 @@ class ConfirmFoodsEvent extends FoodEvent {
   @override
   List<Object> get props => [foods];
 }
+
+class UpdateFoodEvent extends FoodEvent {
+  final Food food;
+
+  const UpdateFoodEvent(this.food);
+
+  @override
+  List<Object> get props => [food];
+}

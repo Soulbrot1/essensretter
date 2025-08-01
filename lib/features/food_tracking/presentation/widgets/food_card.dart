@@ -75,18 +75,36 @@ class FoodCard extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: urgencyColor.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    food.expiryStatus,
-                    style: TextStyle(
-                      color: urgencyColor,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
+                GestureDetector(
+                  onTap: () => _showExpiryDatePicker(context, food),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: urgencyColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: urgencyColor.withValues(alpha: 0.5),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          food.expiryStatus,
+                          style: TextStyle(
+                            color: urgencyColor,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.edit,
+                          color: urgencyColor,
+                          size: 12,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -140,6 +158,8 @@ class FoodCard extends StatelessWidget {
   }
 
   Color _getUrgencyColor(int days, bool isExpired) {
+    // Handle foods without expiry date
+    if (days == 999) return Colors.grey;
     if (isExpired) return Colors.red.shade700;
     if (days <= 0) return Colors.red.shade700;
     if (days <= 1) return Colors.orange;
@@ -163,6 +183,27 @@ class FoodCard extends StatelessWidget {
         return Icons.local_drink;
       default:
         return Icons.fastfood;
+    }
+  }
+
+  void _showExpiryDatePicker(BuildContext context, Food food) async {
+    final DateTime now = DateTime.now();
+    final DateTime initialDate = food.expiryDate ?? now;
+    
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate.isAfter(now) ? initialDate : now,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now.add(const Duration(days: 365 * 2)),
+      locale: const Locale('de', 'DE'),
+      helpText: 'Haltbarkeitsdatum für ${food.name}',
+      cancelText: 'Abbrechen',
+      confirmText: 'Speichern',
+    );
+
+    if (pickedDate != null && context.mounted) {
+      final updatedFood = food.copyWith(expiryDate: pickedDate);
+      context.read<FoodBloc>().add(UpdateFoodEvent(updatedFood));
     }
   }
 

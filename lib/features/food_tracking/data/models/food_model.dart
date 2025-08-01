@@ -4,7 +4,7 @@ class FoodModel extends Food {
   const FoodModel({
     required super.id,
     required super.name,
-    required super.expiryDate,
+    super.expiryDate,
     required super.addedDate,
     super.category,
     super.notes,
@@ -15,7 +15,7 @@ class FoodModel extends Food {
     return FoodModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      expiryDate: DateTime.parse(json['expiryDate'] as String),
+      expiryDate: json['expiryDate'] != null ? DateTime.parse(json['expiryDate'] as String) : null,
       addedDate: DateTime.parse(json['addedDate'] as String),
       category: json['category'] as String?,
       notes: json['notes'] as String?,
@@ -27,7 +27,7 @@ class FoodModel extends Food {
     return {
       'id': id,
       'name': name,
-      'expiryDate': expiryDate.toIso8601String(),
+      'expiryDate': expiryDate?.toIso8601String(),
       'addedDate': addedDate.toIso8601String(),
       'category': category,
       'notes': notes,

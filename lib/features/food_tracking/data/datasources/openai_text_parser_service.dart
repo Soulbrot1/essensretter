@@ -41,8 +41,8 @@ Extrahiere Lebensmittel-Datum-Paare aus diesem deutschen Text:
 Text: "$text"
 Heutiges Datum: ${now.day}.${now.month}.${now.year}
 
-WICHTIG: Erkenne direkte Paare von Lebensmittel + Zeitangabe nebeneinander im Text.
-Jedes Lebensmittel braucht eine eigene Zeitangabe direkt daneben.
+WICHTIG: Erkenne Lebensmittel im Text - sowohl mit als auch ohne Zeitangabe.
+Wenn ein Lebensmittel keine Zeitangabe hat, setze "days" auf null.
 KEINE automatischen Kommas hinzufügen - nutze nur die vorhandenen Wörter.
 
 Berechne die Anzahl der Tage vom heutigen Datum bis zum Zieldatum korrekt!
@@ -54,7 +54,7 @@ Antworte NUR mit diesem JSON-Format:
   "foods": [
     {
       "name": "<exakter_lebensmittel_name_ohne_kommas>",
-      "days": <anzahl_tage_bis_ablaufdatum>,
+      "days": <anzahl_tage_bis_ablaufdatum_oder_null>,
       "category": "<kategorie_oder_null>"
     }
   ]
@@ -68,8 +68,9 @@ Paarungs-Regeln:
    - Datum wie "4.08", "4.8", "2.8.", "02.08"
    - Datum mit Monatsnamen: "4. August", "4 August", "4. aug"
    - Nutze das aktuelle Jahr für Datumsangaben
-3. Nur echte Paare extrahieren - wenn kein Datum bei einem Lebensmittel steht, ignoriere es
+3. Wenn kein Datum bei einem Lebensmittel steht, setze "days": null
 4. Namen exakt übernehmen ohne zusätzliche Kommas oder Wörter
+5. ALLE erkannten Lebensmittel zurückgeben, auch ohne Datum
 
 Beispiele korrekter Paarung:
 - "Salami übermorgen" → {"name": "Salami", "days": 2}
@@ -79,9 +80,10 @@ Beispiele korrekter Paarung:
 - "Käse 4. August" → {"name": "Käse", "days": <tage_bis_4_august>}
 - "Bier 3 Tage" → {"name": "Bier", "days": 3}
 - "Gurken 7.7.25" → {"name": "Gurken", "days": -25} (wenn 7.7.25 25 Tage her ist)
+- "Banane" → {"name": "Banane", "days": null}
+- "Apfel und Birne" → {"name": "Apfel", "days": null}, {"name": "Birne", "days": null}
 
-FALSCH: "Salami 308 honig 3 monate" - das sind keine klaren Paare
-RICHTIG: Nur wenn klar erkennbar ist welches Lebensmittel zu welchem Datum gehört
+WICHTIG: Auch einzelne Lebensmittel ohne Datum extrahieren!
 
 Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
 ''';
@@ -143,11 +145,11 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       for (final foodData in foodsData) {
         final foodMap = foodData as Map<String, dynamic>;
         final name = foodMap['name'] as String?;
-        final days = foodMap['days'] as int? ?? 7;
+        final days = foodMap['days'] as int?;
         final category = foodMap['category'] as String?;
         
         if (name != null && name.trim().isNotEmpty) {
-          final expiryDate = now.add(Duration(days: days));
+          final DateTime? expiryDate = days != null ? now.add(Duration(days: days)) : null;
           debugPrint('Creating food: $name, days: $days, expiryDate: $expiryDate');
           
           foods.add(FoodModel(

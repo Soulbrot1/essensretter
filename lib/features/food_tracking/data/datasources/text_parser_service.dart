@@ -18,10 +18,11 @@ class TextParserServiceImpl implements TextParserService {
     
     for (final item in items) {
       if (item['name']?.trim().isNotEmpty == true) {
+        final days = item['days'];
         foods.add(FoodModel(
           id: uuid.v4(),
           name: _capitalizeFirst(item['name']!.trim()),
-          expiryDate: now.add(Duration(days: item['days'] ?? 7)),
+          expiryDate: days != null ? now.add(Duration(days: days)) : null,
           addedDate: now,
           category: _guessCategory(item['name']!),
         ));
@@ -146,12 +147,12 @@ class TextParserServiceImpl implements TextParserService {
       }
     }
     
-    // Kein Zeitmuster gefunden - nur Lebensmittelname
+    // Kein Zeitmuster gefunden - nur Lebensmittelname (ohne Datum)
     final cleanName = segment.replaceAll(RegExp(r'[^\w\säöüÄÖÜß-]'), '').trim();
     if (cleanName.isNotEmpty) {
       return {
         'name': cleanName,
-        'days': 7, // Standard: 7 Tage
+        'days': null, // Kein Datum
       };
     }
     
