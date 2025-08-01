@@ -10,12 +10,40 @@ class BookmarkedRecipesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gespeicherte Rezepte'),
-        centerTitle: true,
-      ),
-      body: BlocBuilder<RecipeBloc, RecipeState>(
+    return Column(
+      children: [
+        // Handle
+        Container(
+          width: 40,
+          height: 4,
+          margin: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        // Title
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Row(
+            children: [
+              Icon(
+                Icons.bookmark,
+                color: Colors.orange,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Gespeicherte Rezepte',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: BlocBuilder<RecipeBloc, RecipeState>(
         builder: (context, state) {
           if (state is RecipeLoading) {
             return const Center(
@@ -101,7 +129,9 @@ class BookmarkedRecipesPage extends StatelessWidget {
             child: Text('Keine gespeicherten Rezepte verfügbar'),
           );
         },
-      ),
+          ),
+        ),
+      ],
     );
   }
 }

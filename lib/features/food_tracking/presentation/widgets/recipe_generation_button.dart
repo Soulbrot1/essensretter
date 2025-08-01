@@ -130,9 +130,17 @@ class RecipeGenerationButton extends StatelessWidget {
       GenerateRecipesEvent(availableIngredients: availableIngredients),
     );
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.93,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: BlocProvider.value(
           value: recipeBloc,
           child: RecipesPage(availableIngredients: availableIngredients),
         ),
@@ -144,9 +152,17 @@ class RecipeGenerationButton extends StatelessWidget {
     final recipeBloc = di.sl<RecipeBloc>();
     recipeBloc.add(LoadBookmarkedRecipesEvent());
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.93,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: BlocProvider.value(
           value: recipeBloc,
           child: const BookmarkedRecipesPage(),
         ),

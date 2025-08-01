@@ -86,14 +86,90 @@ class RecipeCard extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 8),
-            Text(
-              recipe.instructions,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            ..._buildInstructionSteps(context),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildInstructionSteps(BuildContext context) {
+    final steps = _parseInstructions(recipe.instructions);
+    return steps.asMap().entries.map((entry) {
+      final stepNumber = entry.key + 1;
+      final stepText = entry.value;
+      
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  stepNumber.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                stepText,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
+  List<String> _parseInstructions(String instructions) {
+    // Split by numbered steps (1., 2., 3., etc.) or newlines
+    final steps = <String>[];
+    
+    // First try to split by numbered patterns
+    final numberedPattern = RegExp(r'(\d+\.\s*)');
+    if (numberedPattern.hasMatch(instructions)) {
+      final parts = instructions.split(numberedPattern);
+      for (int i = 1; i < parts.length; i += 2) {
+        if (i + 1 < parts.length) {
+          final stepText = parts[i + 1].trim();
+          if (stepText.isNotEmpty) {
+            steps.add(stepText);
+          }
+        }
+      }
+    } else {
+      // Fallback: split by sentences or periods
+      final sentences = instructions.split(RegExp(r'\.\s+'));
+      for (final sentence in sentences) {
+        final trimmed = sentence.trim();
+        if (trimmed.isNotEmpty && !trimmed.endsWith('.')) {
+          steps.add('$trimmed.');
+        } else if (trimmed.isNotEmpty) {
+          steps.add(trimmed);
+        }
+      }
+    }
+    
+    // If no steps found, return the whole instruction as one step
+    if (steps.isEmpty && instructions.trim().isNotEmpty) {
+      steps.add(instructions.trim());
+    }
+    
+    return steps;
   }
 
   Widget _buildIngredientSection(

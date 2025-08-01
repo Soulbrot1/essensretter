@@ -14,13 +14,37 @@ class RecipesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('KI-Rezeptvorschläge'),
-        centerTitle: true,
-      ),
-      body: Column(
+    return Column(
         children: [
+          // Handle
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.restaurant_menu,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'KI-Rezeptvorschläge',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Container(
             width: double.infinity,
             margin: const EdgeInsets.all(16),
@@ -144,8 +168,7 @@ class RecipesPage extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   void _regenerateRecipe(BuildContext context) {
@@ -160,9 +183,17 @@ class RecipesPage extends StatelessWidget {
     final recipeBloc = di.sl<RecipeBloc>();
     recipeBloc.add(LoadBookmarkedRecipesEvent());
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.93,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: BlocProvider.value(
           value: recipeBloc,
           child: const BookmarkedRecipesPage(),
         ),
