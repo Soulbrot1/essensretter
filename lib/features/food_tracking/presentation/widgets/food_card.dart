@@ -21,9 +21,9 @@ class FoodCard extends StatelessWidget {
 
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
             GestureDetector(
@@ -60,29 +60,16 @@ class FoodCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    food.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      decoration: food.isConsumed || isExpired 
-                          ? TextDecoration.lineThrough 
-                          : null,
-                      color: food.isConsumed ? Colors.grey : null,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  if (food.category != null)
-                    Text(
-                      food.category!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: food.isConsumed ? Colors.grey : null,
-                      ),
-                    ),
-                ],
+              child: Text(
+                food.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  decoration: food.isConsumed || isExpired 
+                      ? TextDecoration.lineThrough 
+                      : null,
+                  color: food.isConsumed ? Colors.grey : null,
+                ),
               ),
             ),
             Row(

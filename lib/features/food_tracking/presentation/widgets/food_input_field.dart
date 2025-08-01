@@ -93,11 +93,6 @@ class _FoodInputFieldState extends State<FoodInputField> {
             'Lebensmittel hinzufügen',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Geben Sie Lebensmittel mit individueller Haltbarkeit ein (z.B. "Honig 5 Tage, Salami 4.08, Milch morgen").',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
           const SizedBox(height: 16),
           TextField(
             controller: _controller,
