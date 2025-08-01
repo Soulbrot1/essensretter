@@ -78,20 +78,28 @@ Antworte NUR mit 4 Bullet Points für "$foodName":
       final cleanedContent = content.trim();
       
       // Validiere dass es Bullet Points sind
+      String finalResult;
       if (cleanedContent.contains('•')) {
-        return cleanedContent;
+        finalResult = cleanedContent;
       } else {
         // Falls keine Bullet Points, füge sie hinzu
         final lines = cleanedContent.split('\n')
             .where((line) => line.trim().isNotEmpty)
             .take(4);
-        final result = lines.map((line) => '• ${line.trim()}').join('\n');
-        
-        // Cache in lokaler Datenbank (nur Storage-Tipps, Spoilage-Tipps werden separat geholt)
-        // Hier speichern wir die API-Antwort für zukünftige Nutzung
-        
-        return result;
+        finalResult = lines.map((line) => '• ${line.trim()}').join('\n');
       }
+      
+      // Hole auch die Spoilage-Tipps und speichere beide in der Datenbank
+      try {
+        final spoilageTips = await getSpoilageIndicators(foodName);
+        await _localDataSource.cacheFoodTips(foodName, finalResult, spoilageTips);
+        debugPrint('KI-Tipps für $foodName in Datenbank gespeichert');
+      } catch (e) {
+        debugPrint('Fehler beim Cachen der KI-Tipps: $e');
+        // Fehler beim Cachen ignorieren - gib trotzdem das Ergebnis zurück
+      }
+      
+      return finalResult;
       
     } catch (e) {
       debugPrint('Fehler beim Abrufen der KI-Tipps: $e');
@@ -186,14 +194,27 @@ Antworte NUR mit 4 Bullet Points für verdorbenes "$foodName":
       // Bereinige die Antwort
       final cleanedContent = content.trim();
       
+      String finalResult;
       if (cleanedContent.contains('•')) {
-        return cleanedContent;
+        finalResult = cleanedContent;
       } else {
         final lines = cleanedContent.split('\n')
             .where((line) => line.trim().isNotEmpty)
             .take(4);
-        return lines.map((line) => '• ${line.trim()}').join('\n');
+        finalResult = lines.map((line) => '• ${line.trim()}').join('\n');
       }
+      
+      // Nur Spoilage-Hinweise einzeln cachen, da Storage-Tipps separat gecacht werden
+      try {
+        final storageTips = _getDefaultTips(foodName); // Verwende Default-Tipps um Loop zu vermeiden
+        await _localDataSource.cacheFoodTips(foodName, storageTips, finalResult);
+        debugPrint('Spoilage-Hinweise für $foodName in Datenbank gespeichert');
+      } catch (e) {
+        debugPrint('Fehler beim Cachen der Spoilage-Hinweise: $e');
+        // Fehler beim Cachen ignorieren - gib trotzdem das Ergebnis zurück
+      }
+      
+      return finalResult;
       
     } catch (e) {
       debugPrint('Fehler beim Abrufen der Verderbnis-Hinweise: $e');
