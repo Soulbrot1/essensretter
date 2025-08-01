@@ -30,4 +30,10 @@ class OpenAITextParserRepositoryImpl implements TextParserRepository {
       return Left(ParsingFailure('Fehler beim Verarbeiten des Textes: $e'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<Food>>> parseFoodsFromText(String text) async {
+    // Für die Vorschau verwenden wir die gleiche Logik wie parseTextToFoods
+    return parseTextToFoods(text);
+  }
 }

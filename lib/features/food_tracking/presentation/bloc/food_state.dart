@@ -62,3 +62,20 @@ class FoodOperationInProgress extends FoodState {
   @override
   List<Object?> get props => [foods, filteredFoods, activeFilter];
 }
+
+class FoodPreviewReady extends FoodState {
+  final List<Food> previewFoods;
+  final List<Food> foods;
+  final List<Food> filteredFoods;
+  final int? activeFilter;
+
+  const FoodPreviewReady({
+    required this.previewFoods,
+    required this.foods,
+    required this.filteredFoods,
+    this.activeFilter,
+  });
+
+  @override
+  List<Object?> get props => [previewFoods, foods, filteredFoods, activeFilter];
+}

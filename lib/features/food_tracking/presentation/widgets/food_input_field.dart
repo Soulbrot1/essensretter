@@ -68,7 +68,7 @@ class _FoodInputFieldState extends State<FoodInputField> {
   void _submitText() {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
-      context.read<FoodBloc>().add(AddFoodFromTextEvent(text));
+      context.read<FoodBloc>().add(ShowFoodPreviewEvent(text));
       _controller.clear();
     }
   }

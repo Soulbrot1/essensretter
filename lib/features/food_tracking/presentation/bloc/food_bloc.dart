@@ -2,9 +2,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/food.dart';
 import '../../domain/usecases/add_food_from_text.dart';
+import '../../domain/usecases/add_foods.dart';
 import '../../domain/usecases/delete_food.dart';
 import '../../domain/usecases/get_all_foods.dart';
 import '../../domain/usecases/get_foods_by_expiry.dart';
+import '../../domain/usecases/parse_foods_from_text.dart';
 import 'food_event.dart';
 import 'food_state.dart';
 
@@ -12,16 +14,22 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   final GetAllFoods getAllFoods;
   final GetFoodsByExpiry getFoodsByExpiry;
   final AddFoodFromText addFoodFromText;
+  final AddFoods addFoods;
+  final ParseFoodsFromText parseFoodsFromText;
   final DeleteFood deleteFood;
 
   FoodBloc({
     required this.getAllFoods,
     required this.getFoodsByExpiry,
     required this.addFoodFromText,
+    required this.addFoods,
+    required this.parseFoodsFromText,
     required this.deleteFood,
   }) : super(FoodInitial()) {
     on<LoadFoodsEvent>(_onLoadFoods);
     on<AddFoodFromTextEvent>(_onAddFoodFromText);
+    on<ShowFoodPreviewEvent>(_onShowFoodPreview);
+    on<ConfirmFoodsEvent>(_onConfirmFoods);
     on<FilterFoodsByExpiryEvent>(_onFilterFoodsByExpiry);
     on<DeleteFoodEvent>(_onDeleteFood);
     on<ToggleConsumedEvent>(_onToggleConsumed);
@@ -75,6 +83,59 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         }
       },
       (addedFoods) async {
+        add(LoadFoodsEvent());
+      },
+    );
+  }
+
+  Future<void> _onShowFoodPreview(
+    ShowFoodPreviewEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FoodLoaded) return;
+
+    final result = await parseFoodsFromText(
+      ParseFoodsFromTextParams(text: event.text),
+    );
+
+    result.fold(
+      (failure) => emit(FoodError(failure.message)),
+      (previewFoods) => emit(FoodPreviewReady(
+        previewFoods: previewFoods,
+        foods: currentState.foods,
+        filteredFoods: currentState.filteredFoods,
+        activeFilter: currentState.activeFilter,
+      )),
+    );
+  }
+
+  Future<void> _onConfirmFoods(
+    ConfirmFoodsEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FoodPreviewReady) return;
+
+    emit(FoodOperationInProgress(
+      foods: currentState.foods,
+      filteredFoods: currentState.filteredFoods,
+      activeFilter: currentState.activeFilter,
+    ));
+
+    final result = await addFoods(AddFoodsParams(foods: event.foods));
+
+    await result.fold(
+      (failure) async {
+        emit(FoodError(failure.message));
+        await Future.delayed(const Duration(seconds: 2));
+        emit(FoodLoaded(
+          foods: currentState.foods,
+          filteredFoods: currentState.filteredFoods,
+          activeFilter: currentState.activeFilter,
+        ));
+      },
+      (_) async {
         add(LoadFoodsEvent());
       },
     );

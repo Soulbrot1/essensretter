@@ -6,13 +6,14 @@ import 'features/food_tracking/data/datasources/food_tips_service.dart';
 import 'features/food_tracking/data/datasources/food_tips_local_data_source.dart';
 import 'features/food_tracking/data/repositories/food_repository_impl.dart';
 import 'features/food_tracking/data/repositories/openai_text_parser_repository_impl.dart';
-import 'features/food_tracking/data/repositories/text_parser_repository_impl.dart';
 import 'features/food_tracking/domain/repositories/food_repository.dart';
 import 'features/food_tracking/domain/repositories/text_parser_repository.dart';
 import 'features/food_tracking/domain/usecases/add_food_from_text.dart';
+import 'features/food_tracking/domain/usecases/add_foods.dart';
 import 'features/food_tracking/domain/usecases/delete_food.dart';
 import 'features/food_tracking/domain/usecases/get_all_foods.dart';
 import 'features/food_tracking/domain/usecases/get_foods_by_expiry.dart';
+import 'features/food_tracking/domain/usecases/parse_foods_from_text.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 
 final sl = GetIt.instance;
@@ -24,6 +25,8 @@ Future<void> init() async {
       getAllFoods: sl(),
       getFoodsByExpiry: sl(),
       addFoodFromText: sl(),
+      addFoods: sl(),
+      parseFoodsFromText: sl(),
       deleteFood: sl(),
     ),
   );
@@ -35,6 +38,8 @@ Future<void> init() async {
     textParserRepository: sl(),
     foodRepository: sl(),
   ));
+  sl.registerLazySingleton(() => AddFoods(sl()));
+  sl.registerLazySingleton(() => ParseFoodsFromText(sl()));
   sl.registerLazySingleton(() => DeleteFood(sl()));
 
   // Repositories

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../domain/entities/food.dart';
 
 abstract class FoodEvent extends Equatable {
   const FoodEvent();
@@ -43,4 +44,22 @@ class ToggleConsumedEvent extends FoodEvent {
 
   @override
   List<Object> get props => [id];
+}
+
+class ShowFoodPreviewEvent extends FoodEvent {
+  final String text;
+
+  const ShowFoodPreviewEvent(this.text);
+
+  @override
+  List<Object> get props => [text];
+}
+
+class ConfirmFoodsEvent extends FoodEvent {
+  final List<Food> foods;
+
+  const ConfirmFoodsEvent(this.foods);
+
+  @override
+  List<Object> get props => [foods];
 }

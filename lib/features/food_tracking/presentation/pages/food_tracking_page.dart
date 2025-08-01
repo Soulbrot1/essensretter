@@ -6,6 +6,7 @@ import '../bloc/food_state.dart';
 import '../widgets/expiry_filter_chips.dart';
 import '../widgets/food_card.dart';
 import '../widgets/food_input_field.dart';
+import '../widgets/food_preview_dialog.dart';
 
 class FoodTrackingPage extends StatefulWidget {
   const FoodTrackingPage({super.key});
@@ -35,8 +36,30 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
           const ExpiryFilterChips(),
           const SizedBox(height: 8),
           Expanded(
-            child: BlocBuilder<FoodBloc, FoodState>(
-              builder: (context, state) {
+            child: BlocListener<FoodBloc, FoodState>(
+              listener: (context, state) {
+                if (state is FoodPreviewReady) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (dialogContext) => FoodPreviewDialog(
+                      foods: state.previewFoods,
+                      onConfirm: (confirmedFoods) {
+                        Navigator.of(dialogContext).pop();
+                        context.read<FoodBloc>().add(
+                          ConfirmFoodsEvent(confirmedFoods),
+                        );
+                      },
+                      onCancel: () {
+                        Navigator.of(dialogContext).pop();
+                        context.read<FoodBloc>().add(LoadFoodsEvent());
+                      },
+                    ),
+                  );
+                }
+              },
+              child: BlocBuilder<FoodBloc, FoodState>(
+                builder: (context, state) {
                 if (state is FoodLoading) {
                   return const Center(
                     child: CircularProgressIndicator(),
@@ -127,6 +150,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
                 
                 return const SizedBox.shrink();
               },
+              ),
             ),
           ),
         ],

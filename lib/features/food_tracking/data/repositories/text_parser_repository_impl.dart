@@ -30,4 +30,11 @@ class TextParserRepositoryImpl implements TextParserRepository {
       return const Left(ParsingFailure('Fehler beim Verarbeiten des Textes'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<Food>>> parseFoodsFromText(String text) async {
+    // Für die Vorschau verwenden wir die gleiche Logik wie parseTextToFoods
+    // aber ohne das Speichern in die Datenbank
+    return parseTextToFoods(text);
+  }
 }
