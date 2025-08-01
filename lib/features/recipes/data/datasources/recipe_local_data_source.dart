@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/recipe_model.dart';
 
 abstract class RecipeLocalDataSource {
@@ -9,14 +11,23 @@ abstract class RecipeLocalDataSource {
 }
 
 class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
-  // In-memory storage for now (later can be replaced with SharedPreferences or SQLite)
-  static final List<RecipeModel> _bookmarkedRecipes = [];
+  static const String _bookmarkedRecipesKey = 'bookmarked_recipes';
 
   @override
   Future<List<RecipeModel>> getBookmarkedRecipes() async {
     try {
-      debugPrint('Loading ${_bookmarkedRecipes.length} bookmarked recipes');
-      return List.from(_bookmarkedRecipes);
+      final prefs = await SharedPreferences.getInstance();
+      final recipesJsonString = prefs.getString(_bookmarkedRecipesKey);
+      
+      if (recipesJsonString == null) {
+        debugPrint('No bookmarked recipes found');
+        return [];
+      }
+
+      final List<dynamic> recipesJson = json.decode(recipesJsonString);
+      final recipes = recipesJson.map((json) => RecipeModel.fromJson(json)).toList();
+      debugPrint('Loaded ${recipes.length} bookmarked recipes from storage');
+      return recipes;
     } catch (e) {
       debugPrint('Error loading bookmarked recipes: $e');
       return [];
@@ -26,8 +37,10 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
   @override
   Future<void> saveBookmarkedRecipe(RecipeModel recipe) async {
     try {
+      final bookmarkedRecipes = await getBookmarkedRecipes();
+      
       // Check if recipe already exists (by title)
-      final existingIndex = _bookmarkedRecipes.indexWhere(
+      final existingIndex = bookmarkedRecipes.indexWhere(
         (r) => r.title == recipe.title,
       );
       
@@ -42,13 +55,14 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
       
       if (existingIndex >= 0) {
         // Update existing recipe
-        _bookmarkedRecipes[existingIndex] = recipeModel;
+        bookmarkedRecipes[existingIndex] = recipeModel;
       } else {
         // Add new recipe
-        _bookmarkedRecipes.add(recipeModel);
+        bookmarkedRecipes.add(recipeModel);
       }
 
-      debugPrint('Saved recipe: ${recipe.title}. Total bookmarks: ${_bookmarkedRecipes.length}');
+      await _saveRecipes(bookmarkedRecipes);
+      debugPrint('Saved recipe: ${recipe.title}. Total bookmarks: ${bookmarkedRecipes.length}');
     } catch (e) {
       debugPrint('Error saving bookmarked recipe: $e');
       rethrow;
@@ -58,8 +72,10 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
   @override
   Future<void> removeBookmarkedRecipe(String recipeTitle) async {
     try {
-      _bookmarkedRecipes.removeWhere((recipe) => recipe.title == recipeTitle);
-      debugPrint('Removed recipe: $recipeTitle. Total bookmarks: ${_bookmarkedRecipes.length}');
+      final bookmarkedRecipes = await getBookmarkedRecipes();
+      bookmarkedRecipes.removeWhere((recipe) => recipe.title == recipeTitle);
+      await _saveRecipes(bookmarkedRecipes);
+      debugPrint('Removed recipe: $recipeTitle. Total bookmarks: ${bookmarkedRecipes.length}');
     } catch (e) {
       debugPrint('Error removing bookmarked recipe: $e');
       rethrow;
@@ -69,11 +85,18 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
   @override
   Future<void> clearBookmarkedRecipes() async {
     try {
-      _bookmarkedRecipes.clear();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_bookmarkedRecipesKey);
       debugPrint('Cleared all bookmarked recipes');
     } catch (e) {
       debugPrint('Error clearing bookmarked recipes: $e');
       rethrow;
     }
+  }
+
+  Future<void> _saveRecipes(List<RecipeModel> recipes) async {
+    final prefs = await SharedPreferences.getInstance();
+    final recipesJson = recipes.map((recipe) => recipe.toJson()).toList();
+    await prefs.setString(_bookmarkedRecipesKey, json.encode(recipesJson));
   }
 }
