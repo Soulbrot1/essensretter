@@ -1,8 +1,9 @@
 import 'package:get_it/get_it.dart';
 import 'features/food_tracking/data/datasources/food_local_data_source.dart';
 import 'features/food_tracking/data/datasources/text_parser_service.dart';
+import 'features/food_tracking/data/datasources/openai_text_parser_service.dart';
 import 'features/food_tracking/data/repositories/food_repository_impl.dart';
-import 'features/food_tracking/data/repositories/text_parser_repository_impl.dart';
+import 'features/food_tracking/data/repositories/openai_text_parser_repository_impl.dart';
 import 'features/food_tracking/domain/repositories/food_repository.dart';
 import 'features/food_tracking/domain/repositories/text_parser_repository.dart';
 import 'features/food_tracking/domain/usecases/add_food_from_text.dart';
@@ -37,13 +38,20 @@ Future<void> init() async {
   sl.registerLazySingleton<FoodRepository>(
     () => FoodRepositoryImpl(localDataSource: sl()),
   );
+  
+  // Wähle zwischen OpenAI und einfachem Parser
   sl.registerLazySingleton<TextParserRepository>(
-    () => TextParserRepositoryImpl(textParserService: sl()),
+    () => OpenAITextParserRepositoryImpl(openAITextParserService: sl()),
+    // Fallback auf einfachen Parser:
+    // () => TextParserRepositoryImpl(textParserService: sl<TextParserService>()),
   );
 
   // Data sources
   sl.registerLazySingleton<FoodLocalDataSource>(
     () => FoodLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton<OpenAITextParserService>(
+    () => OpenAITextParserService(),
   );
   sl.registerLazySingleton<TextParserService>(
     () => TextParserServiceImpl(),
