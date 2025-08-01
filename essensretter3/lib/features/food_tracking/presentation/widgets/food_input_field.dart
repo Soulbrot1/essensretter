@@ -73,6 +73,15 @@ class _FoodInputFieldState extends State<FoodInputField> {
     }
   }
 
+  void _showSpeechNotAvailable() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Spracheingabe ist nur auf echten Geräten verfügbar'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -86,7 +95,7 @@ class _FoodInputFieldState extends State<FoodInputField> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Geben Sie zuerst die Haltbarkeit an (z.B. "3 Tage", "morgen") und dann die Lebensmittel.',
+            'Geben Sie Lebensmittel mit individueller Haltbarkeit ein (z.B. "Honig 5 Tage, Salami 4.08, Milch morgen").',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 16),
@@ -94,19 +103,23 @@ class _FoodInputFieldState extends State<FoodInputField> {
             controller: _controller,
             maxLines: 3,
             decoration: InputDecoration(
-              hintText: 'z.B. "5 Tage Milch, Brot, Käse und 2 Äpfel"',
+              hintText: 'z.B. "Honig 5 Tage, Salami 4.08, Milch morgen"',
               border: const OutlineInputBorder(),
               suffixIcon: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_speechAvailable)
-                    IconButton(
-                      icon: Icon(
-                        _isListening ? Icons.mic : Icons.mic_none,
-                        color: _isListening ? Colors.red : null,
-                      ),
-                      onPressed: _isListening ? _stopListening : _startListening,
+                  IconButton(
+                    icon: Icon(
+                      _isListening ? Icons.mic : Icons.mic_none,
+                      color: _isListening ? Colors.red : (_speechAvailable ? null : Colors.grey),
                     ),
+                    onPressed: _speechAvailable 
+                        ? (_isListening ? _stopListening : _startListening)
+                        : _showSpeechNotAvailable,
+                    tooltip: _speechAvailable 
+                        ? (_isListening ? 'Aufnahme stoppen' : 'Spracheingabe starten')
+                        : 'Spracheingabe nicht verfügbar',
+                  ),
                   IconButton(
                     icon: const Icon(Icons.send),
                     onPressed: _submitText,

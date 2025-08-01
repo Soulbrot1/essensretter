@@ -25,7 +25,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EssensRetter'),
+        title: const Text('Essensretter 3'),
         centerTitle: true,
       ),
       body: Column(

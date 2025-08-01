@@ -11,54 +11,113 @@ class TextParserServiceImpl implements TextParserService {
   @override
   List<FoodModel> parseTextToFoods(String text) {
     final List<FoodModel> foods = [];
-    
-    // Regex für Zeitangaben
-    final timePatterns = {
-      r'(\d+)\s*tag(?:e|en)?': (int days) => days,
-      r'(\d+)\s*woche(?:n)?': (int weeks) => weeks * 7,
-      r'morgen': (_) => 1,
-      r'übermorgen': (_) => 2,
-      r'heute': (_) => 0,
-    };
-    
-    // Finde Zeitangabe am Anfang des Textes
-    int defaultDays = 7; // Standard: 7 Tage
-    String remainingText = text.toLowerCase().trim();
-    
-    for (final pattern in timePatterns.entries) {
-      final regex = RegExp(pattern.key, caseSensitive: false);
-      final match = regex.firstMatch(remainingText);
-      
-      if (match != null && remainingText.indexOf(match.group(0)!) < 20) {
-        if (pattern.key.contains(r'(\d+)')) {
-          final number = int.tryParse(match.group(1)!) ?? 7;
-          defaultDays = pattern.value(number);
-        } else {
-          defaultDays = pattern.value(0);
-        }
-        remainingText = remainingText.replaceFirst(match.group(0)!, '').trim();
-        break;
-      }
-    }
-    
-    // Einfache Lebensmittel-Extraktion
-    // Später durch KI ersetzen
-    final foodItems = _extractFoodItems(remainingText);
-    
     final now = DateTime.now();
-    for (final foodName in foodItems) {
-      if (foodName.trim().isNotEmpty) {
+    
+    // Parse individuelle Lebensmittel mit Zeitangaben
+    final items = _parseIndividualItems(text);
+    
+    for (final item in items) {
+      if (item['name']?.trim().isNotEmpty == true) {
         foods.add(FoodModel(
           id: uuid.v4(),
-          name: _capitalizeFirst(foodName.trim()),
-          expiryDate: now.add(Duration(days: defaultDays)),
+          name: _capitalizeFirst(item['name']!.trim()),
+          expiryDate: now.add(Duration(days: item['days'] ?? 7)),
           addedDate: now,
-          category: _guessCategory(foodName),
+          category: _guessCategory(item['name']!),
         ));
       }
     }
     
     return foods;
+  }
+  
+  List<Map<String, dynamic>> _parseIndividualItems(String text) {
+    final List<Map<String, dynamic>> items = [];
+    
+    // Teile Text in Segmente (getrennt durch Komma, "und", etc.)
+    final segments = text.split(RegExp(r'[,;]|(?:\s+und\s+)'));
+    
+    for (String segment in segments) {
+      segment = segment.trim();
+      if (segment.isEmpty) continue;
+      
+      final item = _parseSegment(segment);
+      if (item != null) items.add(item);
+    }
+    
+    return items;
+  }
+  
+  Map<String, dynamic>? _parseSegment(String segment) {
+    segment = segment.trim().toLowerCase();
+    
+    // Regex für verschiedene Zeitangaben
+    final patterns = [
+      // "Honig 5 Tage"
+      RegExp(r'^(.+?)\s+(\d+)\s*tag(?:e|en)?$'),
+      // "Salami morgen"  
+      RegExp(r'^(.+?)\s+(morgen|übermorgen|heute)$'),
+      // "Käse 2 Wochen"
+      RegExp(r'^(.+?)\s+(\d+)\s*woche(?:n)?$'),
+      // "Milch 4.08" (Datum)
+      RegExp(r'^(.+?)\s+(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?$'),
+    ];
+    
+    // Versuche Muster zu matchen
+    for (final pattern in patterns) {
+      final match = pattern.firstMatch(segment);
+      if (match != null) {
+        final foodName = match.group(1)?.trim();
+        if (foodName == null || foodName.isEmpty) continue;
+        
+        int days = 7; // Standard
+        
+        if (pattern.pattern.contains('tag')) {
+          // "5 Tage"
+          days = int.tryParse(match.group(2)!) ?? 7;
+        } else if (pattern.pattern.contains('morgen')) {
+          // "morgen", "übermorgen", "heute"
+          final timeWord = match.group(2)!;
+          days = timeWord == 'heute' ? 0 : timeWord == 'morgen' ? 1 : 2;
+        } else if (pattern.pattern.contains('woche')) {
+          // "2 Wochen"
+          final weeks = int.tryParse(match.group(2)!) ?? 1;
+          days = weeks * 7;
+        } else if (pattern.pattern.contains(r'\.')) {
+          // Datum "4.08" oder "4.08.2025"
+          final day = int.tryParse(match.group(2)!) ?? 1;
+          final month = int.tryParse(match.group(3)!) ?? 1;
+          final year = match.group(4) != null 
+              ? int.tryParse(match.group(4)!) ?? DateTime.now().year
+              : DateTime.now().year;
+          
+          try {
+            final targetDate = DateTime(year, month, day);
+            final now = DateTime.now();
+            days = targetDate.difference(now).inDays;
+            if (days < 0) days = 0; // Vergangene Daten = heute ablaufend
+          } catch (e) {
+            days = 7; // Fallback bei ungültigem Datum
+          }
+        }
+        
+        return {
+          'name': foodName,
+          'days': days,
+        };
+      }
+    }
+    
+    // Kein Zeitmuster gefunden - nur Lebensmittelname
+    final cleanName = segment.replaceAll(RegExp(r'[^\w\säöüÄÖÜß-]'), '').trim();
+    if (cleanName.isNotEmpty) {
+      return {
+        'name': cleanName,
+        'days': 7, // Standard: 7 Tage
+      };
+    }
+    
+    return null;
   }
   
   List<String> _extractFoodItems(String text) {

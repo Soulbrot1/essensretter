@@ -32,28 +32,41 @@ class OpenAITextParserService implements TextParserService {
 
     try {
       final prompt = '''
-Extrahiere Lebensmittel aus folgendem deutschen Text und gib eine JSON-Antwort zurück:
+Extrahiere Lebensmittel-Datum-Paare aus diesem deutschen Text:
 
 Text: "$text"
 
+WICHTIG: Erkenne direkte Paare von Lebensmittel + Zeitangabe nebeneinander im Text.
+Jedes Lebensmittel braucht eine eigene Zeitangabe direkt daneben.
+KEINE automatischen Kommas hinzufügen - nutze nur die vorhandenen Wörter.
+
 Antworte NUR mit diesem JSON-Format:
 {
-  "defaultDays": <erkannte_haltbarkeitstage_als_zahl>,
   "foods": [
     {
-      "name": "<lebensmittel_name>",
+      "name": "<exakter_lebensmittel_name_ohne_kommas>",
+      "days": <haltbarkeit_in_tagen>,
       "category": "<kategorie_oder_null>"
     }
   ]
 }
 
-Regeln:
-- Erkenne Zeitangaben: "3 Tage"=3, "morgen"=1, "übermorgen"=2, "heute"=0, "1 Woche"=7
-- Ignoriere Zeitangaben, Mengen und Zahlen bei der Lebensmittel-Extraktion
-- Nur echte Lebensmittel extrahieren, keine Zeitangaben oder Mengen
-- Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
-- Standard: 7 Tage wenn keine Zeitangabe gefunden
-- Beispiel: "3 Tage Milch und 2 Äpfel" → defaultDays: 3, foods: [{"name": "Milch", "category": "Milchprodukte"}, {"name": "Äpfel", "category": "Obst"}]
+Paarungs-Regeln:
+1. Suche nach direkten Nachbarschaften: "Lebensmittel + Zeitangabe"
+2. Zeitangaben: "X Tage", "morgen" (1), "übermorgen" (2), "heute" (0), "X Wochen" = X*7, Datum wie "4.08"
+3. Nur echte Paare extrahieren - wenn kein Datum bei einem Lebensmittel steht, ignoriere es
+4. Namen exakt übernehmen ohne zusätzliche Kommas oder Wörter
+
+Beispiele korrekter Paarung:
+- "Salami übermorgen" → {"name": "Salami", "days": 2}
+- "Honig in einem monat" → {"name": "Honig", "days": 30}
+- "Milch 4.08" → {"name": "Milch", "days": <tage_bis_4_august>}
+- "Bier 3 Tage" → {"name": "Bier", "days": 3}
+
+FALSCH: "Salami 308 honig 3 monate" - das sind keine klaren Paare
+RICHTIG: Nur wenn klar erkennbar ist welches Lebensmittel zu welchem Datum gehört
+
+Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
 ''';
 
       final response = await http.post(
@@ -101,7 +114,6 @@ Regeln:
 
   List<FoodModel> _createFoodModels(Map<String, dynamic> parsedData) {
     try {
-      final defaultDays = parsedData['defaultDays'] as int? ?? 7;
       final foodsData = parsedData['foods'] as List<dynamic>? ?? [];
       
       final now = DateTime.now();
@@ -110,13 +122,14 @@ Regeln:
       for (final foodData in foodsData) {
         final foodMap = foodData as Map<String, dynamic>;
         final name = foodMap['name'] as String?;
+        final days = foodMap['days'] as int? ?? 7;
         final category = foodMap['category'] as String?;
         
         if (name != null && name.trim().isNotEmpty) {
           foods.add(FoodModel(
             id: uuid.v4(),
             name: _capitalizeFirst(name.trim()),
-            expiryDate: now.add(Duration(days: defaultDays)),
+            expiryDate: now.add(Duration(days: days)),
             addedDate: now,
             category: category,
           ));
