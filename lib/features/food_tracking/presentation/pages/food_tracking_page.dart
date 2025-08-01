@@ -3,9 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import '../bloc/food_state.dart';
-import '../widgets/expiry_filter_chips.dart';
 import '../widgets/food_card.dart';
-import '../widgets/food_input_field.dart';
 import '../widgets/food_preview_dialog.dart';
 import '../widgets/recipe_generation_button.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
@@ -90,10 +88,6 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
       ),
       body: Column(
         children: [
-          const FoodInputField(),
-          const Divider(),
-          const ExpiryFilterChips(),
-          const SizedBox(height: 8),
           Expanded(
             child: BlocListener<FoodBloc, FoodState>(
               listener: (context, state) {

@@ -6,6 +6,8 @@ import '../../../recipes/presentation/pages/recipes_page.dart';
 import '../../../recipes/presentation/pages/bookmarked_recipes_page.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_state.dart';
+import '../bloc/food_event.dart';
+import 'dictation_text_field.dart';
 import '../../../../injection_container.dart' as di;
 
 class RecipeGenerationButton extends StatelessWidget {
@@ -19,43 +21,71 @@ class RecipeGenerationButton extends StatelessWidget {
         final List availableFoods = state is FoodLoaded ? state.foods : [];
 
         return Container(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
+                blurRadius: 4,
+                offset: const Offset(0, -1),
               ),
             ],
           ),
           child: SafeArea(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
-                    icon: const Icon(Icons.restaurant_menu),
-                    label: const Text('Rezepte generieren'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: hasFood ? Colors.green : Colors.grey,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                // Hinzufügen Button
+                IconButton(
+                  onPressed: () => _showAddFoodDialog(context),
+                  icon: const Icon(Icons.add, size: 24),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                  tooltip: 'Lebensmittel hinzufügen',
                 ),
-                const SizedBox(width: 12),
+                // Filter-Button
+                IconButton(
+                  onPressed: () => _showFilterDialog(context),
+                  icon: const Icon(Icons.filter_list, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                    padding: const EdgeInsets.all(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  tooltip: 'Filter',
+                ),
+                // Rezepte Button (nur Icon)
+                IconButton(
+                  onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
+                  icon: const Icon(Icons.restaurant_menu, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: hasFood ? Colors.green : Colors.grey,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  tooltip: 'Rezepte generieren',
+                ),
+                // Bookmark Button
                 IconButton(
                   onPressed: () => _showBookmarkedRecipes(context),
-                  icon: const Icon(Icons.bookmark, size: 28),
+                  icon: const Icon(Icons.bookmark, size: 20),
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -119,6 +149,214 @@ class RecipeGenerationButton extends StatelessWidget {
         builder: (context) => BlocProvider.value(
           value: recipeBloc,
           child: const BookmarkedRecipesPage(),
+        ),
+      ),
+    );
+  }
+
+  void _showAddFoodDialog(BuildContext context) {
+    final foodBloc = context.read<FoodBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: foodBloc,
+        child: const AddFoodBottomSheet(),
+      ),
+    );
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    final foodBloc = context.read<FoodBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BlocProvider.value(
+        value: foodBloc,
+        child: const FilterBottomSheet(),
+      ),
+    );
+  }
+}
+
+class FilterBottomSheet extends StatelessWidget {
+  const FilterBottomSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Title
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Filter nach Ablaufdatum',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Filter Options
+            BlocBuilder<FoodBloc, FoodState>(
+              builder: (context, state) {
+                final activeFilter = state is FoodLoaded ? state.activeFilter : null;
+                
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: [
+                      _buildFilterOption(context, 'Alle', null, activeFilter),
+                      _buildFilterOption(context, 'Heute', 0, activeFilter),
+                      _buildFilterOption(context, 'Morgen', 1, activeFilter),
+                      _buildFilterOption(context, 'Übermorgen', 2, activeFilter),
+                      _buildFilterOption(context, '3 Tage', 3, activeFilter),
+                      _buildFilterOption(context, '4 Tage', 4, activeFilter),
+                      _buildFilterOption(context, '5 Tage', 5, activeFilter),
+                      _buildFilterOption(context, '6 Tage', 6, activeFilter),
+                      _buildFilterOption(context, '7 Tage', 7, activeFilter),
+                    ],
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterOption(BuildContext context, String label, int? days, int? activeFilter) {
+    final isSelected = days == activeFilter;
+    
+    return ListTile(
+      leading: Icon(
+        isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
+      ),
+      title: Text(label),
+      onTap: () {
+        context.read<FoodBloc>().add(
+          FilterFoodsByExpiryEvent(days),
+        );
+        Navigator.pop(context);
+      },
+      tileColor: isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
+}
+
+class AddFoodBottomSheet extends StatefulWidget {
+  const AddFoodBottomSheet({super.key});
+
+  @override
+  State<AddFoodBottomSheet> createState() => _AddFoodBottomSheetState();
+}
+
+class _AddFoodBottomSheetState extends State<AddFoodBottomSheet> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submitText() {
+    final text = _controller.text.trim();
+    if (text.isNotEmpty) {
+      context.read<FoodBloc>().add(ShowFoodPreviewEvent(text));
+      _controller.clear();
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            left: 16,
+            right: 16,
+            top: 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Title
+              Row(
+                children: [
+                  Icon(
+                    Icons.add_circle,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Lebensmittel hinzufügen',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Text Field mit Diktierfunktion
+              DictationTextField(
+                controller: _controller,
+                hintText: 'z.B. "Honig 5 Tage, Salami 4.08, Milch morgen"',
+                onSubmitted: _submitText,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
