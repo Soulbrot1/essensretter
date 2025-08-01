@@ -218,7 +218,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
       
       // Delete each consumed food
       for (final food in consumedFoods) {
-        foodBloc.add(DeleteFoodEvent(id: food.id));
+        foodBloc.add(DeleteFoodEvent(food.id));
       }
       
       // Show confirmation
