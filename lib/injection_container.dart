@@ -1,4 +1,6 @@
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/services/notification_service.dart';
 import 'features/food_tracking/data/datasources/food_local_data_source.dart';
 import 'features/food_tracking/data/datasources/text_parser_service.dart';
 import 'features/food_tracking/data/datasources/openai_text_parser_service.dart';
@@ -15,6 +17,7 @@ import 'features/food_tracking/domain/usecases/get_all_foods.dart';
 import 'features/food_tracking/domain/usecases/get_foods_by_expiry.dart';
 import 'features/food_tracking/domain/usecases/parse_foods_from_text.dart';
 import 'features/food_tracking/domain/usecases/update_food.dart';
+import 'features/food_tracking/domain/usecases/get_expiring_foods.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/recipes/data/datasources/recipe_service.dart';
 import 'features/recipes/data/datasources/openai_recipe_service.dart';
@@ -26,10 +29,23 @@ import 'features/recipes/domain/usecases/get_bookmarked_recipes.dart';
 import 'features/recipes/domain/usecases/save_bookmarked_recipe.dart';
 import 'features/recipes/domain/usecases/remove_bookmarked_recipe.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
+import 'features/settings/data/datasources/settings_local_data_source.dart';
+import 'features/settings/data/repositories/settings_repository_impl.dart';
+import 'features/settings/domain/repositories/settings_repository.dart';
+import 'features/settings/domain/usecases/get_notification_settings.dart';
+import 'features/settings/domain/usecases/save_notification_settings.dart';
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // External dependencies
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+  
+  // Services
+  sl.registerLazySingleton(() => NotificationService());
   // BLoCs
   sl.registerFactory(
     () => FoodBloc(
@@ -51,6 +67,14 @@ Future<void> init() async {
       removeBookmarkedRecipe: sl(),
     ),
   );
+  
+  sl.registerFactory(
+    () => SettingsBloc(
+      getNotificationSettings: sl(),
+      saveNotificationSettings: sl(),
+      scheduleDailyNotification: sl(),
+    ),
+  );
 
   // Use cases
   sl.registerLazySingleton(() => GetAllFoods(sl()));
@@ -67,6 +91,14 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetBookmarkedRecipes(sl()));
   sl.registerLazySingleton(() => SaveBookmarkedRecipe(sl()));
   sl.registerLazySingleton(() => RemoveBookmarkedRecipe(sl()));
+  sl.registerLazySingleton(() => GetExpiringFoods(sl()));
+  sl.registerLazySingleton(() => GetNotificationSettings(sl()));
+  sl.registerLazySingleton(() => SaveNotificationSettings(sl()));
+  sl.registerLazySingleton(() => ScheduleDailyNotification(
+    getNotificationSettings: sl(),
+    getExpiringFoods: sl(),
+    notificationService: sl(),
+  ));
 
   // Repositories
   sl.registerLazySingleton<FoodRepository>(
@@ -85,6 +117,10 @@ Future<void> init() async {
       recipeService: sl(),
       localDataSource: sl(),
     ),
+  );
+  
+  sl.registerLazySingleton<SettingsRepository>(
+    () => SettingsRepositoryImpl(localDataSource: sl()),
   );
 
   // Data sources
@@ -108,5 +144,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<RecipeLocalDataSource>(
     () => RecipeLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton<SettingsLocalDataSource>(
+    () => SettingsLocalDataSourceImpl(sharedPreferences: sl()),
   );
 }

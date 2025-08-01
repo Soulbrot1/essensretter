@@ -65,6 +65,10 @@ dependencies:
   
   # Environment Variables
   flutter_dotenv: ^5.1.0
+  
+  # Notifications
+  flutter_local_notifications: ^17.2.1
+  timezone: ^0.9.4
 
 dev_dependencies:
   flutter_test:

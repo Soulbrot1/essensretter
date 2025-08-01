@@ -8,6 +8,8 @@ import '../widgets/food_card.dart';
 import '../widgets/food_input_field.dart';
 import '../widgets/food_preview_dialog.dart';
 import '../widgets/recipe_generation_button.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
+import '../../../settings/presentation/bloc/settings_bloc.dart';
 
 class FoodTrackingPage extends StatefulWidget {
   const FoodTrackingPage({super.key});
@@ -30,6 +32,21 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
         title: const Text('Essensretter 3'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<SettingsBloc>(),
+                    child: const SettingsPage(),
+                  ),
+                ),
+              );
+            },
+            tooltip: 'Einstellungen',
+          ),
           BlocBuilder<FoodBloc, FoodState>(
             builder: (context, state) {
               if (state is FoodLoaded && _hasConsumedFoods(state.foods)) {

@@ -5,6 +5,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/food_tracking/presentation/pages/food_tracking_page.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/notification/domain/usecases/schedule_daily_notification.dart';
+import 'core/services/notification_service.dart';
+import 'core/usecases/usecase.dart';
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -14,6 +18,15 @@ void main() async {
   await dotenv.load(fileName: ".env");
   
   await di.init();
+  
+  // Initialisiere Notification Service
+  final notificationService = di.sl<NotificationService>();
+  await notificationService.initialize();
+  
+  // Plane tägliche Benachrichtigung basierend auf Einstellungen
+  final scheduleDailyNotification = di.sl<ScheduleDailyNotification>();
+  await scheduleDailyNotification(NoParams());
+  
   runApp(const MyApp());
 }
 
@@ -42,6 +55,7 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(create: (context) => di.sl<FoodBloc>()),
           BlocProvider(create: (context) => di.sl<RecipeBloc>()),
+          BlocProvider(create: (context) => di.sl<SettingsBloc>()..add(LoadNotificationSettings())),
         ],
         child: const FoodTrackingPage(),
       ),
