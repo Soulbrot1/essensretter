@@ -28,7 +28,7 @@ class Food extends Equatable {
 
   bool get isExpired => daysUntilExpiry < 0;
 
-  bool expiresInDays(int days) => daysUntilExpiry <= days && !isExpired;
+  bool expiresInDays(int days) => daysUntilExpiry <= days;
 
   String get expiryStatus {
     final days = daysUntilExpiry;
