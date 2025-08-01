@@ -4,9 +4,13 @@ import '../bloc/recipe_bloc.dart';
 import '../bloc/recipe_event.dart';
 import '../bloc/recipe_state.dart';
 import '../widgets/recipe_card.dart';
+import 'bookmarked_recipes_page.dart';
+import '../../../../injection_container.dart' as di;
 
 class RecipesPage extends StatelessWidget {
-  const RecipesPage({super.key});
+  final List<String>? availableIngredients;
+  
+  const RecipesPage({super.key, this.availableIngredients});
 
   @override
   Widget build(BuildContext context) {
@@ -25,24 +29,25 @@ class RecipesPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
+                  child: ElevatedButton.icon(
+                    onPressed: () => _regenerateRecipe(context),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Neues Rezept'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: const Text('Rezepte generieren'),
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showBookmarkedRecipes(context),
                     icon: const Icon(Icons.bookmark_border, color: Colors.orange),
-                    label: const Text('Gespeicherte (0)', style: TextStyle(color: Colors.orange)),
+                    label: const Text('Gespeicherte', style: TextStyle(color: Colors.orange)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.orange),
                       shape: RoundedRectangleBorder(
@@ -117,19 +122,18 @@ class RecipesPage extends StatelessWidget {
                     );
                   }
 
-                  return ListView.builder(
+                  return SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
-                    itemCount: state.recipes.length,
-                    itemBuilder: (context, index) {
-                      return RecipeCard(
-                        recipe: state.recipes[index],
-                        onBookmark: () {
-                          context.read<RecipeBloc>().add(
-                            BookmarkRecipeEvent(recipe: state.recipes[index]),
-                          );
-                        },
-                      );
-                    },
+                    child: state.recipes.isNotEmpty
+                        ? RecipeCard(
+                            recipe: state.recipes.first,
+                            onBookmark: () {
+                              context.read<RecipeBloc>().add(
+                                BookmarkRecipeEvent(recipe: state.recipes.first),
+                              );
+                            },
+                          )
+                        : const SizedBox.shrink(),
                   );
                 }
 
@@ -140,6 +144,28 @@ class RecipesPage extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _regenerateRecipe(BuildContext context) {
+    if (availableIngredients != null && availableIngredients!.isNotEmpty) {
+      context.read<RecipeBloc>().add(
+        GenerateRecipesEvent(availableIngredients: availableIngredients!),
+      );
+    }
+  }
+
+  void _showBookmarkedRecipes(BuildContext context) {
+    final recipeBloc = di.sl<RecipeBloc>();
+    recipeBloc.add(LoadBookmarkedRecipesEvent());
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: recipeBloc,
+          child: const BookmarkedRecipesPage(),
+        ),
       ),
     );
   }

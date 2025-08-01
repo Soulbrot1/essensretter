@@ -28,11 +28,11 @@ class OpenAIRecipeService implements RecipeService {
     try {
       final ingredientsText = availableIngredients.join(', ');
       final prompt = '''
-Du bist ein kreativer Koch-Assistent. Erstelle 2 einfache, sinnvolle Rezepte basierend auf einigen der verfügbaren Zutaten.
+Du bist ein kreativer Koch-Assistent. Erstelle 1 einfaches, sinnvolles Rezept basierend auf einigen der verfügbaren Zutaten.
 
 VERFÜGBARE ZUTATEN: $ingredientsText
 
-Für jedes Rezept erstelle:
+Für das Rezept erstelle:
 - title: Kreativer Name des Gerichts
 - cookingTime: Geschätzte Zubereitungszeit (z.B. "30 Minuten")
 - vorhanden: Array mit Zutaten die bereits vorhanden sind (wähle sinnvoll aus der verfügbaren Liste)
@@ -42,12 +42,11 @@ Für jedes Rezept erstelle:
 WICHTIG: 
 - Du musst NICHT alle verfügbaren Zutaten verwenden
 - Wähle nur die Zutaten aus, die zu einem sinnvollen Gericht zusammenpassen
-- Erstelle einfache, praktische Gerichte
-- Maximal 2-3 zusätzliche Zutaten pro Rezept in "ueberpruefen"
+- Erstelle ein einfaches, praktisches Gericht
+- Maximal 2-3 zusätzliche Zutaten in "ueberpruefen"
 - Fokus auf Geschmack und Einfachheit, nicht auf Zutatenverbrauch
-- Die Rezepte sollen alltagstauglich und lecker sein
-
-Beispiel: Wenn verfügbar sind "Äpfel, Salami, Milch, Brot, Honig", dann mache NICHT alle in ein Rezept, sondern z.B. ein Apfel-Honig-Toast und ein Salami-Brot separat.
+- Das Rezept soll alltagstauglich und lecker sein
+- Sei kreativ und variiere die Gerichte bei wiederholten Anfragen
 
 Antworte mit einem JSON-Objekt mit einem "recipes" Array:
 
