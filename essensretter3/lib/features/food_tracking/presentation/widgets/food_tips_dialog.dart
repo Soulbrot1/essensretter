@@ -1,12 +1,48 @@
 import 'package:flutter/material.dart';
+import '../../data/datasources/food_tips_service.dart';
+import '../../../../injection_container.dart' as di;
 
-class FoodTipsDialog extends StatelessWidget {
+class FoodTipsDialog extends StatefulWidget {
   final String foodName;
 
   const FoodTipsDialog({
     super.key,
     required this.foodName,
   });
+
+  @override
+  State<FoodTipsDialog> createState() => _FoodTipsDialogState();
+}
+
+class _FoodTipsDialogState extends State<FoodTipsDialog> {
+  late final FoodTipsService _foodTipsService;
+  String? _tips;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _foodTipsService = di.sl<FoodTipsService>();
+    _loadTips();
+  }
+
+  Future<void> _loadTips() async {
+    try {
+      final tips = await _foodTipsService.getFoodStorageTips(widget.foodName);
+      if (mounted) {
+        setState(() {
+          _tips = tips;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +66,7 @@ class FoodTipsDialog extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Haltbarkeitstipps für $foodName',
+                    'Haltbarkeitstipps für ${widget.foodName}',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -74,13 +110,20 @@ class FoodTipsDialog extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    _getTipsForFood(foodName),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.blue.shade800,
-                      height: 1.4,
-                    ),
-                  ),
+                  _isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.0),
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : Text(
+                          _tips ?? _getDefaultTips(widget.foodName),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.blue.shade800,
+                            height: 1.4,
+                          ),
+                        ),
                 ],
               ),
             ),
@@ -106,7 +149,7 @@ class FoodTipsDialog extends StatelessWidget {
     );
   }
 
-  String _getTipsForFood(String foodName) {
+  String _getDefaultTips(String foodName) {
     final name = foodName.toLowerCase();
     
     if (name.contains('apfel') || name.contains('äpfel')) {

@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'features/food_tracking/data/datasources/food_local_data_source.dart';
 import 'features/food_tracking/data/datasources/text_parser_service.dart';
 import 'features/food_tracking/data/datasources/openai_text_parser_service.dart';
+import 'features/food_tracking/data/datasources/food_tips_service.dart';
 import 'features/food_tracking/data/repositories/food_repository_impl.dart';
 import 'features/food_tracking/data/repositories/openai_text_parser_repository_impl.dart';
 import 'features/food_tracking/domain/repositories/food_repository.dart';
@@ -55,5 +56,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<TextParserService>(
     () => TextParserServiceImpl(),
+  );
+  sl.registerLazySingleton<FoodTipsService>(
+    () => OpenAIFoodTipsService(),
   );
 }
