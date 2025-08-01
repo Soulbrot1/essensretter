@@ -1,6 +1,6 @@
 {
-    "name": "essensretter3",
-    "short_name": "essensretter3",
+    "name": "essensretter",
+    "short_name": "essensretter",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
