@@ -33,57 +33,93 @@ class OpenAITextParserService implements TextParserService {
       return TextParserServiceImpl().parseTextToFoods(text);
     }
 
+    // Hybrid-Ansatz: Erst lokaler Parser für strukturierte Eingaben
+    final localParser = TextParserServiceImpl();
+    final localResults = localParser.parseTextToFoods(text);
+    
+    // Prüfe ob der lokale Parser gute Ergebnisse liefert
+    if (_isLocalParsingSuccessful(text, localResults)) {
+      debugPrint('Lokaler Parser erfolgreich, verwende lokale Ergebnisse');
+      return localResults;
+    }
+    
+    debugPrint('Lokaler Parser unvollständig, verwende KI für komplexe Eingabe');
+    
     try {
       final now = DateTime.now();
       final prompt = '''
-Extrahiere Lebensmittel-Datum-Paare aus diesem deutschen Text:
+Extrahiere Lebensmittel mit Datumsangaben aus diesem deutschen Text. Achte besonders auf deutsche Datumsformate!
 
 Text: "$text"
-Heutiges Datum: ${now.day}.${now.month}.${now.year}
+Heutiges Datum: ${now.day}.${now.month}.${now.year} (${_getWeekdayName(now.weekday)})
 
-WICHTIG: Erkenne Lebensmittel im Text - sowohl mit als auch ohne Zeitangabe.
-Wenn ein Lebensmittel keine Zeitangabe hat, setze "days" auf null.
-KEINE automatischen Kommas hinzufügen - nutze nur die vorhandenen Wörter.
+KRITISCH: 
+1. Erkenne ALLE Lebensmittel - mit oder ohne Datum (ohne Datum = "days": null)
+2. KEINE Kommas oder Wörter hinzufügen - nur exakte Namen aus dem Text
+3. Negative Tage für vergangene Daten (z.B. "days": -5 für 5 Tage abgelaufen)
 
-Berechne die Anzahl der Tage vom heutigen Datum bis zum Zieldatum korrekt!
-WICHTIG: Bei Datumsangaben mit Jahreszahl (z.B. "7.7.25") das Datum exakt verwenden - auch wenn es in der Vergangenheit liegt!
-Für vergangene Daten: negative Tageszahl verwenden!
-
-Antworte NUR mit diesem JSON-Format:
+Antworte NUR mit JSON:
 {
   "foods": [
-    {
-      "name": "<exakter_lebensmittel_name_ohne_kommas>",
-      "days": <anzahl_tage_bis_ablaufdatum_oder_null>,
-      "category": "<kategorie_oder_null>"
-    }
+    {"name": "<exakter_name>", "days": <tage_oder_null>, "category": "<kategorie_oder_null>"}
   ]
 }
 
-Paarungs-Regeln:
-1. Suche nach direkten Nachbarschaften: "Lebensmittel + Zeitangabe"
-2. Zeitangaben: 
-   - "X Tage", "morgen" (1), "übermorgen" (2), "heute" (0)
-   - "X Wochen" = X*7, "X Monate" = X*30
-   - Datum wie "4.08", "4.8", "2.8.", "02.08"
-   - Datum mit Monatsnamen: "4. August", "4 August", "4. aug"
-   - Nutze das aktuelle Jahr für Datumsangaben
-3. Wenn kein Datum bei einem Lebensmittel steht, setze "days": null
-4. Namen exakt übernehmen ohne zusätzliche Kommas oder Wörter
-5. ALLE erkannten Lebensmittel zurückgeben, auch ohne Datum
+DEUTSCHE ZEITANGABEN - erkenne ALLE Varianten:
 
-Beispiele korrekter Paarung:
-- "Salami übermorgen" → {"name": "Salami", "days": 2}
-- "Honig in einem monat" → {"name": "Honig", "days": 30}
-- "Milch 4.08" → {"name": "Milch", "days": <tage_bis_4_august>}
-- "Milch 2.8" → {"name": "Milch", "days": <tage_bis_2_august>}
-- "Käse 4. August" → {"name": "Käse", "days": <tage_bis_4_august>}
-- "Bier 3 Tage" → {"name": "Bier", "days": 3}
-- "Gurken 7.7.25" → {"name": "Gurken", "days": -25} (wenn 7.7.25 25 Tage her ist)
-- "Banane" → {"name": "Banane", "days": null}
-- "Apfel und Birne" → {"name": "Apfel", "days": null}, {"name": "Birne", "days": null}
+RELATIVE ZEITANGABEN:
+- "heute" = 0 Tage
+- "morgen" = 1 Tag  
+- "übermorgen" = 2 Tage
+- "gestern" = -1 Tag (abgelaufen!)
+- "vorgestern" = -2 Tage (abgelaufen!)
 
-WICHTIG: Auch einzelne Lebensmittel ohne Datum extrahieren!
+WOCHENTAGE:
+- "nächsten/kommenden Montag/Dienstag/..." = Tage bis nächster Wochentag
+- "diesen Freitag" = Tage bis Freitag dieser Woche
+- "übernächsten Samstag" = Tage bis Samstag übernächster Woche
+
+WOCHEN/MONATE:
+- "nächste Woche" = 7 Tage
+- "übernächste Woche" = 14 Tage  
+- "in 2/zwei Wochen" = 14 Tage
+- "Ende der Woche" = Tage bis Sonntag
+- "Anfang/Mitte/Ende [Monat]" = 1./15./letzter Tag des Monats
+
+DATUMSFORMATE (Tag.Monat oder Tag/Monat oder Tag-Monat):
+- "8.3", "08.03", "8/3", "8-3" = 8. März
+- "am 8." = 8. des aktuellen Monats (oder nächsten, wenn bereits vorbei)
+- "8.3.25", "8.3.2025" = 8. März 2025
+- Jahreszahlen: 00-30 = 2000-2030, 31-99 = 1931-1999
+
+MONATSNAMEN (alle Varianten):
+- Januar: jan, jän, jänner
+- Februar: feb, febr
+- März: mär, märz, mrz, mar
+- April: apr
+- Mai: mai
+- Juni: jun
+- Juli: jul
+- August: aug, augus
+- September: sep, sept
+- Oktober: okt
+- November: nov
+- Dezember: dez
+
+WICHTIGE REGELN:
+1. Bei "am 8." ohne Monat: Wenn 8. dieses Monats vorbei → nächster Monat
+2. Deutsche Datumslogik: Tag.Monat.Jahr (NICHT Monat/Tag!)
+3. Sprachvarianten beachten: "zwo" = "zwei", "nen" = "einen"
+4. Umgangssprache: "paar Tage" = 3-4 Tage, "einige Tage" = 4-5 Tage
+
+BEISPIELE:
+- "Milch morgen" → {"name": "Milch", "days": 1}
+- "Käse nächsten Dienstag" → {"name": "Käse", "days": <tage_bis_dienstag>}
+- "Brot am 8." → {"name": "Brot", "days": <tage_bis_8_des_monats>}
+- "Joghurt 15/3" → {"name": "Joghurt", "days": <tage_bis_15_märz>}
+- "Wurst Ende März" → {"name": "Wurst", "days": <tage_bis_31_märz>}
+- "Äpfel gestern" → {"name": "Äpfel", "days": -1}
+- "Butter und Eier" → {"name": "Butter", "days": null}, {"name": "Eier", "days": null}
 
 Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
 ''';
@@ -177,5 +213,39 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
   String _capitalizeFirst(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  String _getWeekdayName(int weekday) {
+    const weekdays = [
+      'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 
+      'Freitag', 'Samstag', 'Sonntag'
+    ];
+    return weekdays[weekday - 1];
+  }
+
+  bool _isLocalParsingSuccessful(String text, List<FoodModel> results) {
+    // Lokaler Parser ist erfolgreich wenn:
+    // 1. Mindestens ein Lebensmittel gefunden wurde
+    if (results.isEmpty) return false;
+    
+    // 2. Text enthält strukturierte Zeitangaben (die der lokale Parser gut kann)
+    final structuredPatterns = [
+      RegExp(r'\d+\s*tag(?:e|en)?', caseSensitive: false),
+      RegExp(r'\d+\s*woche(?:n)?', caseSensitive: false),
+      RegExp(r'\d{1,2}[\./\-]\d{1,2}', caseSensitive: false),
+      RegExp(r'morgen|übermorgen|heute|gestern', caseSensitive: false),
+      RegExp(r'nächste(?:n|r)?\s+\w+', caseSensitive: false),
+      RegExp(r'am\s+\d{1,2}\.', caseSensitive: false),
+    ];
+    
+    bool hasStructuredDate = structuredPatterns.any((pattern) => pattern.hasMatch(text));
+    
+    // 3. Text ist nicht zu komplex (keine langen Sätze mit vielen Beschreibungen)
+    final isComplex = text.split(' ').length > 15 || text.contains(' und ') && text.contains(' mit ');
+    
+    // 4. Alle gefundenen Items haben plausible Daten
+    final allHaveDates = results.where((f) => f.expiryDate != null).isNotEmpty;
+    
+    return hasStructuredDate && !isComplex && (allHaveDates || results.length <= 3);
   }
 }
