@@ -1,27 +1,78 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import '../models/food_model.dart';
-import 'text_parser_service.dart';
 
-class OpenAITextParserService implements TextParserService {
+class OpenAITextParserService {
   final String _apiKey;
   final Uuid uuid = const Uuid();
   
   OpenAITextParserService() : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
 
-  @override
-  List<FoodModel> parseTextToFoods(String text) {
-    // Fallback auf einfachen Parser wenn kein API Key
-    if (_apiKey.isEmpty) {
-      debugPrint('OpenAI API Key nicht gefunden, verwende einfachen Parser');
-      return TextParserServiceImpl().parseTextToFoods(text);
-    }
+  // Whisper AI Transkription für präzise deutsche Spracheingabe
+  Future<String> transcribeAudio(File audioFile) async {
+    debugPrint('Whisper Transkription gestartet für Datei: ${audioFile.path}');
     
-    // Für OpenAI verwenden wir die async Methode
-    throw UnimplementedError('Verwende parseTextToFoodsAsync für OpenAI');
+    if (_apiKey.isEmpty) {
+      debugPrint('OpenAI API Key nicht gefunden');
+      throw Exception('OpenAI API Key nicht konfiguriert');
+    }
+
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://api.openai.com/v1/audio/transcriptions'),
+      );
+      
+      request.headers['Authorization'] = 'Bearer $_apiKey';
+      request.fields['model'] = 'whisper-1';
+      request.fields['language'] = 'de';
+      request.fields['response_format'] = 'json';
+      
+      request.files.add(await http.MultipartFile.fromPath(
+        'file', 
+        audioFile.path,
+        filename: 'audio.m4a',
+      ));
+      
+      debugPrint('Sende Audio an Whisper API...');
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (response.statusCode != 200) {
+        debugPrint('Whisper API Fehler: ${response.statusCode}');
+        debugPrint('Response Body: ${response.body}');
+        throw Exception('Whisper API Fehler: ${response.statusCode}');
+      }
+      
+      final responseData = json.decode(response.body);
+      final transcript = responseData['text'] as String;
+      
+      debugPrint('Whisper Transkription erfolgreich: "$transcript"');
+      return transcript;
+      
+    } catch (e) {
+      debugPrint('Fehler bei Whisper Transkription: $e');
+      rethrow;
+    }
+  }
+
+  // Erweiterte Methode: Audio direkt zu Lebensmitteln parsen
+  Future<List<FoodModel>> parseAudioToFoods(File audioFile) async {
+    try {
+      // 1. Audio mit Whisper transkribieren
+      final transcript = await transcribeAudio(audioFile);
+      
+      // 2. Text mit GPT-4o parsen
+      return await parseTextToFoodsAsync(transcript);
+      
+    } catch (e) {
+      debugPrint('Fehler beim Audio-Parsing: $e');
+      return [];
+    }
   }
 
   Future<List<FoodModel>> parseTextToFoodsAsync(String text) async {
@@ -29,21 +80,12 @@ class OpenAITextParserService implements TextParserService {
     debugPrint('API Key vorhanden: ${_apiKey.isNotEmpty}');
     
     if (_apiKey.isEmpty) {
-      debugPrint('OpenAI API Key nicht gefunden, verwende einfachen Parser');
-      return TextParserServiceImpl().parseTextToFoods(text);
+      debugPrint('OpenAI API Key nicht gefunden - Fehler');
+      return [];
     }
 
-    // Hybrid-Ansatz: Erst lokaler Parser für strukturierte Eingaben
-    final localParser = TextParserServiceImpl();
-    final localResults = localParser.parseTextToFoods(text);
-    
-    // Prüfe ob der lokale Parser gute Ergebnisse liefert
-    if (_isLocalParsingSuccessful(text, localResults)) {
-      debugPrint('Lokaler Parser erfolgreich, verwende lokale Ergebnisse');
-      return localResults;
-    }
-    
-    debugPrint('Lokaler Parser unvollständig, verwende KI für komplexe Eingabe');
+    // Vollständig API-basierter Ansatz für Multiplatform-Konsistenz
+    debugPrint('Verwende OpenAI für plattform-einheitliches Parsing');
     
     try {
       final now = DateTime.now();
@@ -51,7 +93,7 @@ class OpenAITextParserService implements TextParserService {
 Extrahiere Lebensmittel mit Datumsangaben aus diesem deutschen Text. Achte besonders auf deutsche Datumsformate!
 
 Text: "$text"
-Heutiges Datum: ${now.day}.${now.month}.${now.year} (${_getWeekdayName(now.weekday)})
+Heutiges Datum: ${now.day}.${now.month}.${now.year}
 
 KRITISCH: 
 1. Erkenne ALLE Lebensmittel - mit oder ohne Datum (ohne Datum = "days": null)
@@ -146,7 +188,7 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       if (response.statusCode != 200) {
         debugPrint('OpenAI API Fehler: ${response.statusCode}');
         debugPrint('Response Body: ${response.body}');
-        return _fallbackParsing(text);
+        return [];
       }
 
       final responseBody = json.decode(response.body);
@@ -156,7 +198,7 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(content);
       if (jsonMatch == null) {
         debugPrint('Kein JSON in OpenAI Antwort gefunden');
-        return _fallbackParsing(text);
+        return [];
       }
       
       final parsedData = json.decode(jsonMatch.group(0)!);
@@ -167,7 +209,7 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       return models;
     } catch (e) {
       debugPrint('OpenAI Parsing Fehler: $e');
-      return _fallbackParsing(text);
+      return [];
     }
   }
 
@@ -205,47 +247,8 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
     }
   }
 
-  List<FoodModel> _fallbackParsing(String text) {
-    debugPrint('Verwende Fallback-Parser');
-    return TextParserServiceImpl().parseTextToFoods(text);
-  }
-
   String _capitalizeFirst(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
-  }
-
-  String _getWeekdayName(int weekday) {
-    const weekdays = [
-      'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 
-      'Freitag', 'Samstag', 'Sonntag'
-    ];
-    return weekdays[weekday - 1];
-  }
-
-  bool _isLocalParsingSuccessful(String text, List<FoodModel> results) {
-    // Lokaler Parser ist erfolgreich wenn:
-    // 1. Mindestens ein Lebensmittel gefunden wurde
-    if (results.isEmpty) return false;
-    
-    // 2. Text enthält strukturierte Zeitangaben (die der lokale Parser gut kann)
-    final structuredPatterns = [
-      RegExp(r'\d+\s*tag(?:e|en)?', caseSensitive: false),
-      RegExp(r'\d+\s*woche(?:n)?', caseSensitive: false),
-      RegExp(r'\d{1,2}[\./\-]\d{1,2}', caseSensitive: false),
-      RegExp(r'morgen|übermorgen|heute|gestern', caseSensitive: false),
-      RegExp(r'nächste(?:n|r)?\s+\w+', caseSensitive: false),
-      RegExp(r'am\s+\d{1,2}\.', caseSensitive: false),
-    ];
-    
-    bool hasStructuredDate = structuredPatterns.any((pattern) => pattern.hasMatch(text));
-    
-    // 3. Text ist nicht zu komplex (keine langen Sätze mit vielen Beschreibungen)
-    final isComplex = text.split(' ').length > 15 || text.contains(' und ') && text.contains(' mit ');
-    
-    // 4. Alle gefundenen Items haben plausible Daten
-    final allHaveDates = results.where((f) => f.expiryDate != null).isNotEmpty;
-    
-    return hasStructuredDate && !isComplex && (allHaveDates || results.length <= 3);
   }
 }

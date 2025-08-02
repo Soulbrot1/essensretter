@@ -83,3 +83,4 @@ class SortFoodsEvent extends FoodEvent {
   @override
   List<Object> get props => [sortOption];
 }
+

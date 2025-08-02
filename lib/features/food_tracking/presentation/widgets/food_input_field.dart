@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 
@@ -12,12 +14,45 @@ class FoodInputField extends StatefulWidget {
 
 class _FoodInputFieldState extends State<FoodInputField> {
   final TextEditingController _controller = TextEditingController();
+  final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isExpanded = false;
+  bool _isListening = false;
+  bool _speechAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _initSpeech() async {
+    try {
+      final micPermission = await Permission.microphone.request();
+      if (micPermission.isGranted) {
+        _speechAvailable = await _speech.initialize(
+          onError: (error) => debugPrint('Speech error: $error'),
+          onStatus: (status) {
+            debugPrint('Speech status: $status');
+            if (status == 'done' || status == 'notListening') {
+              setState(() {
+                _isListening = false;
+              });
+            }
+          },
+        );
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    } catch (e) {
+      debugPrint('Speech initialization error: $e');
+    }
   }
 
   void _submitText() {
@@ -33,6 +68,75 @@ class _FoodInputFieldState extends State<FoodInputField> {
       setState(() {
         _isExpanded = false;
       });
+    }
+  }
+
+  void _startListening() async {
+    if (!_speechAvailable || _isListening) return;
+    
+    try {
+      await _speech.listen(
+        onResult: (result) {
+          if (mounted) {
+            setState(() {
+              _controller.text = result.recognizedWords;
+            });
+          }
+        },
+        localeId: 'de_DE',
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isListening = true;
+        });
+        
+        // Feedback für den Benutzer
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🎤 Diktierung aktiv - verwende iOS-Diktat für beste Ergebnisse'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Start listening error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fehler beim Starten der Diktierung'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _stopListening() async {
+    if (!_isListening) return;
+    
+    try {
+      await _speech.stop();
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+        });
+        
+        // Nach dem Stoppen automatisch den Text senden, wenn nicht leer
+        final text = _controller.text.trim();
+        if (text.isNotEmpty) {
+          _submitText();
+        }
+      }
+    } catch (e) {
+      debugPrint('Stop listening error: $e');
+      if (mounted) {
+        setState(() {
+          _isListening = false;
+        });
+      }
     }
   }
 
@@ -119,9 +223,30 @@ class _FoodInputFieldState extends State<FoodInputField> {
                         hintText: 'z.B. "Honig 5 Tage, Salami 4.08, Milch morgen"',
                         border: const OutlineInputBorder(),
                         contentPadding: const EdgeInsets.all(12),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.send),
-                          onPressed: _submitText,
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Mikrofon Button für iOS-Diktierung
+                            IconButton(
+                              icon: Icon(
+                                _isListening ? Icons.mic : Icons.mic_none,
+                                color: _isListening 
+                                    ? Colors.red 
+                                    : (_speechAvailable ? null : Colors.grey),
+                              ),
+                              onPressed: _speechAvailable 
+                                  ? (_isListening ? _stopListening : _startListening)
+                                  : null,
+                              tooltip: _speechAvailable 
+                                  ? (_isListening ? 'Diktierung stoppen' : 'iOS-Diktierung verwenden')
+                                  : 'Mikrofon nicht verfügbar',
+                            ),
+                            // Send Button
+                            IconButton(
+                              icon: const Icon(Icons.send),
+                              onPressed: _submitText,
+                            ),
+                          ],
                         ),
                       ),
                       onSubmitted: (_) => _submitText(),

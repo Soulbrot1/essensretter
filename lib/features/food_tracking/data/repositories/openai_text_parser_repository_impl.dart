@@ -36,4 +36,5 @@ class OpenAITextParserRepositoryImpl implements TextParserRepository {
     // Für die Vorschau verwenden wir die gleiche Logik wie parseTextToFoods
     return parseTextToFoods(text);
   }
+
 }

@@ -120,6 +120,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     );
   }
 
+
   Future<void> _onConfirmFoods(
     ConfirmFoodsEvent event,
     Emitter<FoodState> emit,
