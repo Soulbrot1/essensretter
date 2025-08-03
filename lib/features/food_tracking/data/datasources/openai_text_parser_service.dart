@@ -36,54 +36,43 @@ class OpenAITextParserService implements TextParserService {
     try {
       final now = DateTime.now();
       final prompt = '''
-Extrahiere Lebensmittel-Datum-Paare aus diesem deutschen Text:
+Extrahiere Lebensmittel und deren Datumsangaben aus diesem deutschen Text:
 
 Text: "$text"
 Heutiges Datum: ${now.day}.${now.month}.${now.year}
 
-WICHTIG: Erkenne Lebensmittel im Text - sowohl mit als auch ohne Zeitangabe.
-Wenn ein Lebensmittel keine Zeitangabe hat, setze "days" auf null.
-KEINE automatischen Kommas hinzufügen - nutze nur die vorhandenen Wörter.
-
-Berechne die Anzahl der Tage vom heutigen Datum bis zum Zieldatum korrekt!
-WICHTIG: Bei Datumsangaben mit Jahreszahl (z.B. "7.7.25") das Datum exakt verwenden - auch wenn es in der Vergangenheit liegt!
-Für vergangene Daten: negative Tageszahl verwenden!
+WICHTIG: Erkenne alle Lebensmittel. Für Datumsangaben gib das Datum als String zurück, NICHT als Anzahl Tage!
 
 Antworte NUR mit diesem JSON-Format:
 {
   "foods": [
     {
-      "name": "<exakter_lebensmittel_name_ohne_kommas>",
-      "days": <anzahl_tage_bis_ablaufdatum_oder_null>,
+      "name": "<exakter_lebensmittel_name>",
+      "date_text": "<original_datum_text_oder_null>",
       "category": "<kategorie_oder_null>"
     }
   ]
 }
 
-Paarungs-Regeln:
-1. Suche nach direkten Nachbarschaften: "Lebensmittel + Zeitangabe"
-2. Zeitangaben: 
-   - "X Tage", "morgen" (1), "übermorgen" (2), "heute" (0)
-   - "X Wochen" = X*7, "X Monate" = X*30
-   - Datum wie "4.08", "4.8", "2.8.", "02.08"
-   - Datum mit Monatsnamen: "4. August", "4 August", "4. aug"
-   - Nutze das aktuelle Jahr für Datumsangaben
-3. Wenn kein Datum bei einem Lebensmittel steht, setze "days": null
-4. Namen exakt übernehmen ohne zusätzliche Kommas oder Wörter
-5. ALLE erkannten Lebensmittel zurückgeben, auch ohne Datum
+Regeln:
+1. Extrahiere Lebensmittel-Namen exakt wie angegeben
+2. Für Zeitangaben, gib den ursprünglichen Text zurück:
+   - "morgen", "übermorgen", "heute"
+   - "3 Tage", "zwei Tage", "4 Tage", "einen Tag"
+   - "1 Woche", "eine Woche", "2 Wochen"
+   - "1 Monat", "einen Monat", "2 Monate"
+   - "24.8.2025", "4.08", "2.8"
+   - "4. August", "4 August"
+3. Wenn kein Datum: "date_text": null
+4. ALLE erkannten Lebensmittel zurückgeben
 
-Beispiele korrekter Paarung:
-- "Salami übermorgen" → {"name": "Salami", "days": 2}
-- "Honig in einem monat" → {"name": "Honig", "days": 30}
-- "Milch 4.08" → {"name": "Milch", "days": <tage_bis_4_august>}
-- "Milch 2.8" → {"name": "Milch", "days": <tage_bis_2_august>}
-- "Käse 4. August" → {"name": "Käse", "days": <tage_bis_4_august>}
-- "Bier 3 Tage" → {"name": "Bier", "days": 3}
-- "Gurken 7.7.25" → {"name": "Gurken", "days": -25} (wenn 7.7.25 25 Tage her ist)
-- "Banane" → {"name": "Banane", "days": null}
-- "Apfel und Birne" → {"name": "Apfel", "days": null}, {"name": "Birne", "days": null}
-
-WICHTIG: Auch einzelne Lebensmittel ohne Datum extrahieren!
+Beispiele:
+- "Salami übermorgen" → {"name": "Salami", "date_text": "übermorgen"}
+- "Milch 24.8.2025" → {"name": "Milch", "date_text": "24.8.2025"}
+- "Käse 3 Tage" → {"name": "Käse", "date_text": "3 Tage"}
+- "Brot zwei Tage" → {"name": "Brot", "date_text": "zwei Tage"}
+- "Joghurt eine Woche" → {"name": "Joghurt", "date_text": "eine Woche"}
+- "Banane" → {"name": "Banane", "date_text": null}
 
 Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
 ''';
@@ -145,12 +134,12 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       for (final foodData in foodsData) {
         final foodMap = foodData as Map<String, dynamic>;
         final name = foodMap['name'] as String?;
-        final days = foodMap['days'] as int?;
+        final dateText = foodMap['date_text'] as String?;
         final category = foodMap['category'] as String?;
         
         if (name != null && name.trim().isNotEmpty) {
-          final DateTime? expiryDate = days != null ? now.add(Duration(days: days)) : null;
-          debugPrint('Creating food: $name, days: $days, expiryDate: $expiryDate');
+          final DateTime? expiryDate = _parseDateText(dateText, now);
+          debugPrint('Creating food: $name, dateText: $dateText, expiryDate: $expiryDate');
           
           foods.add(FoodModel(
             id: uuid.v4(),
@@ -169,9 +158,139 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
     }
   }
 
+  DateTime? _parseDateText(String? dateText, DateTime now) {
+    if (dateText == null || dateText.trim().isEmpty) {
+      return null;
+    }
+
+    final text = dateText.trim().toLowerCase();
+    debugPrint('Parsing date text: "$text"');
+
+    try {
+      // Direkte Zeitangaben
+      if (text == 'heute') return now;
+      if (text == 'morgen') return now.add(const Duration(days: 1));
+      if (text == 'übermorgen') return now.add(const Duration(days: 2));
+
+      // Numerische und textuelle Zeitangaben
+      int? days = _extractDays(text);
+      if (days != null) {
+        debugPrint('Extracted $days days from "$text"');
+        return now.add(Duration(days: days));
+      }
+
+      int? weeks = _extractWeeks(text);
+      if (weeks != null) {
+        debugPrint('Extracted $weeks weeks from "$text"');
+        return now.add(Duration(days: weeks * 7));
+      }
+
+      int? months = _extractMonths(text);
+      if (months != null) {
+        debugPrint('Extracted $months months from "$text"');
+        return now.add(Duration(days: months * 30));
+      }
+
+      // Vollständige Datumsangaben (dd.mm.yyyy, dd.mm.yy)
+      final fullDateMatch = RegExp(r'(\d{1,2})\.(\d{1,2})\.(\d{2,4})').firstMatch(text);
+      if (fullDateMatch != null) {
+        final day = int.parse(fullDateMatch.group(1)!);
+        final month = int.parse(fullDateMatch.group(2)!);
+        var year = int.parse(fullDateMatch.group(3)!);
+        
+        // 2-stellige Jahre behandeln
+        if (year < 100) {
+          year += 2000;
+        }
+        
+        final parsedDate = DateTime(year, month, day);
+        debugPrint('Parsed full date: $day.$month.$year -> $parsedDate');
+        return parsedDate;
+      }
+
+      // Datumsangaben ohne Jahr (dd.mm, dd.mm.)
+      final dateMatch = RegExp(r'(\d{1,2})\.(\d{1,2})\.?').firstMatch(text);
+      if (dateMatch != null) {
+        final day = int.parse(dateMatch.group(1)!);
+        final month = int.parse(dateMatch.group(2)!);
+        
+        // Verwende aktuelles Jahr
+        var parsedDate = DateTime(now.year, month, day);
+        
+        // Wenn das Datum in der Vergangenheit liegt, nimm nächstes Jahr
+        if (parsedDate.isBefore(now)) {
+          parsedDate = DateTime(now.year + 1, month, day);
+        }
+        
+        debugPrint('Parsed date without year: $day.$month.${parsedDate.year} -> $parsedDate');
+        return parsedDate;
+      }
+
+      debugPrint('Could not parse date text: "$text"');
+      return null;
+    } catch (e) {
+      debugPrint('Error parsing date text "$text": $e');
+      return null;
+    }
+  }
+
   List<FoodModel> _fallbackParsing(String text) {
     debugPrint('Verwende Fallback-Parser');
     return TextParserServiceImpl().parseTextToFoods(text);
+  }
+
+  int? _extractDays(String text) {
+    // Numerische Tage: "3 Tage", "4 tag"
+    final numericDayMatch = RegExp(r'(\d+)\s*tag[e]?').firstMatch(text);
+    if (numericDayMatch != null) {
+      return int.parse(numericDayMatch.group(1)!);
+    }
+
+    // Textuelle Tage
+    if (text.contains('einen tag') || text.contains('ein tag')) return 1;
+    if (text.contains('zwei tag')) return 2;
+    if (text.contains('drei tag')) return 3;
+    if (text.contains('vier tag')) return 4;
+    if (text.contains('fünf tag')) return 5;
+    if (text.contains('sechs tag')) return 6;
+    if (text.contains('sieben tag')) return 7;
+    if (text.contains('acht tag')) return 8;
+    if (text.contains('neun tag')) return 9;
+    if (text.contains('zehn tag')) return 10;
+
+    return null;
+  }
+
+  int? _extractWeeks(String text) {
+    // Numerische Wochen: "1 Woche", "2 wochen"
+    final numericWeekMatch = RegExp(r'(\d+)\s*woche[n]?').firstMatch(text);
+    if (numericWeekMatch != null) {
+      return int.parse(numericWeekMatch.group(1)!);
+    }
+
+    // Textuelle Wochen
+    if (text.contains('eine woche') || text.contains('ein woche')) return 1;
+    if (text.contains('zwei woche')) return 2;
+    if (text.contains('drei woche')) return 3;
+    if (text.contains('vier woche')) return 4;
+
+    return null;
+  }
+
+  int? _extractMonths(String text) {
+    // Numerische Monate: "1 Monat", "2 monate"
+    final numericMonthMatch = RegExp(r'(\d+)\s*monat[e]?').firstMatch(text);
+    if (numericMonthMatch != null) {
+      return int.parse(numericMonthMatch.group(1)!);
+    }
+
+    // Textuelle Monate
+    if (text.contains('einen monat') || text.contains('ein monat')) return 1;
+    if (text.contains('zwei monat')) return 2;
+    if (text.contains('drei monat')) return 3;
+    if (text.contains('in einem monat')) return 1;
+
+    return null;
   }
 
   String _capitalizeFirst(String text) {

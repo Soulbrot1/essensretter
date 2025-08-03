@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Diese App benötigt Zugriff auf das Mikrofon, um Lebensmittel per Sprache hinzuzufügen.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Diese App nutzt Spracherkennung, um Lebensmittel und Datumsangaben aus gesprochenen Text zu extrahieren.</string>
 </dict>
 </plist>
