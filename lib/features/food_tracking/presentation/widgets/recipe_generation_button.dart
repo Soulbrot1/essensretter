@@ -8,7 +8,6 @@ import '../bloc/food_bloc.dart';
 import '../bloc/food_state.dart';
 import '../bloc/food_event.dart';
 import 'dictation_text_field.dart';
-import 'voice_input_dialog.dart';
 import '../../../../injection_container.dart' as di;
 
 class RecipeGenerationButton extends StatelessWidget {
@@ -78,20 +77,6 @@ class RecipeGenerationButton extends StatelessWidget {
                     ),
                   ),
                   tooltip: 'Gespeicherte Rezepte',
-                ),
-                // Mikrofon Button
-                IconButton(
-                  onPressed: () => _onMicrophonePressed(context),
-                  icon: const Icon(Icons.mic, size: 20),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  tooltip: 'Sprachaufnahme',
                 ),
               ],
             ),
@@ -184,31 +169,6 @@ class RecipeGenerationButton extends StatelessWidget {
     );
   }
 
-  void _onMicrophonePressed(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => VoiceInputDialog(
-        onResult: (recognizedText) {
-          _processSpeechResult(context, recognizedText);
-        },
-      ),
-    );
-  }
-
-  void _processSpeechResult(BuildContext context, String recognizedText) {
-    // Verwende den erkannten Text wie eine normale Texteingabe
-    context.read<FoodBloc>().add(ShowFoodPreviewEvent(recognizedText));
-    
-    // Bestätigungs-SnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Verarbeite: "$recognizedText"'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
 
 }
 
