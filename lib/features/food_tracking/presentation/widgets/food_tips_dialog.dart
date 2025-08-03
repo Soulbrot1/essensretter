@@ -17,7 +17,6 @@ class FoodTipsDialog extends StatefulWidget {
 class _FoodTipsDialogState extends State<FoodTipsDialog> {
   late final FoodTipsService _foodTipsService;
   String? _tips;
-  String? _spoilageIndicators;
   bool _isLoading = true;
 
   @override
@@ -30,11 +29,9 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
   Future<void> _loadTips() async {
     try {
       final tips = await _foodTipsService.getFoodStorageTips(widget.foodName);
-      final spoilage = await _foodTipsService.getSpoilageIndicators(widget.foodName);
       if (mounted) {
         setState(() {
           _tips = tips;
-          _spoilageIndicators = spoilage;
           _isLoading = false;
         });
       }
@@ -130,55 +127,6 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            // Verderbnis-Hinweise
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.warning_amber_outlined,
-                        color: Colors.red,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Wann ist ${widget.foodName} verdorben?',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.red.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _isLoading
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 16.0),
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        )
-                      : Text(
-                          _spoilageIndicators ?? _getDefaultSpoilageIndicators(widget.foodName),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.red.shade800,
-                            height: 1.4,
-                          ),
-                        ),
-                ],
-              ),
-            ),
             const SizedBox(height: 20),
             Align(
               alignment: Alignment.centerRight,
@@ -227,29 +175,4 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
     }
   }
   
-  String _getDefaultSpoilageIndicators(String foodName) {
-    final name = foodName.toLowerCase();
-    
-    if (name.contains('apfel') || name.contains('äpfel')) {
-      return '• Braune, weiche Stellen\n• Fauliger Geruch\n• Runzelige Haut\n• Schimmelbildung am Stiel';
-    } else if (name.contains('brot')) {
-      return '• Grüner oder weißer Schimmel\n• Säuerlicher Geruch\n• Harte, trockene Konsistenz\n• Verfärbungen sichtbar';
-    } else if (name.contains('milch')) {
-      return '• Säuerlicher Geruch\n• Klumpige Konsistenz\n• Gelbliche Verfärbung\n• Säuerlicher Geschmack';
-    } else if (name.contains('banane')) {
-      return '• Schwarze, matschige Stellen\n• Alkoholischer Geruch\n• Flüssigkeit tritt aus\n• Schimmel am Stielansatz';
-    } else if (name.contains('tomate')) {
-      return '• Weiche, matschige Stellen\n• Schimmelbildung\n• Säuerlicher Geruch\n• Runzelige Haut';
-    } else if (name.contains('salat') || name.contains('kopfsalat')) {
-      return '• Braune, schleimige Blätter\n• Fauliger Geruch\n• Welke Konsistenz\n• Dunkle Verfärbungen';
-    } else if (name.contains('kartoffel')) {
-      return '• Grüne Verfärbung\n• Weiche, faulige Stellen\n• Süßlicher Geruch\n• Austriebe vorhanden';
-    } else if (name.contains('fleisch') || name.contains('wurst')) {
-      return '• Grau-grüne Verfärbung\n• Säuerlicher Geruch\n• Schmierige Oberfläche\n• Unangenehmer Geschmack';
-    } else if (name.contains('käse')) {
-      return '• Ungewöhnlicher Schimmel\n• Ammoniakgeruch\n• Schmierige Konsistenz\n• Bitterer Geschmack';
-    } else {
-      return '• Ungewöhnlicher Geruch\n• Verfärbungen sichtbar\n• Schimmelbildung\n• Veränderte Konsistenz';
-    }
-  }
 }
