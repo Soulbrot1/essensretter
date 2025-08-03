@@ -30,32 +30,14 @@ class FoodCard extends StatelessWidget {
               onTap: () {
                 context.read<FoodBloc>().add(ToggleConsumedEvent(food.id));
               },
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: food.isConsumed ? Colors.green : Colors.grey,
-                    width: 2,
-                  ),
-                  color: food.isConsumed ? Colors.green : Colors.transparent,
+              child: CircleAvatar(
+                backgroundColor: urgencyColor.withValues(alpha: 0.2),
+                radius: 18,
+                child: Icon(
+                  _getCategoryIcon(food.category),
+                  color: urgencyColor,
+                  size: 18,
                 ),
-                child: food.isConsumed
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 12),
-            CircleAvatar(
-              backgroundColor: urgencyColor.withValues(alpha: 0.2),
-              child: Icon(
-                _getCategoryIcon(food.category),
-                color: urgencyColor,
               ),
             ),
             const SizedBox(width: 12),
