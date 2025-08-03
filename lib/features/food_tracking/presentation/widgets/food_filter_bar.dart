@@ -149,6 +149,48 @@ class FoodFilterBar extends StatelessWidget {
                     ),
                   ),
                   PopupMenuItem<int?>(
+                    value: 4,
+                    child: Row(
+                      children: [
+                        Icon(
+                          activeFilter == 4 ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          color: activeFilter == 4 ? Theme.of(context).colorScheme.primary : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('4 Tage'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int?>(
+                    value: 5,
+                    child: Row(
+                      children: [
+                        Icon(
+                          activeFilter == 5 ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          color: activeFilter == 5 ? Theme.of(context).colorScheme.primary : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('5 Tage'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int?>(
+                    value: 6,
+                    child: Row(
+                      children: [
+                        Icon(
+                          activeFilter == 6 ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          color: activeFilter == 6 ? Theme.of(context).colorScheme.primary : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('6 Tage'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<int?>(
                     value: 7,
                     child: Row(
                       children: [
@@ -228,6 +270,12 @@ class FoodFilterBar extends StatelessWidget {
         return 'Übermorgen';
       case 3:
         return '3 Tage';
+      case 4:
+        return '4 Tage';
+      case 5:
+        return '5 Tage';
+      case 6:
+        return '6 Tage';
       case 7:
         return '7 Tage';
       default:

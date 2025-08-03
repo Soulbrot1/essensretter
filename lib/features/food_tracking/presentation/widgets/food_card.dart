@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/food.dart';
@@ -5,7 +6,7 @@ import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import 'food_tips_dialog.dart';
 
-class FoodCard extends StatelessWidget {
+class FoodCard extends StatefulWidget {
   final Food food;
 
   const FoodCard({
@@ -14,9 +15,22 @@ class FoodCard extends StatelessWidget {
   });
 
   @override
+  State<FoodCard> createState() => _FoodCardState();
+}
+
+class _FoodCardState extends State<FoodCard> {
+  Timer? _longPressTimer;
+
+  @override
+  void dispose() {
+    _longPressTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final daysUntilExpiry = food.daysUntilExpiry;
-    final isExpired = food.isExpired;
+    final daysUntilExpiry = widget.food.daysUntilExpiry;
+    final isExpired = widget.food.isExpired;
     final urgencyColor = _getUrgencyColor(daysUntilExpiry, isExpired);
 
     return Card(
@@ -28,13 +42,24 @@ class FoodCard extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                context.read<FoodBloc>().add(ToggleConsumedEvent(food.id));
+                context.read<FoodBloc>().add(ToggleConsumedEvent(widget.food.id));
+              },
+              onTapDown: (_) {
+                _longPressTimer = Timer(const Duration(milliseconds: 1500), () {
+                  _showDisposalConfirmation(context, widget.food);
+                });
+              },
+              onTapUp: (_) {
+                _longPressTimer?.cancel();
+              },
+              onTapCancel: () {
+                _longPressTimer?.cancel();
               },
               child: CircleAvatar(
                 backgroundColor: urgencyColor.withValues(alpha: 0.2),
                 radius: 18,
                 child: Icon(
-                  _getCategoryIcon(food.category),
+                  _getCategoryIcon(widget.food.category),
                   color: urgencyColor,
                   size: 18,
                 ),
@@ -43,14 +68,14 @@ class FoodCard extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                food.name,
+                widget.food.name,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  decoration: food.isConsumed || isExpired 
+                  decoration: widget.food.isConsumed || isExpired 
                       ? TextDecoration.lineThrough 
                       : null,
-                  color: food.isConsumed ? Colors.grey : null,
+                  color: widget.food.isConsumed ? Colors.grey : null,
                 ),
               ),
             ),
@@ -58,7 +83,7 @@ class FoodCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: () => _showExpiryDatePicker(context, food),
+                  onTap: () => _showExpiryDatePicker(context, widget.food),
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
@@ -73,7 +98,7 @@ class FoodCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          food.expiryStatus,
+                          widget.food.expiryStatus,
                           style: TextStyle(
                             color: urgencyColor,
                             fontWeight: FontWeight.w500,
@@ -95,7 +120,7 @@ class FoodCard extends StatelessWidget {
                   onTap: () {
                     showDialog(
                       context: context,
-                      builder: (context) => FoodTipsDialog(foodName: food.name),
+                      builder: (context) => FoodTipsDialog(foodName: widget.food.name),
                     );
                   },
                   child: Container(
@@ -115,7 +140,7 @@ class FoodCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    _showDeleteConfirmation(context, food);
+                    _showDeleteConfirmation(context, widget.food);
                   },
                   child: Container(
                     width: 32,
@@ -210,6 +235,34 @@ class FoodCard extends StatelessWidget {
                 foregroundColor: Colors.red,
               ),
               child: const Text('Löschen'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDisposalConfirmation(BuildContext context, Food food) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Lebensmittel weggeschmissen?'),
+          content: Text('${food.name} weggeschmissen?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Nein'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<FoodBloc>().add(DeleteFoodEvent(food.id));
+                Navigator.of(dialogContext).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.orange,
+              ),
+              child: const Text('Ja, weggeschmissen'),
             ),
           ],
         );
