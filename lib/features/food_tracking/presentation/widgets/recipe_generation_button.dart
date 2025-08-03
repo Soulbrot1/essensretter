@@ -78,6 +78,20 @@ class RecipeGenerationButton extends StatelessWidget {
                   ),
                   tooltip: 'Gespeicherte Rezepte',
                 ),
+                // Statistik Button
+                IconButton(
+                  onPressed: () => _showStatistics(context),
+                  icon: const Icon(Icons.bar_chart, size: 20),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  tooltip: 'Statistiken',
+                ),
               ],
             ),
           ),
@@ -165,6 +179,15 @@ class RecipeGenerationButton extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: foodBloc,
         child: const AddFoodBottomSheet(),
+      ),
+    );
+  }
+
+  void _showStatistics(BuildContext context) {
+    // TODO: Implement statistics page
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Statistiken werden bald verfügbar sein'),
       ),
     );
   }
