@@ -32,6 +32,19 @@ class FoodRepositoryImpl implements FoodRepository {
   }
 
   @override
+  Future<Either<Failure, Food>> getFoodById(String id) async {
+    try {
+      final foods = await localDataSource.getAllFoods();
+      final food = foods.firstWhere((f) => f.id == id);
+      return Right(food);
+    } on CacheException {
+      return const Left(CacheFailure('Fehler beim Laden des Lebensmittels'));
+    } catch (e) {
+      return const Left(CacheFailure('Lebensmittel nicht gefunden'));
+    }
+  }
+
+  @override
   Future<Either<Failure, Food>> addFood(Food food) async {
     try {
       final foodModel = FoodModel.fromEntity(food);

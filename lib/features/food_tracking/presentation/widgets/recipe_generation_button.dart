@@ -4,6 +4,7 @@ import '../../../recipes/presentation/bloc/recipe_bloc.dart';
 import '../../../recipes/presentation/bloc/recipe_event.dart';
 import '../../../recipes/presentation/pages/recipes_page.dart';
 import '../../../recipes/presentation/pages/bookmarked_recipes_page.dart';
+import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_state.dart';
 import '../bloc/food_event.dart';
@@ -184,10 +185,10 @@ class RecipeGenerationButton extends StatelessWidget {
   }
 
   void _showStatistics(BuildContext context) {
-    // TODO: Implement statistics page
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Statistiken werden bald verfügbar sein'),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const StatisticsPage(),
       ),
     );
   }

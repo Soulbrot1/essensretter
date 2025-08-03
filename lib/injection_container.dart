@@ -37,6 +37,9 @@ import 'features/settings/domain/usecases/get_notification_settings.dart';
 import 'features/settings/domain/usecases/save_notification_settings.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/notification/domain/usecases/schedule_daily_notification.dart';
+import 'features/statistics/data/datasources/statistics_local_data_source.dart';
+import 'features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'features/statistics/domain/repositories/statistics_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -87,7 +90,10 @@ Future<void> init() async {
   ));
   sl.registerLazySingleton(() => AddFoods(sl()));
   sl.registerLazySingleton(() => ParseFoodsFromText(sl()));
-  sl.registerLazySingleton(() => DeleteFood(sl()));
+  sl.registerLazySingleton(() => DeleteFood(
+    foodRepository: sl(),
+    statisticsRepository: sl(),
+  ));
   sl.registerLazySingleton(() => UpdateFood(sl()));
   sl.registerLazySingleton(() => GenerateRecipes(sl()));
   sl.registerLazySingleton(() => GetBookmarkedRecipes(sl()));
@@ -124,6 +130,10 @@ Future<void> init() async {
   sl.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(localDataSource: sl()),
   );
+  
+  sl.registerLazySingleton<StatisticsRepository>(
+    () => StatisticsRepositoryImpl(localDataSource: sl()),
+  );
 
   // Data sources
   sl.registerLazySingleton<FoodLocalDataSource>(
@@ -149,5 +159,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<SettingsLocalDataSource>(
     () => SettingsLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+  sl.registerLazySingleton<StatisticsLocalDataSource>(
+    () => StatisticsLocalDataSourceImpl(),
   );
 }
