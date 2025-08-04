@@ -14,17 +14,23 @@ class RecipeLoading extends RecipeState {}
 
 class RecipeLoaded extends RecipeState {
   final List<Recipe> recipes;
+  final List<Recipe> previousRecipes;
 
-  const RecipeLoaded({required this.recipes});
+  const RecipeLoaded({
+    required this.recipes,
+    this.previousRecipes = const [],
+  });
 
   @override
-  List<Object> get props => [recipes];
+  List<Object> get props => [recipes, previousRecipes];
 
   RecipeLoaded copyWith({
     List<Recipe>? recipes,
+    List<Recipe>? previousRecipes,
   }) {
     return RecipeLoaded(
       recipes: recipes ?? this.recipes,
+      previousRecipes: previousRecipes ?? this.previousRecipes,
     );
   }
 }

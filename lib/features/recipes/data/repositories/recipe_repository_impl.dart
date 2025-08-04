@@ -16,9 +16,15 @@ class RecipeRepositoryImpl implements RecipeRepository {
   });
 
   @override
-  Future<Either<Failure, List<Recipe>>> generateRecipes(List<String> availableIngredients) async {
+  Future<Either<Failure, List<Recipe>>> generateRecipes(
+    List<String> availableIngredients, {
+    List<Recipe> previousRecipes = const [],
+  }) async {
     try {
-      final recipes = await recipeService.generateRecipes(availableIngredients);
+      final recipes = await recipeService.generateRecipes(
+        availableIngredients,
+        previousRecipes: previousRecipes,
+      );
       return Right(recipes);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

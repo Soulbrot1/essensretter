@@ -124,10 +124,7 @@ class RecipeCard extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                stepText,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+              child: _buildStepContent(context, stepText),
             ),
           ],
         ),
@@ -136,32 +133,36 @@ class RecipeCard extends StatelessWidget {
   }
 
   List<String> _parseInstructions(String instructions) {
-    // Split by numbered steps (1., 2., 3., etc.) or newlines
     final steps = <String>[];
     
-    // First try to split by numbered patterns
-    final numberedPattern = RegExp(r'(\d+\.\s*)');
-    if (numberedPattern.hasMatch(instructions)) {
-      final parts = instructions.split(numberedPattern);
-      for (int i = 1; i < parts.length; i += 2) {
-        if (i + 1 < parts.length) {
-          final stepText = parts[i + 1].trim();
-          if (stepText.isNotEmpty) {
-            steps.add(stepText);
-          }
+    // Split by newlines first to preserve structure
+    final lines = instructions.split('\n');
+    
+    String currentStep = '';
+    for (final line in lines) {
+      final trimmedLine = line.trim();
+      
+      // Check if it's a numbered step (1., 2., etc.)
+      if (RegExp(r'^\d+\.').hasMatch(trimmedLine)) {
+        // Save previous step if exists
+        if (currentStep.isNotEmpty) {
+          steps.add(currentStep.trim());
+        }
+        // Start new step
+        currentStep = trimmedLine;
+      } else if (trimmedLine.isNotEmpty) {
+        // Add to current step (could be a bullet point or continuation)
+        if (currentStep.isNotEmpty) {
+          currentStep += '\n$trimmedLine';
+        } else {
+          currentStep = trimmedLine;
         }
       }
-    } else {
-      // Fallback: split by sentences or periods
-      final sentences = instructions.split(RegExp(r'\.\s+'));
-      for (final sentence in sentences) {
-        final trimmed = sentence.trim();
-        if (trimmed.isNotEmpty && !trimmed.endsWith('.')) {
-          steps.add('$trimmed.');
-        } else if (trimmed.isNotEmpty) {
-          steps.add(trimmed);
-        }
-      }
+    }
+    
+    // Add the last step
+    if (currentStep.isNotEmpty) {
+      steps.add(currentStep.trim());
     }
     
     // If no steps found, return the whole instruction as one step
@@ -170,6 +171,67 @@ class RecipeCard extends StatelessWidget {
     }
     
     return steps;
+  }
+
+  Widget _buildStepContent(BuildContext context, String stepText) {
+    // Check if the step contains bullet points
+    if (stepText.contains('•') || stepText.contains('\n')) {
+      final lines = stepText.split('\n');
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: lines.map((line) {
+          final trimmedLine = line.trim();
+          if (trimmedLine.isEmpty) return const SizedBox.shrink();
+          
+          // Format main step title
+          if (RegExp(r'^\d+\.').hasMatch(trimmedLine)) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                trimmedLine.replaceFirst(RegExp(r'^\d+\.\s*'), ''),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          }
+          
+          // Format bullet points
+          if (trimmedLine.startsWith('•')) {
+            return Padding(
+              padding: const EdgeInsets.only(left: 16, bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(
+                      trimmedLine.substring(1).trim(),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          // Regular text
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              trimmedLine,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          );
+        }).toList(),
+      );
+    }
+    
+    // Simple text without formatting
+    return Text(
+      stepText,
+      style: Theme.of(context).textTheme.bodyMedium,
+    );
   }
 
   Widget _buildIngredientSection(

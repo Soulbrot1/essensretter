@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import '../../domain/entities/recipe.dart';
 import '../models/recipe_model.dart';
 import 'recipe_service.dart';
 
@@ -11,7 +12,10 @@ class OpenAIRecipeService implements RecipeService {
   OpenAIRecipeService() : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
 
   @override
-  Future<List<RecipeModel>> generateRecipes(List<String> availableIngredients) async {
+  Future<List<RecipeModel>> generateRecipes(
+    List<String> availableIngredients, {
+    List<Recipe> previousRecipes = const [],
+  }) async {
     debugPrint('OpenAI Recipe Service aufgerufen mit Zutaten: $availableIngredients');
     debugPrint('API Key vorhanden: ${_apiKey.isNotEmpty}');
     
@@ -27,26 +31,57 @@ class OpenAIRecipeService implements RecipeService {
 
     try {
       final ingredientsText = availableIngredients.join(', ');
+      
+      // Erstelle Liste der vorherigen Rezepte mit Details zur Vermeidung von Duplikaten
+      final previousRecipeNames = previousRecipes.map((recipe) => recipe.title).toList();
+      final previousRecipeTypes = previousRecipes.map((recipe) => 
+        '${recipe.title} (${recipe.vorhanden.join(", ")})'
+      ).toList();
+      
+      final previousRecipesText = previousRecipeNames.isNotEmpty 
+          ? '\n\nBEREITS VORGESCHLAGENE REZEPTE UND ZUTATEN (KOMPLETT VERMEIDEN):\n${previousRecipeTypes.join('\n')}\n\nVERMEIDE ÄHNLICHE GERICHTE WIE: ${previousRecipeNames.join(', ')}'
+          : '';
+      
       final prompt = '''
 Du bist ein kreativer Koch-Assistent. Erstelle 1 einfaches, sinnvolles Rezept basierend auf einigen der verfügbaren Zutaten.
 
-VERFÜGBARE ZUTATEN: $ingredientsText
+VERFÜGBARE ZUTATEN: $ingredientsText$previousRecipesText
 
 Für das Rezept erstelle:
 - title: Kreativer Name des Gerichts
 - cookingTime: Geschätzte Zubereitungszeit (z.B. "30 Minuten")
 - vorhanden: Array mit Zutaten die bereits vorhanden sind (wähle sinnvoll aus der verfügbaren Liste)
 - ueberpruefen: Array mit zusätzlichen Zutaten die eventuell gekauft werden müssen
-- instructions: Schritt-für-Schritt Anleitung zur Zubereitung
+- instructions: Detaillierte Schritt-für-Schritt Anleitung die ALLE verwendeten Zutaten erwähnt
 
-WICHTIG: 
+WICHTIG für die instructions: 
+- Schreibe KURZE, PRÄGNANTE Sätze
+- Verwende Stichpunkte und Bulletpoints wo möglich
+- Nummeriere die Hauptschritte (1., 2., 3., etc.)
+- Erwähne ALLE Zutaten aus "vorhanden" und "ueberpruefen" 
+- Vermeide Füllwörter und lange Erklärungen
+- Nutze einfache, klare Sprache
+- Achte auf korrekte Rechtschreibung
+
+WICHTIG für die Rezepterstellung:
 - Du musst NICHT alle verfügbaren Zutaten verwenden
-- Wähle nur die Zutaten aus, die zu einem sinnvollen Gericht zusammenpassen
+- WICHTIG: Wähle nur Zutaten die GESCHMACKLICH und KULINARISCH zusammenpassen
+- Erstelle nur REALISTISCHE und LECKERE Gerichte die Menschen wirklich essen würden
+- Vermeide seltsame oder unappetitliche Kombinationen
+- Achte auf Harmonie von süß/herzhaft - keine chaotischen Mischungen
 - Erstelle ein einfaches, praktisches Gericht
 - Maximal 2-3 zusätzliche Zutaten in "ueberpruefen"
-- Fokus auf Geschmack und Einfachheit, nicht auf Zutatenverbrauch
-- Das Rezept soll alltagstauglich und lecker sein
-- Sei kreativ und variiere die Gerichte bei wiederholten Anfragen
+- Fokus auf Geschmack und Einfachkeit
+- STRENG VERBOTEN: KEINE Salate wenn bereits Salat vorgeschlagen wurde
+- STRENG VERBOTEN: KEINE ähnlichen Gerichte oder Variationen bereits vorgeschlagener Rezepte
+- STRENG VERBOTEN: KEINE Wiederverwendung derselben Hauptzutat-Kombinationen
+- Denke an KOMPLETT ANDERE Gerichte: Suppen, Pfannengerichte, Aufläufe, Wraps, Smoothies, Pasta, etc.
+- Sei RADIKAL ANDERS - völlig neue Richtung!
+
+BEISPIELE für GUTE Kombinationen:
+- Süße Gerichte: Apfel + Honig + Zimt (z.B. Apfel-Smoothie)
+- Herzhafte Gerichte: Salat + Karotte + Nüsse (z.B. Gemüsesuppe)
+- Wraps: Salat + Gemüse + Käse/Fleisch (NIEMALS süße Zutaten in Wraps!)
 
 Antworte mit einem JSON-Objekt mit einem "recipes" Array:
 
@@ -57,7 +92,7 @@ Antworte mit einem JSON-Objekt mit einem "recipes" Array:
       "cookingTime": "Zeit",
       "vorhanden": ["zutat1", "zutat2"],
       "ueberpruefen": ["zusatz1", "zusatz2"],
-      "instructions": "Schritt-für-Schritt Anleitung..."
+      "instructions": "1. Vorbereitung:\\n• Zutat vorbereiten\\n• Weitere Vorbereitung\\n\\n2. Zubereitung:\\n• Hauptschritt\\n• Nächster Schritt\\n\\n3. Servieren:\\n• Anrichten\\n• Genießen"
     }
   ]
 }
@@ -77,7 +112,7 @@ Antworte mit einem JSON-Objekt mit einem "recipes" Array:
               'content': prompt,
             }
           ],
-          'temperature': 0.7,
+          'temperature': 0.9,
           'max_tokens': 1500,
         }),
       );
@@ -102,8 +137,12 @@ Antworte mit einem JSON-Objekt mit einem "recipes" Array:
       debugPrint('OpenAI Recipe Response parsed: $parsedData');
       
       final recipes = _createRecipeModels(parsedData);
-      debugPrint('Erstellte ${recipes.length} Rezepte');
-      return recipes;
+      
+      // Zusätzliche lokale Duplikatsprüfung
+      final filteredRecipes = _filterDuplicateRecipes(recipes, previousRecipes);
+      
+      debugPrint('Erstellte ${recipes.length} Rezepte, nach Filterung: ${filteredRecipes.length}');
+      return filteredRecipes;
     } catch (e) {
       debugPrint('OpenAI Recipe Generation Fehler: $e');
       rethrow;
@@ -127,5 +166,45 @@ Antworte mit einem JSON-Objekt mit einem "recipes" Array:
       debugPrint('Fehler beim Erstellen der RecipeModels: $e');
       throw Exception('Fehler beim Verarbeiten der Rezepte');
     }
+  }
+
+  List<RecipeModel> _filterDuplicateRecipes(List<RecipeModel> newRecipes, List<Recipe> previousRecipes) {
+    if (previousRecipes.isEmpty) return newRecipes;
+    
+    final previousTitles = previousRecipes.map((r) => r.title.toLowerCase()).toSet();
+    final previousIngredientCombos = previousRecipes.map((r) => 
+      r.vorhanden.map((i) => i.toLowerCase()).toSet()
+    ).toList();
+    
+    return newRecipes.where((recipe) {
+      final recipeTitle = recipe.title.toLowerCase();
+      final recipeIngredients = recipe.vorhanden.map((i) => i.toLowerCase()).toSet();
+      
+      // Prüfe auf exakte Titel-Übereinstimmung
+      if (previousTitles.contains(recipeTitle)) {
+        debugPrint('Rezept gefiltert (Titel-Duplikat): ${recipe.title}');
+        return false;
+      }
+      
+      // Prüfe auf ähnliche Titel (Salat-Variationen)
+      if (recipeTitle.contains('salat') && previousTitles.any((title) => title.contains('salat'))) {
+        debugPrint('Rezept gefiltert (Salat-Duplikat): ${recipe.title}');
+        return false;
+      }
+      
+      // Prüfe auf ähnliche Zutatenkombinationen (>70% Übereinstimmung)
+      for (final prevCombo in previousIngredientCombos) {
+        final intersection = recipeIngredients.intersection(prevCombo);
+        final union = recipeIngredients.union(prevCombo);
+        final similarity = intersection.length / union.length;
+        
+        if (similarity > 0.7) {
+          debugPrint('Rezept gefiltert (Zutaten-Ähnlichkeit ${similarity.toStringAsFixed(2)}): ${recipe.title}');
+          return false;
+        }
+      }
+      
+      return true;
+    }).toList();
   }
 }

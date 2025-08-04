@@ -25,10 +25,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     setState(() => _isLoading = true);
     
     try {
-      // Erst Beispieldaten hinzufügen
-      await _dataSource.addSampleData();
-      
-      // Dann Daten laden
+      // Daten laden
       final now = DateTime.now();
       DateTime startDate;
       

@@ -9,7 +9,6 @@ import '../widgets/recipe_generation_button.dart';
 import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
-import '../../../statistics/presentation/pages/simple_statistics_page.dart';
 
 class FoodTrackingPage extends StatefulWidget {
   const FoodTrackingPage({super.key});
@@ -59,18 +58,6 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const SimpleStatisticsPage(),
-                ),
-              );
-            },
-            tooltip: 'Statistiken',
-          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {

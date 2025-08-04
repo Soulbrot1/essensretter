@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../domain/entities/recipe.dart';
 import '../../domain/usecases/generate_recipes.dart';
 import '../../domain/usecases/get_bookmarked_recipes.dart';
 import '../../domain/usecases/save_bookmarked_recipe.dart';
@@ -31,13 +32,26 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
   ) async {
     emit(RecipeLoading());
 
+    // Sammle vorherige Rezepte aus dem aktuellen Zustand
+    List<Recipe> previousRecipes = [];
+    if (state is RecipeLoaded) {
+      final currentState = state as RecipeLoaded;
+      previousRecipes = [...currentState.previousRecipes, ...currentState.recipes];
+    }
+
     final result = await generateRecipes(
-      GenerateRecipesParams(availableIngredients: event.availableIngredients),
+      GenerateRecipesParams(
+        availableIngredients: event.availableIngredients,
+        previousRecipes: previousRecipes,
+      ),
     );
 
     result.fold(
       (failure) => emit(RecipeError(message: failure.message)),
-      (recipes) => emit(RecipeLoaded(recipes: recipes)),
+      (recipes) => emit(RecipeLoaded(
+        recipes: recipes,
+        previousRecipes: previousRecipes,
+      )),
     );
   }
 

@@ -10,12 +10,12 @@ abstract class StatisticsLocalDataSource {
 
 class StatisticsLocalDataSourceImpl implements StatisticsLocalDataSource {
   static const String _tableName = 'waste_entries';
-  static Database? _sharedDatabase;
+  Database? _database;
 
   Future<Database> get database async {
-    if (_sharedDatabase != null) return _sharedDatabase!;
-    _sharedDatabase = await _initDatabase();
-    return _sharedDatabase!;
+    if (_database != null) return _database!;
+    _database = await _initDatabase();
+    return _database!;
   }
 
   Future<Database> _initDatabase() async {
@@ -25,7 +25,7 @@ class StatisticsLocalDataSourceImpl implements StatisticsLocalDataSource {
     
     return await openDatabase(
       path,
-      version: 4,
+      version: 6,
       onCreate: (db, version) async {
         print('Creating database tables...');
         
@@ -66,6 +66,31 @@ class StatisticsLocalDataSourceImpl implements StatisticsLocalDataSource {
             )
           ''');
           print('waste_entries table created during upgrade');
+        }
+        if (oldVersion < 5) {
+          // Sicherstellen, dass waste_entries existiert
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS $_tableName(
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              category TEXT,
+              deleted_date INTEGER NOT NULL
+            )
+          ''');
+          print('waste_entries table ensured in version 5');
+        }
+        if (oldVersion < 6) {
+          // Migration von Version 5 zu 6: waste_entries neu erstellen ohne is_wasted
+          await db.execute('DROP TABLE IF EXISTS $_tableName');
+          await db.execute('''
+            CREATE TABLE $_tableName(
+              id TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              category TEXT,
+              deleted_date INTEGER NOT NULL
+            )
+          ''');
+          print('waste_entries table recreated in version 6');
         }
       },
     );

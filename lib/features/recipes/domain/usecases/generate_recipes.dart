@@ -12,15 +12,22 @@ class GenerateRecipes implements UseCase<List<Recipe>, GenerateRecipesParams> {
 
   @override
   Future<Either<Failure, List<Recipe>>> call(GenerateRecipesParams params) async {
-    return await repository.generateRecipes(params.availableIngredients);
+    return await repository.generateRecipes(
+      params.availableIngredients,
+      previousRecipes: params.previousRecipes,
+    );
   }
 }
 
 class GenerateRecipesParams extends Equatable {
   final List<String> availableIngredients;
+  final List<Recipe> previousRecipes;
 
-  const GenerateRecipesParams({required this.availableIngredients});
+  const GenerateRecipesParams({
+    required this.availableIngredients,
+    this.previousRecipes = const [],
+  });
 
   @override
-  List<Object> get props => [availableIngredients];
+  List<Object> get props => [availableIngredients, previousRecipes];
 }
