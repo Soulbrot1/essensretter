@@ -10,14 +10,25 @@ EssensRetter ist eine Flutter-App zur Reduzierung von Lebensmittelverschwendung 
 # App starten (iOS Simulator)
 flutter run
 
-# Tests ausführen
+# Tests ausführen (PFLICHT vor jedem Commit)
 flutter test
 
-# Code-Analyse
+# Tests mit Coverage
+flutter test --coverage
+
+# Spezifische Test-Suites
+flutter test test/unit_test/        # Unit Tests
+flutter test test/widget_test/      # Widget Tests
+flutter test integration_test/      # Integration Tests
+
+# Code-Analyse (PFLICHT vor jedem Commit)
 flutter analyze
 
 # Dependencies aktualisieren
 flutter pub get
+
+# Code-Formatierung
+dart format lib/ test/
 
 # iOS-spezifisch bauen
 flutter build ios
@@ -79,11 +90,44 @@ Wir verwenden BLoC (Business Logic Component) für State Management:
 - Events triggern State-Änderungen
 - UI reagiert auf State-Änderungen
 
-## Testing-Strategie
+## Testing-Strategie (PFLICHT)
 
-1. **Unit Tests**: Für Use Cases und Repositories
-2. **Widget Tests**: Für UI-Komponenten
-3. **Integration Tests**: Für komplette User Flows
+### Test-First Development (TDD)
+1. **RED**: Test schreiben (schlägt fehl)
+2. **GREEN**: Minimale Implementation (Test erfolgreich)
+3. **REFACTOR**: Code verbessern, Tests behalten
+
+### Test-Kategorien (alle PFLICHT)
+
+#### 1. Unit Tests (test/unit_test/)
+- **Ziel**: Use Cases, Repositories, Utils testen
+- **Framework**: mocktail für Mocking
+- **Coverage**: >90% für Business Logic
+- **Beispiel**: `test/unit_test/features/food_tracking/domain/usecases/get_all_foods_test.dart`
+
+#### 2. Widget Tests (test/widget_test/)
+- **Ziel**: UI-Komponenten isoliert testen
+- **Framework**: flutter_test + Widgettester
+- **Coverage**: Alle kritischen Widgets
+- **Beispiel**: `test/widget_test/food_card_test.dart`
+
+#### 3. BLoC Tests (test/unit_test/)
+- **Ziel**: State Management testen
+- **Framework**: bloc_test
+- **Coverage**: Alle Events und States
+- **Beispiel**: `test/unit_test/features/food_tracking/presentation/bloc/food_bloc_test.dart`
+
+#### 4. Integration Tests (integration_test/)
+- **Ziel**: Komplette User Flows Ende-zu-Ende
+- **Framework**: integration_test
+- **Coverage**: Kritische Workflows
+- **Beispiel**: Lebensmittel hinzufügen → Anzeigen → Löschen
+
+### Test-Regeln (ZWINGEND)
+- **Jede neue Funktion**: Braucht Tests vor Implementation
+- **Jeder Bug-Fix**: Braucht Test, der den Bug reproduziert
+- **Code Coverage**: Minimum 80% Overall, 90% für Domain Layer
+- **Tests laufen**: Bei jedem Commit (CI/CD)
 
 ## Wichtige Dependencies
 
@@ -96,13 +140,31 @@ dependencies:
   intl: ^0.18.0            # Datum-Formatierung
 ```
 
-## Entwicklungs-Workflow
+## Entwicklungs-Workflow (ZWINGEND)
 
-1. Neue Features immer in eigenem Branch entwickeln
-2. Clean Architecture befolgen
-3. Tests für neue Funktionalität schreiben
-4. Code mit `flutter analyze` prüfen
-5. README.md bei größeren Änderungen aktualisieren
+### Für jede neue Funktion:
+1. **Branch erstellen**: `git checkout -b feature/neue-funktion`
+2. **Tests schreiben**: TDD befolgen - Tests zuerst!
+3. **Implementation**: Clean Architecture befolgen
+4. **Tests ausführen**: `flutter test` (muss erfolgreich sein)
+5. **Code-Analyse**: `flutter analyze` (keine Warnings)
+6. **Formatierung**: `dart format lib/ test/`
+7. **Dokumentation**: README.md bei größeren Änderungen aktualisieren
+8. **Commit**: Mit aussagekräftiger Commit-Message
+9. **Pull Request**: Mit Tests und Beschreibung
+
+### Pre-Commit Checklist (PFLICHT):
+- [ ] `flutter test` erfolgreich
+- [ ] `flutter analyze` ohne Warnings  
+- [ ] Code formatiert (`dart format`)
+- [ ] Neue Tests geschrieben
+- [ ] Dokumentation aktualisiert (wenn nötig)
+
+### Quality Gates:
+- **Tests**: Minimum 80% Coverage
+- **Linting**: Keine flutter_lints Violations
+- **Architektur**: Clean Architecture befolgt
+- **Performance**: Keine Memory Leaks
 
 ## Häufige Aufgaben
 
