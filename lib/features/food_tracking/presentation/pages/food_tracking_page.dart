@@ -28,6 +28,10 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF2E7D32),
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black26,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -41,19 +45,25 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
                   height: 40,
                   width: 40,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.shopping_bag,
-                    color: Theme.of(context).colorScheme.onPrimary,
+                    color: Colors.white,
                     size: 20,
                   ),
                 );
               },
             ),
             const SizedBox(width: 8),
-            const Text('Food Rescue'),
+            const Text(
+              'Food Rescue',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         centerTitle: true,

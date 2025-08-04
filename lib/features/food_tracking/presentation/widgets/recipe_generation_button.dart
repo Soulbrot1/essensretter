@@ -24,12 +24,12 @@ class RecipeGenerationButton extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: const Color(0xFF2E7D32),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.3),
-                blurRadius: 4,
-                offset: const Offset(0, -1),
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
               ),
             ],
           ),
@@ -42,8 +42,8 @@ class RecipeGenerationButton extends StatelessWidget {
                   onPressed: () => _showAddFoodDialog(context),
                   icon: const Icon(Icons.add, size: 24),
                   style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.white.withValues(alpha: 0.9),
+                    foregroundColor: const Color(0xFF2E7D32),
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -56,8 +56,8 @@ class RecipeGenerationButton extends StatelessWidget {
                   onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
                   icon: const Icon(Icons.restaurant_menu, size: 20),
                   style: IconButton.styleFrom(
-                    backgroundColor: hasFood ? Colors.green : Colors.grey,
-                    foregroundColor: Colors.white,
+                    backgroundColor: hasFood ? Colors.white.withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.3),
+                    foregroundColor: hasFood ? const Color(0xFF2E7D32) : Colors.grey,
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -70,8 +70,8 @@ class RecipeGenerationButton extends StatelessWidget {
                   onPressed: () => _showBookmarkedRecipes(context),
                   icon: const Icon(Icons.bookmark, size: 20),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.white.withValues(alpha: 0.9),
+                    foregroundColor: const Color(0xFF2E7D32),
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -84,8 +84,8 @@ class RecipeGenerationButton extends StatelessWidget {
                   onPressed: () => _showStatistics(context),
                   icon: const Icon(Icons.bar_chart, size: 20),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.white.withValues(alpha: 0.9),
+                    foregroundColor: const Color(0xFF2E7D32),
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

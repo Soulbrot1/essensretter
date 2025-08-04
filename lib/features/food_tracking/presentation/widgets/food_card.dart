@@ -99,8 +99,8 @@ class _FoodCardState extends State<FoodCard> {
                       children: [
                         Text(
                           widget.food.expiryStatus,
-                          style: TextStyle(
-                            color: urgencyColor,
+                          style: const TextStyle(
+                            color: Colors.black,
                             fontWeight: FontWeight.w500,
                             fontSize: 12,
                           ),
