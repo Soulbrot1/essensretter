@@ -4,9 +4,50 @@ import '../bloc/recipe_bloc.dart';
 import '../bloc/recipe_event.dart';
 import '../bloc/recipe_state.dart';
 import '../widgets/recipe_card.dart';
+import '../../domain/entities/recipe.dart';
+import '../../domain/entities/ingredient.dart';
 
 class BookmarkedRecipesPage extends StatelessWidget {
   const BookmarkedRecipesPage({super.key});
+
+  void _addTestRecipe(BuildContext context) {
+    // DEBUG: Erstelle Test-Rezept mit korrekten Mengenangaben
+    final testRecipe = Recipe(
+      title: 'Test Pasta Bolognese',
+      cookingTime: '30 Minuten',
+      vorhanden: [
+        Ingredient.fromString('400g Pasta'),
+        Ingredient.fromString('2 EL Olivenöl'),
+        Ingredient.fromString('1 große Zwiebel'),
+      ],
+      ueberpruefen: [
+        Ingredient.fromString('500g Hackfleisch'),
+        Ingredient.fromString('400ml Tomatensoße'),
+        Ingredient.fromString('100g Parmesan'),
+      ],
+      instructions: '''1. Vorbereitung:
+• Zwiebel fein hacken
+• Wasser für Pasta aufsetzen
+
+2. Zubereitung:
+• Zwiebel in Olivenöl anbraten
+• Hackfleisch hinzufügen und anbraten
+• Tomatensoße hinzufügen und köcheln lassen
+• Pasta kochen
+
+3. Servieren:
+• Pasta mit Soße vermischen
+• Mit Parmesan bestreuen''',
+      servings: 2,
+      isBookmarked: true,
+    );
+    
+    context.read<RecipeBloc>().add(BookmarkRecipeEvent(recipe: testRecipe));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Test-Rezept hinzugefügt!')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +78,12 @@ class BookmarkedRecipesPage extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+              // DEBUG: Test-Rezept Button
+              IconButton(
+                onPressed: () => _addTestRecipe(context),
+                icon: Icon(Icons.science, color: Colors.blue),
+                tooltip: 'Test-Rezept hinzufügen (Debug)',
               ),
             ],
           ),

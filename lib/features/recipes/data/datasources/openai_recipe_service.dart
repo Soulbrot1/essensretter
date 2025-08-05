@@ -35,7 +35,7 @@ class OpenAIRecipeService implements RecipeService {
       // Erstelle Liste der vorherigen Rezepte mit Details zur Vermeidung von Duplikaten
       final previousRecipeNames = previousRecipes.map((recipe) => recipe.title).toList();
       final previousRecipeTypes = previousRecipes.map((recipe) => 
-        '${recipe.title} (${recipe.vorhanden.join(", ")})'
+        '${recipe.title} (${recipe.vorhandenAsStrings.join(", ")})'
       ).toList();
       
       final previousRecipesText = previousRecipeNames.isNotEmpty 
@@ -43,16 +43,17 @@ class OpenAIRecipeService implements RecipeService {
           : '';
       
       final prompt = '''
-Du bist ein kreativer Koch-Assistent. Erstelle 1 einfaches, sinnvolles Rezept basierend auf einigen der verfügbaren Zutaten.
+Du bist ein kreativer Koch-Assistent. Erstelle 1 einfaches, sinnvolles Rezept FÜR 2 PERSONEN basierend auf einigen der verfügbaren Zutaten.
 
 VERFÜGBARE ZUTATEN: $ingredientsText$previousRecipesText
 
 Für das Rezept erstelle:
 - title: Kreativer Name des Gerichts
 - cookingTime: Geschätzte Zubereitungszeit (z.B. "30 Minuten")
-- vorhanden: Array mit Zutaten die bereits vorhanden sind (wähle sinnvoll aus der verfügbaren Liste)
-- ueberpruefen: Array mit zusätzlichen Zutaten die eventuell gekauft werden müssen
-- instructions: Detaillierte Schritt-für-Schritt Anleitung die ALLE verwendeten Zutaten erwähnt
+- vorhanden: Array mit Zutaten die bereits vorhanden sind MIT GENAUEN MENGENANGABEN für 2 Personen (z.B. "200g Mehl", "2 EL Öl", "1 große Zwiebel")
+- ueberpruefen: Array mit zusätzlichen Zutaten die eventuell gekauft werden müssen MIT GENAUEN MENGENANGABEN für 2 Personen
+- instructions: Detaillierte Schritt-für-Schritt Anleitung die ALLE verwendeten Zutaten mit Mengen erwähnt
+- servings: IMMER 2 (für 2 Personen)
 
 WICHTIG für die instructions: 
 - Schreibe KURZE, PRÄGNANTE Sätze
@@ -71,7 +72,10 @@ WICHTIG für die Rezepterstellung:
 - Achte auf Harmonie von süß/herzhaft - keine chaotischen Mischungen
 - Erstelle ein einfaches, praktisches Gericht
 - Maximal 2-3 zusätzliche Zutaten in "ueberpruefen"
-- Fokus auf Geschmack und Einfachkeit
+- Fokus auf Geschmack und Einfachheit
+- KRITISCH: ALLE Zutaten müssen EXAKTE MENGENANGABEN haben (z.B. "300g", "2 EL", "1 Stück")
+- Verwende realistische Portionsgrößen für 2 Personen
+- Gib NIEMALS Zutaten ohne Menge an
 - STRENG VERBOTEN: KEINE Salate wenn bereits Salat vorgeschlagen wurde
 - STRENG VERBOTEN: KEINE ähnlichen Gerichte oder Variationen bereits vorgeschlagener Rezepte
 - STRENG VERBOTEN: KEINE Wiederverwendung derselben Hauptzutat-Kombinationen
@@ -90,9 +94,10 @@ Antworte mit einem JSON-Objekt mit einem "recipes" Array:
     {
       "title": "Rezeptname",
       "cookingTime": "Zeit",
-      "vorhanden": ["zutat1", "zutat2"],
-      "ueberpruefen": ["zusatz1", "zusatz2"],
-      "instructions": "1. Vorbereitung:\\n• Zutat vorbereiten\\n• Weitere Vorbereitung\\n\\n2. Zubereitung:\\n• Hauptschritt\\n• Nächster Schritt\\n\\n3. Servieren:\\n• Anrichten\\n• Genießen"
+      "vorhanden": ["200g Mehl", "2 EL Öl"],
+      "ueberpruefen": ["1 große Zwiebel", "300ml Gemüsebrühe"],
+      "instructions": "1. Vorbereitung:\\n• Zutat vorbereiten\\n• Weitere Vorbereitung\\n\\n2. Zubereitung:\\n• Hauptschritt\\n• Nächster Schritt\\n\\n3. Servieren:\\n• Anrichten\\n• Genießen",
+      "servings": 2
     }
   ]
 }
@@ -173,12 +178,12 @@ Antworte mit einem JSON-Objekt mit einem "recipes" Array:
     
     final previousTitles = previousRecipes.map((r) => r.title.toLowerCase()).toSet();
     final previousIngredientCombos = previousRecipes.map((r) => 
-      r.vorhanden.map((i) => i.toLowerCase()).toSet()
+      r.vorhandenAsStrings.map((i) => i.toLowerCase()).toSet()
     ).toList();
     
     return newRecipes.where((recipe) {
       final recipeTitle = recipe.title.toLowerCase();
-      final recipeIngredients = recipe.vorhanden.map((i) => i.toLowerCase()).toSet();
+      final recipeIngredients = recipe.vorhandenAsStrings.map((i) => i.toLowerCase()).toSet();
       
       // Prüfe auf exakte Titel-Übereinstimmung
       if (previousTitles.contains(recipeTitle)) {

@@ -111,16 +111,16 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
       for (final recipe in bookmarkedRecipes) {
         // Check if the deleted food is in vorhanden list
         if (recipe.vorhanden.any((ingredient) => 
-            ingredient.toLowerCase().contains(foodName.toLowerCase()))) {
+            ingredient.name.toLowerCase().contains(foodName.toLowerCase()))) {
           // Move the ingredient from vorhanden to ueberpruefen
           final updatedVorhanden = recipe.vorhanden
               .where((ingredient) => 
-                  !ingredient.toLowerCase().contains(foodName.toLowerCase()))
+                  !ingredient.name.toLowerCase().contains(foodName.toLowerCase()))
               .toList();
           
           final matchingIngredients = recipe.vorhanden
               .where((ingredient) => 
-                  ingredient.toLowerCase().contains(foodName.toLowerCase()))
+                  ingredient.name.toLowerCase().contains(foodName.toLowerCase()))
               .toList();
           
           final updatedUeberpruefen = [

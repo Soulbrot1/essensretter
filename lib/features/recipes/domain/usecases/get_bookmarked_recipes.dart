@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../entities/recipe.dart';
+import '../entities/ingredient.dart';
 import '../repositories/recipe_repository.dart';
 import '../../../food_tracking/domain/repositories/food_repository.dart';
 
@@ -33,14 +34,14 @@ class GetBookmarkedRecipes implements UseCase<List<Recipe>, NoParams> {
             
             // Synchronize each recipe with current food inventory
             final synchronizedRecipes = recipes.map((recipe) {
-              final stillAvailable = <String>[];
-              final needToCheck = <String>[];
+              final stillAvailable = <Ingredient>[];
+              final needToCheck = <Ingredient>[];
               
               // Check which ingredients from "vorhanden" are still available
               for (final ingredient in recipe.vorhanden) {
                 if (availableFoodNames.any((foodName) => 
-                    ingredient.toLowerCase().contains(foodName) || 
-                    foodName.contains(ingredient.toLowerCase()))) {
+                    ingredient.name.toLowerCase().contains(foodName) || 
+                    foodName.contains(ingredient.name.toLowerCase()))) {
                   stillAvailable.add(ingredient);
                 } else {
                   // Move to check/buy list if not available anymore
@@ -51,8 +52,8 @@ class GetBookmarkedRecipes implements UseCase<List<Recipe>, NoParams> {
               // Check which ingredients from "ueberpruefen" are now available
               for (final ingredient in recipe.ueberpruefen) {
                 if (availableFoodNames.any((foodName) => 
-                    ingredient.toLowerCase().contains(foodName) || 
-                    foodName.contains(ingredient.toLowerCase()))) {
+                    ingredient.name.toLowerCase().contains(foodName) || 
+                    foodName.contains(ingredient.name.toLowerCase()))) {
                   // Move back to available list
                   stillAvailable.add(ingredient);
                 } else {

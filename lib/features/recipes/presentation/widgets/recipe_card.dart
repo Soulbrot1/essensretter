@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/recipe.dart';
+import '../../domain/services/recipe_calculator.dart';
+import 'serving_size_slider.dart';
 
 class RecipeCard extends StatefulWidget {
   final Recipe recipe;
@@ -17,6 +19,24 @@ class RecipeCard extends StatefulWidget {
 
 class _RecipeCardState extends State<RecipeCard> {
   bool _isExpanded = false;
+  late Recipe _currentRecipe;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentRecipe = widget.recipe;
+  }
+
+  void _updateServings(int newServings) {
+    print('DEBUG: Scaling recipe from ${widget.recipe.servings} to $newServings servings');
+    print('DEBUG: Original vorhanden: ${widget.recipe.vorhanden.map((i) => i.displayText).toList()}');
+    
+    setState(() {
+      _currentRecipe = RecipeCalculator.scaleRecipe(widget.recipe, newServings);
+    });
+    
+    print('DEBUG: Scaled vorhanden: ${_currentRecipe.vorhanden.map((i) => i.displayText).toList()}');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +52,7 @@ class _RecipeCardState extends State<RecipeCard> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.recipe.title,
+                    _currentRecipe.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize! * 0.8,
@@ -73,7 +93,7 @@ class _RecipeCardState extends State<RecipeCard> {
                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  'Kochzeit: ${widget.recipe.cookingTime}',
+                  'Kochzeit: ${_currentRecipe.cookingTime}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
@@ -82,19 +102,25 @@ class _RecipeCardState extends State<RecipeCard> {
             ),
             if (_isExpanded) ...[
               const SizedBox(height: 16),
+              // Serving Size Slider
+              ServingSizeSlider(
+                currentServings: _currentRecipe.servings,
+                onServingsChanged: _updateServings,
+              ),
+              const SizedBox(height: 16),
               _buildIngredientSection(
                 context,
                 'Vorhanden:',
-                widget.recipe.vorhanden,
+                _currentRecipe.vorhanden.map((i) => i.displayText).toList(),
                 Colors.green,
                 Icons.check_circle,
               ),
-              if (widget.recipe.ueberpruefen.isNotEmpty) ...[
+              if (_currentRecipe.ueberpruefen.isNotEmpty) ...[
               const SizedBox(height: 12),
               _buildIngredientSection(
                 context,
                 'Überprüfen/Kaufen:',
-                widget.recipe.ueberpruefen,
+                _currentRecipe.ueberpruefen.map((i) => i.displayText).toList(),
                 Colors.orange,
                 Icons.help_outline,
               ),
@@ -116,7 +142,7 @@ class _RecipeCardState extends State<RecipeCard> {
   }
 
   List<Widget> _buildInstructionSteps(BuildContext context) {
-    final steps = _parseInstructions(widget.recipe.instructions);
+    final steps = _parseInstructions(_currentRecipe.instructions);
     return steps.asMap().entries.map((entry) {
       final stepNumber = entry.key + 1;
       final stepText = entry.value;
