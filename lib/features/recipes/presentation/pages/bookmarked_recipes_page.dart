@@ -115,11 +115,7 @@ class BookmarkedRecipesPage extends StatelessWidget {
                 final recipe = state.bookmarkedRecipes[index];
                 return RecipeCard(
                   recipe: recipe,
-                  onBookmark: () {
-                    context.read<RecipeBloc>().add(
-                      RemoveBookmarkEvent(recipeTitle: recipe.title),
-                    );
-                  },
+                  onBookmark: () => _showRemoveConfirmationDialog(context, recipe),
                 );
               },
             );
@@ -132,6 +128,61 @@ class BookmarkedRecipesPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showRemoveConfirmationDialog(BuildContext context, recipe) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Rezept entfernen'),
+          content: RichText(
+            text: TextSpan(
+              style: Theme.of(context).textTheme.bodyMedium,
+              children: [
+                const TextSpan(text: 'Möchtest du das Rezept '),
+                TextSpan(
+                  text: '"${recipe.title}"',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const TextSpan(text: ' wirklich aus deinen Favoriten entfernen?\n\n'),
+                TextSpan(
+                  text: '⚠️ Das Rezept wird unwiederbringlich gelöscht.',
+                  style: TextStyle(
+                    color: Colors.red[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Abbrechen',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.read<RecipeBloc>().add(
+                  RemoveBookmarkEvent(recipeTitle: recipe.title),
+                );
+              },
+              child: Text(
+                'Entfernen',
+                style: TextStyle(
+                  color: Colors.red[700],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
