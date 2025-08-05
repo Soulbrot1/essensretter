@@ -16,4 +16,9 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   Future<void> recordWastedFood(String foodId, String name, String? category) async {
     return await localDataSource.recordWastedFood(foodId, name, category);
   }
+
+  @override
+  Future<void> recordConsumedFood(String foodId, String name, String? category) async {
+    return await localDataSource.recordConsumedFood(foodId, name, category);
+  }
 }

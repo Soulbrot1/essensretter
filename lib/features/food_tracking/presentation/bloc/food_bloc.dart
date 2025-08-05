@@ -8,6 +8,8 @@ import '../../domain/usecases/get_all_foods.dart';
 import '../../domain/usecases/get_foods_by_expiry.dart';
 import '../../domain/usecases/parse_foods_from_text.dart';
 import '../../domain/usecases/update_food.dart';
+import '../../../recipes/domain/usecases/update_recipes_after_food_deletion.dart';
+import '../../../statistics/domain/repositories/statistics_repository.dart';
 import 'food_event.dart';
 import 'food_state.dart';
 
@@ -19,6 +21,8 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   final ParseFoodsFromText parseFoodsFromText;
   final DeleteFood deleteFood;
   final UpdateFood updateFood;
+  final UpdateRecipesAfterFoodDeletion updateRecipesAfterFoodDeletion;
+  final StatisticsRepository statisticsRepository;
 
   FoodBloc({
     required this.getAllFoods,
@@ -28,6 +32,8 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     required this.parseFoodsFromText,
     required this.deleteFood,
     required this.updateFood,
+    required this.updateRecipesAfterFoodDeletion,
+    required this.statisticsRepository,
   }) : super(FoodInitial()) {
     on<LoadFoodsEvent>(_onLoadFoods);
     on<AddFoodFromTextEvent>(_onAddFoodFromText);
@@ -210,30 +216,47 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
 
-    final updatedFoods = currentState.foods.map((food) {
-      if (food.id == event.id) {
-        return food.copyWith(isConsumed: !food.isConsumed);
-      }
-      return food;
-    }).toList();
+    // Get the food to be consumed
+    final foodToConsume = currentState.foods.firstWhere(
+      (food) => food.id == event.id,
+      orElse: () => throw Exception('Food not found'),
+    );
 
-    final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
-    
-    List<Food> filteredFoods;
-    if (currentState.activeFilter != null) {
-      filteredFoods = sortedFoods
-          .where((food) => food.expiresInDays(currentState.activeFilter!))
-          .toList();
-    } else {
-      filteredFoods = sortedFoods;
-    }
-
-    emit(FoodLoaded(
-      foods: sortedFoods,
-      filteredFoods: filteredFoods,
+    // Show loading state
+    emit(FoodOperationInProgress(
+      foods: currentState.foods,
+      filteredFoods: currentState.filteredFoods,
       activeFilter: currentState.activeFilter,
       sortOption: currentState.sortOption,
     ));
+
+    try {
+      // Update recipes before deleting the food
+      await updateRecipesAfterFoodDeletion(
+        UpdateRecipesParams(foodName: foodToConsume.name),
+      );
+
+      // Record in statistics as consumed
+      await statisticsRepository.recordConsumedFood(
+        foodToConsume.id,
+        foodToConsume.name,
+        foodToConsume.category,
+      );
+
+      // Delete the food
+      final result = await deleteFood(DeleteFoodParams(id: event.id));
+
+      result.fold(
+        (failure) {
+          emit(FoodError(failure.message));
+          emit(currentState);
+        },
+        (_) => add(LoadFoodsEvent()),
+      );
+    } catch (e) {
+      emit(FoodError('Fehler beim Verbrauchen: $e'));
+      emit(currentState);
+    }
   }
 
   Future<void> _onUpdateFood(

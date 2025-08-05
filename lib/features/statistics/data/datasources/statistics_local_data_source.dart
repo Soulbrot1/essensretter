@@ -5,6 +5,7 @@ import '../../domain/entities/waste_entry.dart';
 abstract class StatisticsLocalDataSource {
   Future<List<WasteEntry>> getWasteEntries(DateTime startDate, DateTime endDate);
   Future<void> recordWastedFood(String foodId, String name, String? category);
+  Future<void> recordConsumedFood(String foodId, String name, String? category);
   Future<void> addSampleData();
 }
 
@@ -127,6 +128,13 @@ class StatisticsLocalDataSourceImpl implements StatisticsLocalDataSource {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  @override
+  Future<void> recordConsumedFood(String foodId, String name, String? category) async {
+    // Consumed food is not tracked as waste
+    // This is intentionally empty as we don't want to record consumed food as waste
+    // But we need this method for the recipe update functionality
   }
 
   @override

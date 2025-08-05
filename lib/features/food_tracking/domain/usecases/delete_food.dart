@@ -4,14 +4,17 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../repositories/food_repository.dart';
 import '../../../statistics/domain/repositories/statistics_repository.dart';
+import '../../../recipes/domain/usecases/update_recipes_after_food_deletion.dart';
 
 class DeleteFood implements UseCase<void, DeleteFoodParams> {
   final FoodRepository foodRepository;
   final StatisticsRepository statisticsRepository;
+  final UpdateRecipesAfterFoodDeletion updateRecipesAfterFoodDeletion;
 
   DeleteFood({
     required this.foodRepository,
     required this.statisticsRepository,
+    required this.updateRecipesAfterFoodDeletion,
   });
 
   @override
@@ -41,6 +44,18 @@ class DeleteFood implements UseCase<void, DeleteFoodParams> {
         } catch (e) {
           print('DeleteFood: Error recording statistics: $e');
           // Statistik-Fehler ignorieren, Löschung trotzdem durchführen
+        }
+        
+        // Update recipes to move this food from vorhanden to ueberpruefen
+        try {
+          print('DeleteFood: Updating recipes after food deletion...');
+          await updateRecipesAfterFoodDeletion(
+            UpdateRecipesParams(foodName: food.name),
+          );
+          print('DeleteFood: Successfully updated recipes');
+        } catch (e) {
+          print('DeleteFood: Error updating recipes: $e');
+          // Recipe update error ignorieren, Löschung trotzdem durchführen
         }
         
         // Lebensmittel löschen

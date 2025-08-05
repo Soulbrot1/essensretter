@@ -61,4 +61,26 @@ class RecipeRepositoryImpl implements RecipeRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> updateRecipesAfterFoodDeletion(String foodName) async {
+    try {
+      await localDataSource.updateRecipesAfterFoodDeletion(foodName);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateAllBookmarkedRecipes(List<Recipe> recipes) async {
+    try {
+      await localDataSource.updateAllBookmarkedRecipes(
+        recipes.map((r) => RecipeModel.fromEntity(r)).toList(),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
 }

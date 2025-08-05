@@ -29,6 +29,7 @@ import 'features/recipes/domain/usecases/generate_recipes.dart';
 import 'features/recipes/domain/usecases/get_bookmarked_recipes.dart';
 import 'features/recipes/domain/usecases/save_bookmarked_recipe.dart';
 import 'features/recipes/domain/usecases/remove_bookmarked_recipe.dart';
+import 'features/recipes/domain/usecases/update_recipes_after_food_deletion.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
 import 'features/settings/data/datasources/settings_local_data_source.dart';
 import 'features/settings/data/repositories/settings_repository_impl.dart';
@@ -61,6 +62,8 @@ Future<void> init() async {
       parseFoodsFromText: sl(),
       deleteFood: sl(),
       updateFood: sl(),
+      updateRecipesAfterFoodDeletion: sl(),
+      statisticsRepository: sl(),
     ),
   );
   
@@ -93,12 +96,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteFood(
     foodRepository: sl(),
     statisticsRepository: sl(),
+    updateRecipesAfterFoodDeletion: sl(),
   ));
   sl.registerLazySingleton(() => UpdateFood(sl()));
   sl.registerLazySingleton(() => GenerateRecipes(sl()));
-  sl.registerLazySingleton(() => GetBookmarkedRecipes(sl()));
+  sl.registerLazySingleton(() => GetBookmarkedRecipes(
+    repository: sl(),
+    foodRepository: sl(),
+  ));
   sl.registerLazySingleton(() => SaveBookmarkedRecipe(sl()));
   sl.registerLazySingleton(() => RemoveBookmarkedRecipe(sl()));
+  sl.registerLazySingleton(() => UpdateRecipesAfterFoodDeletion(sl()));
   sl.registerLazySingleton(() => GetExpiringFoods(sl()));
   sl.registerLazySingleton(() => GetNotificationSettings(sl()));
   sl.registerLazySingleton(() => SaveNotificationSettings(sl()));

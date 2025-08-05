@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/entities/recipe.dart';
 
-class RecipeCard extends StatelessWidget {
+class RecipeCard extends StatefulWidget {
   final Recipe recipe;
   final VoidCallback? onBookmark;
 
@@ -10,6 +10,13 @@ class RecipeCard extends StatelessWidget {
     required this.recipe,
     this.onBookmark,
   });
+
+  @override
+  State<RecipeCard> createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends State<RecipeCard> {
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -25,23 +32,36 @@ class RecipeCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    recipe.title,
+                    widget.recipe.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize! * 0.8,
                         ),
                   ),
                 ),
                 IconButton(
-                  onPressed: onBookmark,
+                  onPressed: () {
+                    setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
                   icon: Icon(
-                    recipe.isBookmarked 
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey[600],
+                  ),
+                  tooltip: _isExpanded ? 'Einklappen' : 'Ausklappen',
+                ),
+                IconButton(
+                  onPressed: widget.onBookmark,
+                  icon: Icon(
+                    widget.recipe.isBookmarked 
                         ? Icons.bookmark 
                         : Icons.bookmark_border,
-                    color: recipe.isBookmarked 
+                    color: widget.recipe.isBookmarked 
                         ? Colors.orange 
                         : Colors.grey,
                   ),
-                  tooltip: recipe.isBookmarked 
+                  tooltip: widget.recipe.isBookmarked 
                       ? 'Aus Favoriten entfernen'
                       : 'Zu Favoriten hinzufügen',
                 ),
@@ -53,40 +73,42 @@ class RecipeCard extends StatelessWidget {
                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  'Kochzeit: ${recipe.cookingTime}',
+                  'Kochzeit: ${widget.recipe.cookingTime}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey[600],
                       ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _buildIngredientSection(
-              context,
-              'Vorhanden:',
-              recipe.vorhanden,
-              Colors.green,
-              Icons.check_circle,
-            ),
-            if (recipe.ueberpruefen.isNotEmpty) ...[
+            if (_isExpanded) ...[
+              const SizedBox(height: 16),
+              _buildIngredientSection(
+                context,
+                'Vorhanden:',
+                widget.recipe.vorhanden,
+                Colors.green,
+                Icons.check_circle,
+              ),
+              if (widget.recipe.ueberpruefen.isNotEmpty) ...[
               const SizedBox(height: 12),
               _buildIngredientSection(
                 context,
                 'Überprüfen/Kaufen:',
-                recipe.ueberpruefen,
+                widget.recipe.ueberpruefen,
                 Colors.orange,
                 Icons.help_outline,
               ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                'Anleitung:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              ..._buildInstructionSteps(context),
             ],
-            const SizedBox(height: 16),
-            Text(
-              'Anleitung:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            ..._buildInstructionSteps(context),
           ],
         ),
       ),
@@ -94,7 +116,7 @@ class RecipeCard extends StatelessWidget {
   }
 
   List<Widget> _buildInstructionSteps(BuildContext context) {
-    final steps = _parseInstructions(recipe.instructions);
+    final steps = _parseInstructions(widget.recipe.instructions);
     return steps.asMap().entries.map((entry) {
       final stepNumber = entry.key + 1;
       final stepText = entry.value;

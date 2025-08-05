@@ -8,6 +8,8 @@ abstract class RecipeLocalDataSource {
   Future<void> saveBookmarkedRecipe(RecipeModel recipe);
   Future<void> removeBookmarkedRecipe(String recipeTitle);
   Future<void> clearBookmarkedRecipes();
+  Future<void> updateRecipesAfterFoodDeletion(String foodName);
+  Future<void> updateAllBookmarkedRecipes(List<RecipeModel> recipes);
 }
 
 class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
@@ -98,5 +100,64 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
     final prefs = await SharedPreferences.getInstance();
     final recipesJson = recipes.map((recipe) => recipe.toJson()).toList();
     await prefs.setString(_bookmarkedRecipesKey, json.encode(recipesJson));
+  }
+
+  @override
+  Future<void> updateRecipesAfterFoodDeletion(String foodName) async {
+    try {
+      final bookmarkedRecipes = await getBookmarkedRecipes();
+      final updatedRecipes = <RecipeModel>[];
+      
+      for (final recipe in bookmarkedRecipes) {
+        // Check if the deleted food is in vorhanden list
+        if (recipe.vorhanden.any((ingredient) => 
+            ingredient.toLowerCase().contains(foodName.toLowerCase()))) {
+          // Move the ingredient from vorhanden to ueberpruefen
+          final updatedVorhanden = recipe.vorhanden
+              .where((ingredient) => 
+                  !ingredient.toLowerCase().contains(foodName.toLowerCase()))
+              .toList();
+          
+          final matchingIngredients = recipe.vorhanden
+              .where((ingredient) => 
+                  ingredient.toLowerCase().contains(foodName.toLowerCase()))
+              .toList();
+          
+          final updatedUeberpruefen = [
+            ...recipe.ueberpruefen,
+            ...matchingIngredients,
+          ];
+          
+          updatedRecipes.add(RecipeModel(
+            title: recipe.title,
+            cookingTime: recipe.cookingTime,
+            vorhanden: updatedVorhanden,
+            ueberpruefen: updatedUeberpruefen,
+            instructions: recipe.instructions,
+            isBookmarked: recipe.isBookmarked,
+          ));
+        } else {
+          // Recipe doesn't contain the deleted food, keep as is
+          updatedRecipes.add(recipe);
+        }
+      }
+      
+      await _saveRecipes(updatedRecipes);
+      debugPrint('Updated recipes after deletion of: $foodName');
+    } catch (e) {
+      debugPrint('Error updating recipes after food deletion: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateAllBookmarkedRecipes(List<RecipeModel> recipes) async {
+    try {
+      await _saveRecipes(recipes);
+      debugPrint('Updated all bookmarked recipes. Total: ${recipes.length}');
+    } catch (e) {
+      debugPrint('Error updating all bookmarked recipes: $e');
+      rethrow;
+    }
   }
 }
