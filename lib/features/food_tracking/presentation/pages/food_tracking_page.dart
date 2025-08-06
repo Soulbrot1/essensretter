@@ -83,18 +83,6 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
             },
             tooltip: 'Einstellungen',
           ),
-          BlocBuilder<FoodBloc, FoodState>(
-            builder: (context, state) {
-              if (state is FoodLoaded && _hasConsumedFoods(state.foods)) {
-                return IconButton(
-                  icon: const Icon(Icons.delete_sweep),
-                  onPressed: () => _showDeleteConsumedDialog(context),
-                  tooltip: 'Verbrauchte Lebensmittel löschen',
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
         ],
       ),
       body: Column(
@@ -222,62 +210,5 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
       ),
       bottomNavigationBar: const RecipeGenerationButton(),
     );
-  }
-
-  bool _hasConsumedFoods(List foods) {
-    return foods.any((food) => food.isConsumed);
-  }
-
-  void _showDeleteConsumedDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Verbrauchte Lebensmittel löschen'),
-          content: const Text(
-            'Möchten Sie alle als verbraucht markierten Lebensmittel dauerhaft löschen?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-                _deleteAllConsumedFoods(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Löschen'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteAllConsumedFoods(BuildContext context) async {
-    final foodBloc = context.read<FoodBloc>();
-    final currentState = foodBloc.state;
-    
-    if (currentState is FoodLoaded) {
-      final consumedFoods = currentState.foods.where((food) => food.isConsumed).toList();
-      
-      // Delete each consumed food
-      for (final food in consumedFoods) {
-        foodBloc.add(DeleteFoodEvent(food.id));
-      }
-      
-      // Show confirmation
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${consumedFoods.length} verbrauchte Lebensmittel gelöscht'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
   }
 }

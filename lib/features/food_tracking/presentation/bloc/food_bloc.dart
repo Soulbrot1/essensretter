@@ -44,6 +44,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     on<ToggleConsumedEvent>(_onToggleConsumed);
     on<UpdateFoodEvent>(_onUpdateFood);
     on<SortFoodsEvent>(_onSortFoods);
+    on<ClearConsumedFoodsEvent>(_onClearConsumedFoods);
   }
 
   Future<void> _onLoadFoods(
@@ -216,47 +217,42 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
 
-    // Get the food to be consumed
-    final foodToConsume = currentState.foods.firstWhere(
+    // Get the food to be toggled
+    final foodToToggle = currentState.foods.firstWhere(
       (food) => food.id == event.id,
       orElse: () => throw Exception('Food not found'),
     );
 
-    // Show loading state
-    emit(FoodOperationInProgress(
-      foods: currentState.foods,
-      filteredFoods: currentState.filteredFoods,
-      activeFilter: currentState.activeFilter,
-      sortOption: currentState.sortOption,
-    ));
+    // Toggle the consumed status
+    final updatedFood = foodToToggle.copyWith(isConsumed: !foodToToggle.isConsumed);
 
-    try {
-      // Update recipes before deleting the food
+    // If marking as consumed for the first time, update recipes and record stats
+    if (!foodToToggle.isConsumed && updatedFood.isConsumed) {
+      // Update recipes - move this food from "vorhanden" to "ueberpruefen" 
       await updateRecipesAfterFoodDeletion(
-        UpdateRecipesParams(foodName: foodToConsume.name),
+        UpdateRecipesParams(foodName: foodToToggle.name),
       );
 
       // Record in statistics as consumed
       await statisticsRepository.recordConsumedFood(
-        foodToConsume.id,
-        foodToConsume.name,
-        foodToConsume.category,
+        foodToToggle.id,
+        foodToToggle.name,
+        foodToToggle.category,
       );
-
-      // Delete the food
-      final result = await deleteFood(DeleteFoodParams(id: event.id));
-
-      result.fold(
-        (failure) {
-          emit(FoodError(failure.message));
-          emit(currentState);
-        },
-        (_) => add(LoadFoodsEvent()),
-      );
-    } catch (e) {
-      emit(FoodError('Fehler beim Verbrauchen: $e'));
-      emit(currentState);
     }
+
+    // Update the food in the database
+    final result = await updateFood(updatedFood);
+
+    result.fold(
+      (failure) {
+        emit(FoodError(failure.message));
+        if (currentState is FoodLoaded) {
+          emit(currentState);
+        }
+      },
+      (_) => add(LoadFoodsEvent()),
+    );
   }
 
   Future<void> _onUpdateFood(
@@ -340,6 +336,42 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     }
     
     return sorted;
+  }
+
+  Future<void> _onClearConsumedFoods(
+    ClearConsumedFoodsEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FoodLoaded) return;
+
+    // Find all consumed foods
+    final consumedFoods = currentState.foods.where((food) => food.isConsumed).toList();
+    
+    if (consumedFoods.isEmpty) return;
+
+    // Show loading state
+    emit(FoodOperationInProgress(
+      foods: currentState.foods,
+      filteredFoods: currentState.filteredFoods,
+      activeFilter: currentState.activeFilter,
+      sortOption: currentState.sortOption,
+    ));
+
+    try {
+      // Delete all consumed foods
+      for (final food in consumedFoods) {
+        await deleteFood(DeleteFoodParams(id: food.id));
+      }
+
+      // Reload the foods list
+      add(LoadFoodsEvent());
+    } catch (e) {
+      emit(FoodError('Fehler beim Löschen verbrauchter Lebensmittel: $e'));
+      if (currentState is FoodLoaded) {
+        emit(currentState);
+      }
+    }
   }
 
   List<Food> _sortFoodsByExpiry(List<Food> foods) {

@@ -253,6 +253,33 @@ class FoodFilterBar extends StatelessWidget {
                 tooltip: 'Nach Kategorie sortieren',
                 padding: const EdgeInsets.all(8),
               ),
+              
+              const Spacer(), // Push clear button to the right
+              
+              // Clear consumed foods button
+              BlocBuilder<FoodBloc, FoodState>(
+                builder: (context, state) {
+                  // Check if there are any consumed foods
+                  final hasConsumedFoods = state is FoodLoaded && 
+                      state.foods.any((food) => food.isConsumed);
+                  
+                  if (!hasConsumedFoods) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  return IconButton(
+                    onPressed: () {
+                      _showClearConsumedConfirmation(context);
+                    },
+                    icon: Icon(
+                      Icons.clear_all,
+                      color: Colors.red[600],
+                    ),
+                    tooltip: 'Verbrauchte Lebensmittel löschen',
+                    padding: const EdgeInsets.all(8),
+                  );
+                },
+              ),
             ],
           ),
         );
@@ -281,5 +308,39 @@ class FoodFilterBar extends StatelessWidget {
       default:
         return '$days Tage';
     }
+  }
+
+  void _showClearConsumedConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Verbrauchte Lebensmittel löschen'),
+          content: const Text(
+            'Möchtest du alle durchgestrichenen (verbrauchten) Lebensmittel '
+            'permanent aus der Liste entfernen?\n\n'
+            '⚠️ Diese Aktion kann nicht rückgängig gemacht werden.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                context.read<FoodBloc>().add(const ClearConsumedFoodsEvent());
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Löschen'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
