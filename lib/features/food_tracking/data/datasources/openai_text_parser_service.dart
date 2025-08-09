@@ -36,12 +36,12 @@ class OpenAITextParserService implements TextParserService {
     try {
       final now = DateTime.now();
       final prompt = '''
-Extrahiere Lebensmittel und deren Datumsangaben aus diesem deutschen Text:
+Analysiere diesen deutschen Text und extrahiere ALLE Lebensmittel mit ihren Datumsangaben.
 
 Text: "$text"
 Heutiges Datum: ${now.day}.${now.month}.${now.year}
 
-WICHTIG: Erkenne alle Lebensmittel. Für Datumsangaben gib das Datum als String zurück, NICHT als Anzahl Tage!
+SEHR WICHTIG: Jedes Lebensmittel muss mit seiner zugehörigen Datumsangabe erfasst werden!
 
 Antworte NUR mit diesem JSON-Format:
 {
@@ -54,25 +54,30 @@ Antworte NUR mit diesem JSON-Format:
   ]
 }
 
-Regeln:
-1. Extrahiere Lebensmittel-Namen exakt wie angegeben
-2. Für Zeitangaben, gib den ursprünglichen Text zurück:
-   - "morgen", "übermorgen", "heute"
-   - "3 Tage", "zwei Tage", "4 Tage", "einen Tag"
-   - "1 Woche", "eine Woche", "2 Wochen"
-   - "1 Monat", "einen Monat", "2 Monate"
-   - "24.8.2025", "4.08", "2.8"
-   - "4. August", "4 August"
-3. Wenn kein Datum: "date_text": null
-4. ALLE erkannten Lebensmittel zurückgeben
+KRITISCHE REGEL für die Zuordnung:
+Analysiere den Text Wort für Wort und erkenne Muster wie:
+- [Lebensmittel] [Zahl] [Zeiteinheit]: "Honig 5 Tage" → {"name": "Honig", "date_text": "5 Tage"}
+- [Lebensmittel] [Datum]: "Salami 13.08.25" → {"name": "Salami", "date_text": "13.08.25"}
+- [Zeitangabe] [Lebensmittel]: "morgen Milch" → {"name": "Milch", "date_text": "morgen"}
+- [Lebensmittel] ohne Datum: "Butter" → {"name": "Butter", "date_text": null}
 
-Beispiele:
-- "Salami übermorgen" → {"name": "Salami", "date_text": "übermorgen"}
-- "Milch 24.8.2025" → {"name": "Milch", "date_text": "24.8.2025"}
-- "Käse 3 Tage" → {"name": "Käse", "date_text": "3 Tage"}
-- "Brot zwei Tage" → {"name": "Brot", "date_text": "zwei Tage"}
-- "Joghurt eine Woche" → {"name": "Joghurt", "date_text": "eine Woche"}
-- "Banane" → {"name": "Banane", "date_text": null}
+Datumsformate die erkannt werden müssen:
+- Relative: "heute", "morgen", "übermorgen", "X Tage", "X Wochen", "einen Monat"
+- Absolute: "DD.MM.YYYY", "DD.MM.YY", "DD.MM", "D.M"
+- Die Zahl und Zeiteinheit DIREKT nach/vor dem Lebensmittel gehören dazu!
+
+BEISPIELE mit korrekter Zuordnung:
+"Honig 5 Tage und Salami 13.08.25" muss ergeben:
+[{"name": "Honig", "date_text": "5 Tage"}, {"name": "Salami", "date_text": "13.08.25"}]
+
+"Milch morgen, Käse 15.8.24, Brot 3 Tage" muss ergeben:
+[{"name": "Milch", "date_text": "morgen"}, {"name": "Käse", "date_text": "15.8.24"}, {"name": "Brot", "date_text": "3 Tage"}]
+
+"Apfel 2 Tage Banane 4.9" muss ergeben:
+[{"name": "Apfel", "date_text": "2 Tage"}, {"name": "Banane", "date_text": "4.9"}]
+
+"Honig 5 Tage salami 13.08.25" muss ergeben:
+[{"name": "Honig", "date_text": "5 Tage"}, {"name": "salami", "date_text": "13.08.25"}]
 
 Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
 ''';
