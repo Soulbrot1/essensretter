@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/utils/demo_foods.dart';
 import '../../domain/entities/food.dart';
 import '../../domain/usecases/add_food_from_text.dart';
 import '../../domain/usecases/add_foods.dart';
@@ -45,6 +47,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     on<UpdateFoodEvent>(_onUpdateFood);
     on<SortFoodsEvent>(_onSortFoods);
     on<ClearConsumedFoodsEvent>(_onClearConsumedFoods);
+    on<LoadDemoFoodsEvent>(_onLoadDemoFoods);
   }
 
   Future<void> _onLoadFoods(
@@ -55,12 +58,33 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     
     final result = await getAllFoods(NoParams());
     
-    result.fold(
-      (failure) => emit(FoodError(failure.message)),
-      (foods) {
+    await result.fold(
+      (failure) async => emit(FoodError(failure.message)),
+      (foods) async {
+        List<Food> finalFoods = foods;
+        
+        // Lade Demo-Lebensmittel beim ersten App-Start
+        if (foods.isEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          final demoLoaded = prefs.getBool(DemoFoods.demoLoadedKey) ?? false;
+          
+          if (!demoLoaded) {
+            final demoFoods = DemoFoods.createDemoFoods();
+            final addResult = await addFoods(AddFoodsParams(foods: demoFoods));
+            
+            await addResult.fold(
+              (failure) => null, // Ignore failure, continue with empty state
+              (success) async {
+                finalFoods = demoFoods;
+                await prefs.setBool(DemoFoods.demoLoadedKey, true);
+              },
+            );
+          }
+        }
+        
         final currentState = state;
         final sortOption = currentState is FoodLoaded ? currentState.sortOption : SortOption.date;
-        final sortedFoods = _sortFoods(foods, sortOption);
+        final sortedFoods = _sortFoods(finalFoods, sortOption);
         emit(FoodLoaded(
           foods: sortedFoods,
           filteredFoods: sortedFoods,
@@ -371,6 +395,37 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       if (currentState is FoodLoaded) {
         emit(currentState);
       }
+    }
+  }
+
+  Future<void> _onLoadDemoFoods(
+    LoadDemoFoodsEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is FoodLoaded) {
+      emit(FoodOperationInProgress(
+        foods: currentState.foods,
+        filteredFoods: currentState.filteredFoods,
+        activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
+      ));
+    }
+
+    try {
+      final demoFoods = DemoFoods.createDemoFoods();
+      final addResult = await addFoods(AddFoodsParams(foods: demoFoods));
+      
+      addResult.fold(
+        (failure) => emit(FoodError('Fehler beim Laden der Demo-Lebensmittel: ${failure.message}')),
+        (success) async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool(DemoFoods.demoLoadedKey, true);
+          add(LoadFoodsEvent()); // Reload foods list
+        },
+      );
+    } catch (e) {
+      emit(FoodError('Fehler beim Laden der Demo-Lebensmittel: $e'));
     }
   }
 

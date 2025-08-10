@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
+import '../../../food_tracking/presentation/bloc/food_bloc.dart';
+import '../../../food_tracking/presentation/bloc/food_event.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -109,6 +111,30 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ),
                 ],
+                const Divider(height: 32),
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Demo',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.add_shopping_cart, color: Colors.green),
+                  title: const Text('Demo-Lebensmittel laden'),
+                  subtitle: const Text('3 Beispiel-Lebensmittel hinzufügen'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () {
+                    context.read<FoodBloc>().add(const LoadDemoFoodsEvent());
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Demo-Lebensmittel werden geladen...')),
+                    );
+                    Navigator.of(context).pop();
+                  },
+                ),
               ],
             );
           }
