@@ -200,7 +200,10 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
                         padding: const EdgeInsets.only(bottom: 16),
                         itemCount: foods.length,
                         itemBuilder: (context, index) {
-                          return FoodCard(food: foods[index]);
+                          return FoodCard(
+                            food: foods[index], 
+                            isFirstCard: index == 0,
+                          );
                         },
                       ),
                       if (state is FoodOperationInProgress)
