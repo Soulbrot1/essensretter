@@ -219,6 +219,21 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         activeFilter: currentState.activeFilter,
         sortOption: currentState.sortOption,
       ));
+      
+      // Wenn es weggeworfen wurde, in Statistik erfassen
+      if (event.wasDisposed) {
+        final foodToDelete = currentState.foods.firstWhere(
+          (food) => food.id == event.id,
+          orElse: () => throw Exception('Food not found'),
+        );
+        
+        // In Statistik als weggeworfen erfassen
+        await statisticsRepository.recordWastedFood(
+          foodToDelete.id,
+          foodToDelete.name,
+          foodToDelete.category,
+        );
+      }
     }
 
     final result = await deleteFood(DeleteFoodParams(id: event.id));

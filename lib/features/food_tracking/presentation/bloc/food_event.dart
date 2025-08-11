@@ -30,11 +30,12 @@ class FilterFoodsByExpiryEvent extends FoodEvent {
 
 class DeleteFoodEvent extends FoodEvent {
   final String id;
+  final bool wasDisposed; // true = weggeworfen, false = verbraucht/andere Gründe
 
-  const DeleteFoodEvent(this.id);
+  const DeleteFoodEvent(this.id, {this.wasDisposed = false});
 
   @override
-  List<Object> get props => [id];
+  List<Object> get props => [id, wasDisposed];
 }
 
 class ToggleConsumedEvent extends FoodEvent {

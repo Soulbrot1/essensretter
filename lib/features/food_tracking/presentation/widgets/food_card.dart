@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/food.dart';
@@ -19,13 +18,6 @@ class FoodCard extends StatefulWidget {
 }
 
 class _FoodCardState extends State<FoodCard> {
-  Timer? _longPressTimer;
-
-  @override
-  void dispose() {
-    _longPressTimer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,17 +35,6 @@ class _FoodCardState extends State<FoodCard> {
             GestureDetector(
               onTap: () {
                 context.read<FoodBloc>().add(ToggleConsumedEvent(widget.food.id));
-              },
-              onTapDown: (_) {
-                _longPressTimer = Timer(const Duration(milliseconds: 1500), () {
-                  _showDisposalConfirmation(context, widget.food);
-                });
-              },
-              onTapUp: (_) {
-                _longPressTimer?.cancel();
-              },
-              onTapCancel: () {
-                _longPressTimer?.cancel();
               },
               child: CircleAvatar(
                 backgroundColor: urgencyColor.withValues(alpha: 0.2),
@@ -219,8 +200,8 @@ class _FoodCardState extends State<FoodCard> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Lebensmittel löschen'),
-          content: Text('Möchten Sie "${food.name}" wirklich löschen?'),
+          title: const Text('Lebensmittel wegwerfen?'),
+          content: Text('Wurde "${food.name}" weggeworfen?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -228,13 +209,20 @@ class _FoodCardState extends State<FoodCard> {
             ),
             TextButton(
               onPressed: () {
-                context.read<FoodBloc>().add(DeleteFoodEvent(food.id));
+                // Als weggeworfen markieren (wasDisposed = true)
+                context.read<FoodBloc>().add(DeleteFoodEvent(food.id, wasDisposed: true));
                 Navigator.of(dialogContext).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${food.name} wurde als weggeworfen markiert'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
               },
               style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
+                foregroundColor: Colors.orange,
               ),
-              child: const Text('Löschen'),
+              child: const Text('Ja, weggeworfen'),
             ),
           ],
         );
@@ -242,31 +230,4 @@ class _FoodCardState extends State<FoodCard> {
     );
   }
 
-  void _showDisposalConfirmation(BuildContext context, Food food) {
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Lebensmittel weggeschmissen?'),
-          content: Text('${food.name} weggeschmissen?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Nein'),
-            ),
-            TextButton(
-              onPressed: () {
-                context.read<FoodBloc>().add(DeleteFoodEvent(food.id));
-                Navigator.of(dialogContext).pop();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.orange,
-              ),
-              child: const Text('Ja, weggeschmissen'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }

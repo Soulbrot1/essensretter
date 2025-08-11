@@ -14,7 +14,7 @@ abstract class FoodLocalDataSource {
 class FoodLocalDataSourceImpl implements FoodLocalDataSource {
   static const String _databaseName = 'essensretter.db';
   static const String _tableName = 'foods';
-  static const int _databaseVersion = 6;
+  static const int _databaseVersion = 7;
 
   Database? _database;
 
@@ -44,6 +44,16 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
         category TEXT,
         notes TEXT,
         isConsumed INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    
+    // Erstelle waste_entries Tabelle für Statistiken
+    await db.execute('''
+      CREATE TABLE waste_entries(
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        category TEXT,
+        deleted_date INTEGER NOT NULL
       )
     ''');
   }
@@ -98,6 +108,17 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
       await db.execute('DROP TABLE IF EXISTS waste_entries');
       await db.execute('''
         CREATE TABLE waste_entries(
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          category TEXT,
+          deleted_date INTEGER NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 7) {
+      // Migration von Version 6 zu 7: Sicherstellen, dass waste_entries existiert
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS waste_entries(
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           category TEXT,
