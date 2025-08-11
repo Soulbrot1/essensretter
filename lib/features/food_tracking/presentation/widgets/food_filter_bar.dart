@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import '../bloc/food_state.dart';
+import '../../../../core/utils/tutorial_helper.dart';
 
 class FoodFilterBar extends StatelessWidget {
   const FoodFilterBar({super.key});
@@ -26,6 +27,7 @@ class FoodFilterBar extends StatelessWidget {
             ),
           ),
           child: Row(
+            key: TutorialHelper.filterKey,
             children: [
               // Active filter button (replaces both clock icon and filter indicator)
               PopupMenuButton<int?>(

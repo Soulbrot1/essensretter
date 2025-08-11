@@ -10,6 +10,7 @@ import '../bloc/food_state.dart';
 import '../bloc/food_event.dart';
 import 'dictation_text_field.dart';
 import '../../../../injection_container.dart' as di;
+import '../../../../core/utils/tutorial_helper.dart';
 
 class RecipeGenerationButton extends StatelessWidget {
   const RecipeGenerationButton({super.key});
@@ -39,6 +40,7 @@ class RecipeGenerationButton extends StatelessWidget {
               children: [
                 // Hinzufügen Button
                 IconButton(
+                  key: TutorialHelper.addButtonKey,
                   onPressed: () => _showAddFoodDialog(context),
                   icon: const Icon(Icons.add, size: 24),
                   style: IconButton.styleFrom(
@@ -53,6 +55,7 @@ class RecipeGenerationButton extends StatelessWidget {
                 ),
                 // Rezepte Button (nur Icon)
                 IconButton(
+                  key: TutorialHelper.recipeButtonKey,
                   onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
                   icon: const Icon(Icons.restaurant_menu, size: 20),
                   style: IconButton.styleFrom(
