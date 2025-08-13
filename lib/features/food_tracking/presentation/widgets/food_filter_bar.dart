@@ -30,7 +30,8 @@ class FoodFilterBar extends StatelessWidget {
           child: Row(
             children: [
               // Active filter button (replaces both clock icon and filter indicator)
-              PopupMenuButton<int?>(
+              Expanded(
+                child: PopupMenuButton<int?>(
                 onSelected: (value) {
                   context.read<FoodBloc>().add(FilterFoodsByExpiryEvent(value));
                 },
@@ -207,12 +208,12 @@ class FoodFilterBar extends StatelessWidget {
                     ),
                   ),
                 ],
+                ),
               ),
               
-              const SizedBox(width: 16),
-              
               // Sort Buttons - A-Z
-              IconButton(
+              Expanded(
+                child: IconButton(
                 onPressed: () {
                   context.read<FoodBloc>().add(const SortFoodsEvent(SortOption.alphabetical));
                 },
@@ -224,10 +225,12 @@ class FoodFilterBar extends StatelessWidget {
                 ),
                 tooltip: 'A-Z sortieren',
                 padding: const EdgeInsets.all(8),
+                ),
               ),
               
               // Sort Buttons - Date
-              IconButton(
+              Expanded(
+                child: IconButton(
                 onPressed: () {
                   context.read<FoodBloc>().add(const SortFoodsEvent(SortOption.date));
                 },
@@ -239,10 +242,12 @@ class FoodFilterBar extends StatelessWidget {
                 ),
                 tooltip: 'Nach Datum sortieren',
                 padding: const EdgeInsets.all(8),
+                ),
               ),
               
               // Sort Buttons - Category
-              IconButton(
+              Expanded(
+                child: IconButton(
                 onPressed: () {
                   context.read<FoodBloc>().add(const SortFoodsEvent(SortOption.category));
                 },
@@ -254,9 +259,8 @@ class FoodFilterBar extends StatelessWidget {
                 ),
                 tooltip: 'Nach Kategorie sortieren',
                 padding: const EdgeInsets.all(8),
+                ),
               ),
-              
-              const Spacer(), // Push clear button to the right
               
               // Clear consumed foods button
               BlocBuilder<FoodBloc, FoodState>(

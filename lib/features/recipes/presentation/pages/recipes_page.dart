@@ -36,48 +36,19 @@ class RecipesPage extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'KI-Rezeptvorschläge',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _regenerateRecipe(context),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Neues Rezept'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+Expanded(
+                  child: Text(
+                    'Rezeptvorschläge',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _showBookmarkedRecipes(context),
-                    icon: const Icon(Icons.bookmark_border, color: Colors.orange),
-                    label: const Text('Gespeicherte', style: TextStyle(color: Colors.orange)),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.orange),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
+                IconButton(
+                  onPressed: () => _regenerateRecipe(context),
+                  icon: const Icon(Icons.refresh_outlined),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.black,
                   ),
                 ),
               ],

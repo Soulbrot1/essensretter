@@ -20,13 +20,13 @@ class AppHeader extends StatelessWidget {
           // Logo
           Image.asset(
             'assets/images/image.png',
-            height: 60,
-            width: 60,
+            height: 131,
+            width: 131,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                height: 60,
-                width: 60,
+                height: 131,
+                width: 131,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(16),
@@ -41,7 +41,7 @@ class AppHeader extends StatelessWidget {
                 child: Icon(
                   Icons.shopping_bag,
                   color: Theme.of(context).colorScheme.onPrimary,
-                  size: 30,
+                  size: 66,
                 ),
               );
             },
