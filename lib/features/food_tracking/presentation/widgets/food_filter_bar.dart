@@ -16,6 +16,7 @@ class FoodFilterBar extends StatelessWidget {
         final currentSort = state is FoodLoaded ? state.sortOption : SortOption.date;
         
         return Container(
+          key: TutorialHelper.filterBarKey,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFE0F2E0), // Ausgewogenes helles Grün, harmonisch zur Header-Farbe
@@ -27,7 +28,6 @@ class FoodFilterBar extends StatelessWidget {
             ),
           ),
           child: Row(
-            key: TutorialHelper.filterKey,
             children: [
               // Active filter button (replaces both clock icon and filter indicator)
               PopupMenuButton<int?>(

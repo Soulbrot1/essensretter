@@ -111,6 +111,7 @@ class _FoodCardState extends State<FoodCard> {
                     );
                   },
                   child: Container(
+                    key: widget.isFirstCard ? TutorialHelper.infoButtonKey : null,
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
@@ -130,6 +131,7 @@ class _FoodCardState extends State<FoodCard> {
                     _showDeleteConfirmation(context, widget.food);
                   },
                   child: Container(
+                    key: widget.isFirstCard ? TutorialHelper.trashButtonKey : null,
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(

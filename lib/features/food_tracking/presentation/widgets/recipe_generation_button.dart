@@ -70,6 +70,7 @@ class RecipeGenerationButton extends StatelessWidget {
                 ),
                 // Bookmark Button
                 IconButton(
+                  key: TutorialHelper.bookmarkButtonKey,
                   onPressed: () => _showBookmarkedRecipes(context),
                   icon: const Icon(Icons.bookmark, size: 20),
                   style: IconButton.styleFrom(
