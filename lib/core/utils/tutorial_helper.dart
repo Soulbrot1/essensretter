@@ -79,8 +79,13 @@ class TutorialHelper {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Jedes Jahr landen Millionen Tonnen noch genießbarer Lebensmittel im Müll. 🗑️',
+                'In Deutschland werfen private Haushalte jährlich 6,3 Millionen Tonnen Lebensmittel weg. 🗑️',
                 style: TextStyle(fontSize: 16),
+              ),
+              SizedBox(height: 12),
+              Text(
+                'Das sind 75 kg pro Person im Jahr - im Wert von etwa 350 € pro Kopf! 💸',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: Colors.red),
               ),
               SizedBox(height: 12),
               Text(
