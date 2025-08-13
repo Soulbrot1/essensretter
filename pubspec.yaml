@@ -56,7 +56,7 @@ dependencies:
   dartz: ^0.10.1
   
   # Speech to Text
-  speech_to_text: ^6.6.2
+  speech_to_text: ^7.2.0
   permission_handler: ^11.3.1
   
   # HTTP & API (für KI-Integration)
