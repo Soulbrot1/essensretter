@@ -46,7 +46,7 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
         isConsumed INTEGER NOT NULL DEFAULT 0
       )
     ''');
-    
+
     // Erstelle waste_entries Tabelle für Statistiken
     await db.execute('''
       CREATE TABLE waste_entries(
@@ -61,7 +61,9 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       // Migration von Version 1 zu 2: isConsumed Spalte hinzufügen
-      await db.execute('ALTER TABLE $_tableName ADD COLUMN isConsumed INTEGER NOT NULL DEFAULT 0');
+      await db.execute(
+        'ALTER TABLE $_tableName ADD COLUMN isConsumed INTEGER NOT NULL DEFAULT 0',
+      );
     }
     if (oldVersion < 3) {
       // Migration von Version 2 zu 3: expiryDate nullable machen
@@ -78,7 +80,9 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
           isConsumed INTEGER NOT NULL DEFAULT 0
         )
       ''');
-      await db.execute('INSERT INTO $_tableName SELECT * FROM ${_tableName}_old');
+      await db.execute(
+        'INSERT INTO $_tableName SELECT * FROM ${_tableName}_old',
+      );
       await db.execute('DROP TABLE ${_tableName}_old');
     }
     if (oldVersion < 4) {
@@ -148,14 +152,14 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
       final db = await database;
       final now = DateTime.now();
       final targetDate = now.add(Duration(days: days));
-      
+
       final List<Map<String, dynamic>> maps = await db.query(
         _tableName,
         where: 'date(expiryDate) <= date(?)',
         whereArgs: [targetDate.toIso8601String()],
         orderBy: 'expiryDate ASC',
       );
-      
+
       return List.generate(maps.length, (i) => FoodModel.fromJson(maps[i]));
     } catch (e) {
       throw CacheException();
@@ -181,11 +185,7 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
   Future<void> deleteFood(String id) async {
     try {
       final db = await database;
-      await db.delete(
-        _tableName,
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      await db.delete(_tableName, where: 'id = ?', whereArgs: [id]);
     } catch (e) {
       throw CacheException();
     }

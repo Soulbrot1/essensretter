@@ -28,24 +28,20 @@ class _SpeechRecordingDialogState extends State<SpeechRecordingDialog>
   @override
   void initState() {
     super.initState();
-    
+
     _pulseController = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
     );
-    
+
     _waveController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.3,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
 
     // Wave animation nicht benötigt für einfache Pulse-Animation
 
@@ -67,7 +63,7 @@ class _SpeechRecordingDialogState extends State<SpeechRecordingDialog>
   @override
   void didUpdateWidget(SpeechRecordingDialog oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.isListening && !oldWidget.isListening) {
       _startAnimations();
     } else if (!widget.isListening && oldWidget.isListening) {
@@ -105,30 +101,32 @@ class _SpeechRecordingDialogState extends State<SpeechRecordingDialog>
             // Titel
             Text(
               widget.isListening ? 'Ich höre zu...' : 'Bereit für Aufnahme',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            
+
             // Untertitel
             Text(
               widget.isListening
                   ? 'Sprechen Sie jetzt Ihre Lebensmittel mit Datum'
                   : 'Tippen Sie auf das Mikrofon um zu beginnen',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Mikrofon mit Animation
             GestureDetector(
-              onTap: widget.isListening ? null : () {
-                // Beginne Aufnahme - wird vom Parent gehandelt
-              },
+              onTap: widget.isListening
+                  ? null
+                  : () {
+                      // Beginne Aufnahme - wird vom Parent gehandelt
+                    },
               child: AnimatedBuilder(
                 animation: _pulseAnimation,
                 builder: (context, child) {
@@ -166,11 +164,12 @@ class _SpeechRecordingDialogState extends State<SpeechRecordingDialog>
                 },
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Erkannter Text
-            if (widget.recognizedText != null && widget.recognizedText!.isNotEmpty)
+            if (widget.recognizedText != null &&
+                widget.recognizedText!.isNotEmpty)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -197,9 +196,9 @@ class _SpeechRecordingDialogState extends State<SpeechRecordingDialog>
                   ],
                 ),
               ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -209,10 +208,10 @@ class _SpeechRecordingDialogState extends State<SpeechRecordingDialog>
                   onPressed: widget.onCancel,
                   child: const Text('Abbrechen'),
                 ),
-                
+
                 // Bestätigen Button (nur wenn Text vorhanden)
-                if (widget.recognizedText != null && 
-                    widget.recognizedText!.isNotEmpty && 
+                if (widget.recognizedText != null &&
+                    widget.recognizedText!.isNotEmpty &&
                     !widget.isListening)
                   ElevatedButton(
                     onPressed: () => widget.onComplete(widget.recognizedText!),

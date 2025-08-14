@@ -13,20 +13,20 @@ import 'injection_container.dart' as di;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Lade Environment Variablen
   await dotenv.load(fileName: ".env");
-  
+
   await di.init();
-  
+
   // Initialisiere Notification Service
   final notificationService = di.sl<NotificationService>();
   await notificationService.initialize();
-  
+
   // Plane tägliche Benachrichtigung basierend auf Einstellungen
   final scheduleDailyNotification = di.sl<ScheduleDailyNotification>();
   await scheduleDailyNotification(NoParams());
-  
+
   runApp(const MyApp());
 }
 
@@ -36,6 +36,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Essensretter 3',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
@@ -46,16 +47,16 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('de', 'DE'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('de', 'DE'), Locale('en', 'US')],
       locale: const Locale('de', 'DE'),
       home: MultiBlocProvider(
         providers: [
           BlocProvider(create: (context) => di.sl<FoodBloc>()),
           BlocProvider(create: (context) => di.sl<RecipeBloc>()),
-          BlocProvider(create: (context) => di.sl<SettingsBloc>()..add(LoadNotificationSettings())),
+          BlocProvider(
+            create: (context) =>
+                di.sl<SettingsBloc>()..add(LoadNotificationSettings()),
+          ),
         ],
         child: const FoodTrackingPage(),
       ),

@@ -19,49 +19,36 @@ class DeleteFood implements UseCase<void, DeleteFoodParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteFoodParams params) async {
-    print('DeleteFood: Starting deletion process for food ID: ${params.id}');
-    
     // Erst das Lebensmittel für die Statistik holen
     final foodResult = await foodRepository.getFoodById(params.id);
-    
+
     return foodResult.fold(
       (failure) {
-        print('DeleteFood: Failed to get food: ${failure.message}');
         return Left(failure);
       },
       (food) async {
-        print('DeleteFood: Found food: ${food.name}, category: ${food.category}');
-        
         // In Statistik als weggeworfen eintragen
         try {
-          print('DeleteFood: Recording wasted food in statistics...');
           await statisticsRepository.recordWastedFood(
             food.id,
             food.name,
             food.category,
           );
-          print('DeleteFood: Successfully recorded in statistics');
         } catch (e) {
-          print('DeleteFood: Error recording statistics: $e');
           // Statistik-Fehler ignorieren, Löschung trotzdem durchführen
         }
-        
+
         // Update recipes to move this food from vorhanden to ueberpruefen
         try {
-          print('DeleteFood: Updating recipes after food deletion...');
           await updateRecipesAfterFoodDeletion(
             UpdateRecipesParams(foodName: food.name),
           );
-          print('DeleteFood: Successfully updated recipes');
         } catch (e) {
-          print('DeleteFood: Error updating recipes: $e');
           // Recipe update error ignorieren, Löschung trotzdem durchführen
         }
-        
+
         // Lebensmittel löschen
-        print('DeleteFood: Deleting food from main storage...');
         final deleteResult = await foodRepository.deleteFood(params.id);
-        print('DeleteFood: Deletion completed');
         return deleteResult;
       },
     );

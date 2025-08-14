@@ -5,7 +5,8 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/recipe.dart';
 import '../repositories/recipe_repository.dart';
 
-class SaveBookmarkedRecipe implements UseCase<void, SaveBookmarkedRecipeParams> {
+class SaveBookmarkedRecipe
+    implements UseCase<void, SaveBookmarkedRecipeParams> {
   final RecipeRepository repository;
 
   SaveBookmarkedRecipe(this.repository);

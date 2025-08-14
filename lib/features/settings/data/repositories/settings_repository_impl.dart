@@ -12,7 +12,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
   SettingsRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<Either<Failure, NotificationSettings>> getNotificationSettings() async {
+  Future<Either<Failure, NotificationSettings>>
+  getNotificationSettings() async {
     try {
       final settings = await localDataSource.getNotificationSettings();
       return Right(settings);
@@ -22,7 +23,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   @override
-  Future<Either<Failure, void>> saveNotificationSettings(NotificationSettings settings) async {
+  Future<Either<Failure, void>> saveNotificationSettings(
+    NotificationSettings settings,
+  ) async {
     try {
       final settingsModel = NotificationSettingsModel.fromEntity(settings);
       await localDataSource.saveNotificationSettings(settingsModel);

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
@@ -16,18 +15,14 @@ class SpeechService {
     try {
       _isInitialized = await _speech.initialize(
         onError: (error) {
-          debugPrint('Spracherkennung Fehler: ${error.errorMsg}');
+          // Error handled silently
         },
         onStatus: (status) {
-          debugPrint('Spracherkennung Status: $status');
           _isListening = status == 'listening';
         },
       );
-      
-      debugPrint('Spracherkennung initialisiert: $_isInitialized');
       return _isInitialized;
     } catch (e) {
-      debugPrint('Fehler bei Spracherkennung-Initialisierung: $e');
       return false;
     }
   }
@@ -35,26 +30,22 @@ class SpeechService {
   Future<bool> requestMicrophonePermission() async {
     try {
       final status = await Permission.microphone.status;
-      debugPrint('Aktueller Mikrofon-Status: $status');
-      
+
       if (status == PermissionStatus.granted) {
         return true;
       }
-      
+
       if (status == PermissionStatus.permanentlyDenied) {
-        debugPrint('Mikrofon-Berechtigung dauerhaft verweigert - Benutzer muss Einstellungen öffnen');
         return false;
       }
-      
+
       final newStatus = await Permission.microphone.request();
-      debugPrint('Neue Mikrofon-Berechtigung: $newStatus');
       return newStatus == PermissionStatus.granted;
     } catch (e) {
-      debugPrint('Fehler bei Mikrofon-Berechtigung: $e');
       return false;
     }
   }
-  
+
   Future<PermissionStatus> getMicrophonePermissionStatus() async {
     return await Permission.microphone.status;
   }
@@ -70,17 +61,15 @@ class SpeechService {
 
     final hasPermission = await requestMicrophonePermission();
     if (!hasPermission) {
-      debugPrint('Keine Mikrofon-Berechtigung');
       return null;
     }
 
     try {
       String recognizedText = '';
-      
+
       await _speech.listen(
         onResult: (result) {
           recognizedText = result.recognizedWords;
-          debugPrint('Erkannter Text: $recognizedText');
         },
         localeId: localeId,
         listenFor: timeout,
@@ -100,11 +89,8 @@ class SpeechService {
         await Future.delayed(const Duration(milliseconds: 100));
       }
 
-      debugPrint('Sprachaufnahme beendet. Erkannter Text: "$recognizedText"');
       return recognizedText.trim().isNotEmpty ? recognizedText.trim() : null;
-      
     } catch (e) {
-      debugPrint('Fehler bei Sprachaufnahme: $e');
       return null;
     }
   }
@@ -113,7 +99,6 @@ class SpeechService {
     if (_speech.isListening) {
       await _speech.stop();
       _isListening = false;
-      debugPrint('Sprachaufnahme gestoppt');
     }
   }
 
@@ -121,12 +106,11 @@ class SpeechService {
     if (_speech.isListening) {
       await _speech.cancel();
       _isListening = false;
-      debugPrint('Sprachaufnahme abgebrochen');
     }
   }
 
   Future<List<stt.LocaleName>> get availableLocales => _speech.locales();
-  
+
   Future<bool> get hasPermission => _speech.hasPermission;
 
   void dispose() {

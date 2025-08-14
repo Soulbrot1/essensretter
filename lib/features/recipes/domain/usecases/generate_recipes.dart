@@ -11,7 +11,9 @@ class GenerateRecipes implements UseCase<List<Recipe>, GenerateRecipesParams> {
   GenerateRecipes(this.repository);
 
   @override
-  Future<Either<Failure, List<Recipe>>> call(GenerateRecipesParams params) async {
+  Future<Either<Failure, List<Recipe>>> call(
+    GenerateRecipesParams params,
+  ) async {
     return await repository.generateRecipes(
       params.availableIngredients,
       previousRecipes: params.previousRecipes,

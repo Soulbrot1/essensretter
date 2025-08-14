@@ -8,17 +8,28 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   StatisticsRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<List<WasteEntry>> getWasteEntries(DateTime startDate, DateTime endDate) async {
+  Future<List<WasteEntry>> getWasteEntries(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
     return await localDataSource.getWasteEntries(startDate, endDate);
   }
 
   @override
-  Future<void> recordWastedFood(String foodId, String name, String? category) async {
+  Future<void> recordWastedFood(
+    String foodId,
+    String name,
+    String? category,
+  ) async {
     return await localDataSource.recordWastedFood(foodId, name, category);
   }
 
   @override
-  Future<void> recordConsumedFood(String foodId, String name, String? category) async {
+  Future<void> recordConsumedFood(
+    String foodId,
+    String name,
+    String? category,
+  ) async {
     return await localDataSource.recordConsumedFood(foodId, name, category);
   }
 }

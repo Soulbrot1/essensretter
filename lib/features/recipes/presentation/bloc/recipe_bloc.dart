@@ -36,7 +36,10 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     List<Recipe> previousRecipes = [];
     if (state is RecipeLoaded) {
       final currentState = state as RecipeLoaded;
-      previousRecipes = [...currentState.previousRecipes, ...currentState.recipes];
+      previousRecipes = [
+        ...currentState.previousRecipes,
+        ...currentState.recipes,
+      ];
     }
 
     final result = await generateRecipes(
@@ -48,10 +51,9 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
 
     result.fold(
       (failure) => emit(RecipeError(message: failure.message)),
-      (recipes) => emit(RecipeLoaded(
-        recipes: recipes,
-        previousRecipes: previousRecipes,
-      )),
+      (recipes) => emit(
+        RecipeLoaded(recipes: recipes, previousRecipes: previousRecipes),
+      ),
     );
   }
 
@@ -60,7 +62,7 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
     Emitter<RecipeState> emit,
   ) async {
     final recipe = event.recipe;
-    
+
     if (recipe.isBookmarked) {
       // Remove bookmark
       await removeBookmarkedRecipe(
@@ -82,7 +84,7 @@ class RecipeBloc extends Bloc<RecipeEvent, RecipeState> {
         }
         return r;
       }).toList();
-      
+
       emit(currentState.copyWith(recipes: updated));
     }
   }

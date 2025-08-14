@@ -16,10 +16,7 @@ class RecipeLoaded extends RecipeState {
   final List<Recipe> recipes;
   final List<Recipe> previousRecipes;
 
-  const RecipeLoaded({
-    required this.recipes,
-    this.previousRecipes = const [],
-  });
+  const RecipeLoaded({required this.recipes, this.previousRecipes = const []});
 
   @override
   List<Object> get props => [recipes, previousRecipes];
@@ -43,9 +40,7 @@ class BookmarkedRecipesLoaded extends RecipeState {
   @override
   List<Object> get props => [bookmarkedRecipes];
 
-  BookmarkedRecipesLoaded copyWith({
-    List<Recipe>? bookmarkedRecipes,
-  }) {
+  BookmarkedRecipesLoaded copyWith({List<Recipe>? bookmarkedRecipes}) {
     return BookmarkedRecipesLoaded(
       bookmarkedRecipes: bookmarkedRecipes ?? this.bookmarkedRecipes,
     );

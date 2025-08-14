@@ -56,11 +56,17 @@ class RecipeGenerationButton extends StatelessWidget {
                 // Rezepte Button (nur Icon)
                 IconButton(
                   key: TutorialHelper.recipeButtonKey,
-                  onPressed: hasFood ? () => _generateRecipes(context, availableFoods) : null,
+                  onPressed: hasFood
+                      ? () => _generateRecipes(context, availableFoods)
+                      : null,
                   icon: const Icon(Icons.restaurant_menu, size: 20),
                   style: IconButton.styleFrom(
-                    backgroundColor: hasFood ? Colors.white.withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.3),
-                    foregroundColor: hasFood ? const Color(0xFF2E7D32) : Colors.grey,
+                    backgroundColor: hasFood
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : Colors.white.withValues(alpha: 0.3),
+                    foregroundColor: hasFood
+                        ? const Color(0xFF2E7D32)
+                        : Colors.grey,
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -116,9 +122,9 @@ class RecipeGenerationButton extends StatelessWidget {
     final availableIngredients = expiringFoods.isNotEmpty
         ? expiringFoods
         : foods
-            .where((food) => !food.isConsumed)
-            .map((food) => food.name as String)
-            .toList();
+              .where((food) => !food.isConsumed)
+              .map((food) => food.name as String)
+              .toList();
 
     if (availableIngredients.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -191,15 +197,10 @@ class RecipeGenerationButton extends StatelessWidget {
   void _showStatistics(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const StatisticsPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const StatisticsPage()),
     );
   }
-
-
 }
-
 
 class AddFoodBottomSheet extends StatefulWidget {
   const AddFoodBottomSheet({super.key});

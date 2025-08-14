@@ -55,43 +55,46 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     Emitter<FoodState> emit,
   ) async {
     emit(FoodLoading());
-    
+
     final result = await getAllFoods(NoParams());
-    
-    await result.fold(
-      (failure) async => emit(FoodError(failure.message)),
-      (foods) async {
-        List<Food> finalFoods = foods;
-        
-        // Lade Demo-Lebensmittel beim ersten App-Start
-        if (foods.isEmpty) {
-          final prefs = await SharedPreferences.getInstance();
-          final demoLoaded = prefs.getBool(DemoFoods.demoLoadedKey) ?? false;
-          
-          if (!demoLoaded) {
-            final demoFoods = DemoFoods.createDemoFoods();
-            final addResult = await addFoods(AddFoodsParams(foods: demoFoods));
-            
-            await addResult.fold(
-              (failure) => null, // Ignore failure, continue with empty state
-              (success) async {
-                finalFoods = demoFoods;
-                await prefs.setBool(DemoFoods.demoLoadedKey, true);
-              },
-            );
-          }
+
+    await result.fold((failure) async => emit(FoodError(failure.message)), (
+      foods,
+    ) async {
+      List<Food> finalFoods = foods;
+
+      // Lade Demo-Lebensmittel beim ersten App-Start
+      if (foods.isEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final demoLoaded = prefs.getBool(DemoFoods.demoLoadedKey) ?? false;
+
+        if (!demoLoaded) {
+          final demoFoods = DemoFoods.createDemoFoods();
+          final addResult = await addFoods(AddFoodsParams(foods: demoFoods));
+
+          await addResult.fold(
+            (failure) => null, // Ignore failure, continue with empty state
+            (success) async {
+              finalFoods = demoFoods;
+              await prefs.setBool(DemoFoods.demoLoadedKey, true);
+            },
+          );
         }
-        
-        final currentState = state;
-        final sortOption = currentState is FoodLoaded ? currentState.sortOption : SortOption.date;
-        final sortedFoods = _sortFoods(finalFoods, sortOption);
-        emit(FoodLoaded(
+      }
+
+      final currentState = state;
+      final sortOption = currentState is FoodLoaded
+          ? currentState.sortOption
+          : SortOption.date;
+      final sortedFoods = _sortFoods(finalFoods, sortOption);
+      emit(
+        FoodLoaded(
           foods: sortedFoods,
           filteredFoods: sortedFoods,
           sortOption: sortOption,
-        ));
-      },
-    );
+        ),
+      );
+    });
   }
 
   Future<void> _onAddFoodFromText(
@@ -100,12 +103,14 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   ) async {
     final currentState = state;
     if (currentState is FoodLoaded) {
-      emit(FoodOperationInProgress(
-        foods: currentState.foods,
-        filteredFoods: currentState.filteredFoods,
-        activeFilter: currentState.activeFilter,
-        sortOption: currentState.sortOption,
-      ));
+      emit(
+        FoodOperationInProgress(
+          foods: currentState.foods,
+          filteredFoods: currentState.filteredFoods,
+          activeFilter: currentState.activeFilter,
+          sortOption: currentState.sortOption,
+        ),
+      );
     }
 
     final result = await addFoodFromText(
@@ -141,13 +146,15 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
 
     result.fold(
       (failure) => emit(FoodError(failure.message)),
-      (previewFoods) => emit(FoodPreviewReady(
-        previewFoods: previewFoods,
-        foods: currentState.foods,
-        filteredFoods: currentState.filteredFoods,
-        activeFilter: currentState.activeFilter,
-        sortOption: currentState.sortOption,
-      )),
+      (previewFoods) => emit(
+        FoodPreviewReady(
+          previewFoods: previewFoods,
+          foods: currentState.foods,
+          filteredFoods: currentState.filteredFoods,
+          activeFilter: currentState.activeFilter,
+          sortOption: currentState.sortOption,
+        ),
+      ),
     );
   }
 
@@ -158,11 +165,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodPreviewReady) return;
 
-    emit(FoodOperationInProgress(
-      foods: currentState.foods,
-      filteredFoods: currentState.filteredFoods,
-      activeFilter: currentState.activeFilter,
-    ));
+    emit(
+      FoodOperationInProgress(
+        foods: currentState.foods,
+        filteredFoods: currentState.filteredFoods,
+        activeFilter: currentState.activeFilter,
+      ),
+    );
 
     final result = await addFoods(AddFoodsParams(foods: event.foods));
 
@@ -170,12 +179,14 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       (failure) async {
         emit(FoodError(failure.message));
         await Future.delayed(const Duration(seconds: 2));
-        emit(FoodLoaded(
-          foods: currentState.foods,
-          filteredFoods: currentState.filteredFoods,
-          activeFilter: currentState.activeFilter,
-          sortOption: currentState.sortOption,
-        ));
+        emit(
+          FoodLoaded(
+            foods: currentState.foods,
+            filteredFoods: currentState.filteredFoods,
+            activeFilter: currentState.activeFilter,
+            sortOption: currentState.sortOption,
+          ),
+        );
       },
       (_) async {
         add(LoadFoodsEvent());
@@ -191,19 +202,23 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     if (currentState is! FoodLoaded) return;
 
     if (event.daysUntilExpiry == null) {
-      emit(currentState.copyWith(
-        filteredFoods: currentState.foods,
-        clearActiveFilter: true,
-      ));
+      emit(
+        currentState.copyWith(
+          filteredFoods: currentState.foods,
+          clearActiveFilter: true,
+        ),
+      );
     } else {
       final filtered = currentState.foods
           .where((food) => food.expiresInDays(event.daysUntilExpiry!))
           .toList();
-      
-      emit(currentState.copyWith(
-        filteredFoods: filtered,
-        activeFilter: event.daysUntilExpiry,
-      ));
+
+      emit(
+        currentState.copyWith(
+          filteredFoods: filtered,
+          activeFilter: event.daysUntilExpiry,
+        ),
+      );
     }
   }
 
@@ -213,20 +228,22 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   ) async {
     final currentState = state;
     if (currentState is FoodLoaded) {
-      emit(FoodOperationInProgress(
-        foods: currentState.foods,
-        filteredFoods: currentState.filteredFoods,
-        activeFilter: currentState.activeFilter,
-        sortOption: currentState.sortOption,
-      ));
-      
+      emit(
+        FoodOperationInProgress(
+          foods: currentState.foods,
+          filteredFoods: currentState.filteredFoods,
+          activeFilter: currentState.activeFilter,
+          sortOption: currentState.sortOption,
+        ),
+      );
+
       // Wenn es weggeworfen wurde, in Statistik erfassen
       if (event.wasDisposed) {
         final foodToDelete = currentState.foods.firstWhere(
           (food) => food.id == event.id,
           orElse: () => throw Exception('Food not found'),
         );
-        
+
         // In Statistik als weggeworfen erfassen
         await statisticsRepository.recordWastedFood(
           foodToDelete.id,
@@ -238,15 +255,12 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
 
     final result = await deleteFood(DeleteFoodParams(id: event.id));
 
-    result.fold(
-      (failure) {
-        emit(FoodError(failure.message));
-        if (currentState is FoodLoaded) {
-          emit(currentState);
-        }
-      },
-      (_) => add(LoadFoodsEvent()),
-    );
+    result.fold((failure) {
+      emit(FoodError(failure.message));
+      if (currentState is FoodLoaded) {
+        emit(currentState);
+      }
+    }, (_) => add(LoadFoodsEvent()));
   }
 
   Future<void> _onToggleConsumed(
@@ -263,11 +277,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     );
 
     // Toggle the consumed status
-    final updatedFood = foodToToggle.copyWith(isConsumed: !foodToToggle.isConsumed);
+    final updatedFood = foodToToggle.copyWith(
+      isConsumed: !foodToToggle.isConsumed,
+    );
 
     // If marking as consumed for the first time, update recipes and record stats
     if (!foodToToggle.isConsumed && updatedFood.isConsumed) {
-      // Update recipes - move this food from "vorhanden" to "ueberpruefen" 
+      // Update recipes - move this food from "vorhanden" to "ueberpruefen"
       await updateRecipesAfterFoodDeletion(
         UpdateRecipesParams(foodName: foodToToggle.name),
       );
@@ -283,15 +299,12 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     // Update the food in the database
     final result = await updateFood(updatedFood);
 
-    result.fold(
-      (failure) {
-        emit(FoodError(failure.message));
-        if (currentState is FoodLoaded) {
-          emit(currentState);
-        }
-      },
-      (_) => add(LoadFoodsEvent()),
-    );
+    result.fold((failure) {
+      emit(FoodError(failure.message));
+      if (currentState is FoodLoaded) {
+        emit(currentState);
+      }
+    }, (_) => add(LoadFoodsEvent()));
   }
 
   Future<void> _onUpdateFood(
@@ -300,25 +313,24 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   ) async {
     final currentState = state;
     if (currentState is FoodLoaded) {
-      emit(FoodOperationInProgress(
-        foods: currentState.foods,
-        filteredFoods: currentState.filteredFoods,
-        activeFilter: currentState.activeFilter,
-        sortOption: currentState.sortOption,
-      ));
+      emit(
+        FoodOperationInProgress(
+          foods: currentState.foods,
+          filteredFoods: currentState.filteredFoods,
+          activeFilter: currentState.activeFilter,
+          sortOption: currentState.sortOption,
+        ),
+      );
     }
 
     final result = await updateFood(event.food);
 
-    result.fold(
-      (failure) {
-        emit(FoodError(failure.message));
-        if (currentState is FoodLoaded) {
-          emit(currentState);
-        }
-      },
-      (_) => add(LoadFoodsEvent()),
-    );
+    result.fold((failure) {
+      emit(FoodError(failure.message));
+      if (currentState is FoodLoaded) {
+        emit(currentState);
+      }
+    }, (_) => add(LoadFoodsEvent()));
   }
 
   Future<void> _onSortFoods(
@@ -329,7 +341,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     if (currentState is! FoodLoaded) return;
 
     final sortedFoods = _sortFoods(currentState.foods, event.sortOption);
-    
+
     List<Food> filteredFoods;
     if (currentState.activeFilter != null) {
       filteredFoods = sortedFoods
@@ -339,19 +351,23 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       filteredFoods = sortedFoods;
     }
 
-    emit(currentState.copyWith(
-      foods: sortedFoods,
-      filteredFoods: filteredFoods,
-      sortOption: event.sortOption,
-    ));
+    emit(
+      currentState.copyWith(
+        foods: sortedFoods,
+        filteredFoods: filteredFoods,
+        sortOption: event.sortOption,
+      ),
+    );
   }
 
   List<Food> _sortFoods(List<Food> foods, SortOption sortOption) {
     final sorted = List<Food>.from(foods);
-    
+
     switch (sortOption) {
       case SortOption.alphabetical:
-        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        sorted.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
       case SortOption.date:
         sorted.sort((a, b) {
@@ -373,7 +389,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         });
         break;
     }
-    
+
     return sorted;
   }
 
@@ -385,17 +401,21 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     if (currentState is! FoodLoaded) return;
 
     // Find all consumed foods
-    final consumedFoods = currentState.foods.where((food) => food.isConsumed).toList();
-    
+    final consumedFoods = currentState.foods
+        .where((food) => food.isConsumed)
+        .toList();
+
     if (consumedFoods.isEmpty) return;
 
     // Show loading state
-    emit(FoodOperationInProgress(
-      foods: currentState.foods,
-      filteredFoods: currentState.filteredFoods,
-      activeFilter: currentState.activeFilter,
-      sortOption: currentState.sortOption,
-    ));
+    emit(
+      FoodOperationInProgress(
+        foods: currentState.foods,
+        filteredFoods: currentState.filteredFoods,
+        activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
+      ),
+    );
 
     try {
       // Delete all consumed foods
@@ -419,20 +439,26 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   ) async {
     final currentState = state;
     if (currentState is FoodLoaded) {
-      emit(FoodOperationInProgress(
-        foods: currentState.foods,
-        filteredFoods: currentState.filteredFoods,
-        activeFilter: currentState.activeFilter,
-        sortOption: currentState.sortOption,
-      ));
+      emit(
+        FoodOperationInProgress(
+          foods: currentState.foods,
+          filteredFoods: currentState.filteredFoods,
+          activeFilter: currentState.activeFilter,
+          sortOption: currentState.sortOption,
+        ),
+      );
     }
 
     try {
       final demoFoods = DemoFoods.createDemoFoods();
       final addResult = await addFoods(AddFoodsParams(foods: demoFoods));
-      
+
       addResult.fold(
-        (failure) => emit(FoodError('Fehler beim Laden der Demo-Lebensmittel: ${failure.message}')),
+        (failure) => emit(
+          FoodError(
+            'Fehler beim Laden der Demo-Lebensmittel: ${failure.message}',
+          ),
+        ),
         (success) async {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setBool(DemoFoods.demoLoadedKey, true);

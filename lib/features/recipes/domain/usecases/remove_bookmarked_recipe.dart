@@ -4,13 +4,16 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../repositories/recipe_repository.dart';
 
-class RemoveBookmarkedRecipe implements UseCase<void, RemoveBookmarkedRecipeParams> {
+class RemoveBookmarkedRecipe
+    implements UseCase<void, RemoveBookmarkedRecipeParams> {
   final RecipeRepository repository;
 
   RemoveBookmarkedRecipe(this.repository);
 
   @override
-  Future<Either<Failure, void>> call(RemoveBookmarkedRecipeParams params) async {
+  Future<Either<Failure, void>> call(
+    RemoveBookmarkedRecipeParams params,
+  ) async {
     return await repository.removeBookmarkedRecipe(params.recipeTitle);
   }
 }

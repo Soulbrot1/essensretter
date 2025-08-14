@@ -25,9 +25,11 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
     context.read<FoodBloc>().add(LoadFoodsEvent());
     _checkAndShowTutorial();
   }
-  
+
   Future<void> _checkAndShowTutorial() async {
-    await Future.delayed(const Duration(seconds: 1)); // Warte bis UI aufgebaut ist
+    await Future.delayed(
+      const Duration(seconds: 1),
+    ); // Warte bis UI aufgebaut ist
     if (mounted) {
       final shouldShow = await TutorialHelper.shouldShowTutorial();
       if (shouldShow) {
@@ -125,99 +127,93 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
               },
               child: BlocBuilder<FoodBloc, FoodState>(
                 builder: (context, state) {
-                if (state is FoodLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                
-                if (state is FoodError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          state.message,
-                          style: Theme.of(context).textTheme.titleMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<FoodBloc>().add(LoadFoodsEvent());
-                          },
-                          child: const Text('Erneut versuchen'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                
-                if (state is FoodLoaded || state is FoodOperationInProgress) {
-                  final foods = state is FoodLoaded 
-                      ? state.filteredFoods 
-                      : (state as FoodOperationInProgress).filteredFoods;
-                  
-                  if (foods.isEmpty) {
+                  if (state is FoodLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (state is FoodError) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
+                          const Icon(
+                            Icons.error_outline,
                             size: 64,
-                            color: Colors.grey[400],
+                            color: Colors.red,
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Keine Lebensmittel vorhanden',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Fügen Sie Lebensmittel über das Eingabefeld hinzu',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[500],
-                            ),
+                            state.message,
+                            style: Theme.of(context).textTheme.titleMedium,
                             textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.read<FoodBloc>().add(LoadFoodsEvent());
+                            },
+                            child: const Text('Erneut versuchen'),
                           ),
                         ],
                       ),
                     );
                   }
-                  
-                  return Stack(
-                    children: [
-                      ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        itemCount: foods.length,
-                        itemBuilder: (context, index) {
-                          return FoodCard(
-                            food: foods[index], 
-                            isFirstCard: index == 0,
-                          );
-                        },
-                      ),
-                      if (state is FoodOperationInProgress)
-                        const Positioned.fill(
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
+
+                  if (state is FoodLoaded || state is FoodOperationInProgress) {
+                    final foods = state is FoodLoaded
+                        ? state.filteredFoods
+                        : (state as FoodOperationInProgress).filteredFoods;
+
+                    if (foods.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Keine Lebensmittel vorhanden',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Fügen Sie Lebensmittel über das Eingabefeld hinzu',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: Colors.grey[500]),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                    ],
-                  );
-                }
-                
-                return const SizedBox.shrink();
-              },
+                      );
+                    }
+
+                    return Stack(
+                      children: [
+                        ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          itemCount: foods.length,
+                          itemBuilder: (context, index) {
+                            return FoodCard(
+                              food: foods[index],
+                              isFirstCard: index == 0,
+                            );
+                          },
+                        ),
+                        if (state is FoodOperationInProgress)
+                          const Positioned.fill(
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                      ],
+                    );
+                  }
+
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ),

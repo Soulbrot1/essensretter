@@ -7,11 +7,7 @@ class RecipeCard extends StatefulWidget {
   final Recipe recipe;
   final VoidCallback? onBookmark;
 
-  const RecipeCard({
-    super.key,
-    required this.recipe,
-    this.onBookmark,
-  });
+  const RecipeCard({super.key, required this.recipe, this.onBookmark});
 
   @override
   State<RecipeCard> createState() => _RecipeCardState();
@@ -28,14 +24,9 @@ class _RecipeCardState extends State<RecipeCard> {
   }
 
   void _updateServings(int newServings) {
-    print('DEBUG: Scaling recipe from ${widget.recipe.servings} to $newServings servings');
-    print('DEBUG: Original vorhanden: ${widget.recipe.vorhanden.map((i) => i.displayText).toList()}');
-    
     setState(() {
       _currentRecipe = RecipeCalculator.scaleRecipe(widget.recipe, newServings);
     });
-    
-    print('DEBUG: Scaled vorhanden: ${_currentRecipe.vorhanden.map((i) => i.displayText).toList()}');
   }
 
   @override
@@ -54,9 +45,11 @@ class _RecipeCardState extends State<RecipeCard> {
                   child: Text(
                     _currentRecipe.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: Theme.of(context).textTheme.headlineSmall!.fontSize! * 0.8,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      fontSize:
+                          Theme.of(context).textTheme.headlineSmall!.fontSize! *
+                          0.8,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -74,14 +67,14 @@ class _RecipeCardState extends State<RecipeCard> {
                 IconButton(
                   onPressed: widget.onBookmark,
                   icon: Icon(
-                    widget.recipe.isBookmarked 
-                        ? Icons.bookmark 
+                    widget.recipe.isBookmarked
+                        ? Icons.bookmark
                         : Icons.bookmark_border,
-                    color: widget.recipe.isBookmarked 
-                        ? Colors.orange 
+                    color: widget.recipe.isBookmarked
+                        ? Colors.orange
                         : Colors.grey,
                   ),
-                  tooltip: widget.recipe.isBookmarked 
+                  tooltip: widget.recipe.isBookmarked
                       ? 'Aus Favoriten entfernen'
                       : 'Zu Favoriten hinzufügen',
                 ),
@@ -94,9 +87,9 @@ class _RecipeCardState extends State<RecipeCard> {
                 const SizedBox(width: 4),
                 Text(
                   'Kochzeit: ${_currentRecipe.cookingTime}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -116,21 +109,23 @@ class _RecipeCardState extends State<RecipeCard> {
                 Icons.check_circle,
               ),
               if (_currentRecipe.ueberpruefen.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              _buildIngredientSection(
-                context,
-                'Überprüfen/Kaufen:',
-                _currentRecipe.ueberpruefen.map((i) => i.displayText).toList(),
-                Colors.orange,
-                Icons.help_outline,
-              ),
+                const SizedBox(height: 12),
+                _buildIngredientSection(
+                  context,
+                  'Überprüfen/Kaufen:',
+                  _currentRecipe.ueberpruefen
+                      .map((i) => i.displayText)
+                      .toList(),
+                  Colors.orange,
+                  Icons.help_outline,
+                ),
               ],
               const SizedBox(height: 16),
               Text(
                 'Anleitung:',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               ..._buildInstructionSteps(context),
@@ -146,7 +141,7 @@ class _RecipeCardState extends State<RecipeCard> {
     return steps.asMap().entries.map((entry) {
       final stepNumber = entry.key + 1;
       final stepText = entry.value;
-      
+
       return Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Row(
@@ -171,9 +166,7 @@ class _RecipeCardState extends State<RecipeCard> {
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: _buildStepContent(context, stepText),
-            ),
+            Expanded(child: _buildStepContent(context, stepText)),
           ],
         ),
       );
@@ -182,14 +175,14 @@ class _RecipeCardState extends State<RecipeCard> {
 
   List<String> _parseInstructions(String instructions) {
     final steps = <String>[];
-    
+
     // Split by newlines first to preserve structure
     final lines = instructions.split('\n');
-    
+
     String currentStep = '';
     for (final line in lines) {
       final trimmedLine = line.trim();
-      
+
       // Check if it's a numbered step (1., 2., etc.)
       if (RegExp(r'^\d+\.').hasMatch(trimmedLine)) {
         // Save previous step if exists
@@ -207,17 +200,17 @@ class _RecipeCardState extends State<RecipeCard> {
         }
       }
     }
-    
+
     // Add the last step
     if (currentStep.isNotEmpty) {
       steps.add(currentStep.trim());
     }
-    
+
     // If no steps found, return the whole instruction as one step
     if (steps.isEmpty && instructions.trim().isNotEmpty) {
       steps.add(instructions.trim());
     }
-    
+
     return steps;
   }
 
@@ -230,20 +223,20 @@ class _RecipeCardState extends State<RecipeCard> {
         children: lines.map((line) {
           final trimmedLine = line.trim();
           if (trimmedLine.isEmpty) return const SizedBox.shrink();
-          
+
           // Format main step title
           if (RegExp(r'^\d+\.').hasMatch(trimmedLine)) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 trimmedLine.replaceFirst(RegExp(r'^\d+\.\s*'), ''),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             );
           }
-          
+
           // Format bullet points
           if (trimmedLine.startsWith('•')) {
             return Padding(
@@ -251,7 +244,10 @@ class _RecipeCardState extends State<RecipeCard> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text(
+                    '• ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   Expanded(
                     child: Text(
                       trimmedLine.substring(1).trim(),
@@ -262,7 +258,7 @@ class _RecipeCardState extends State<RecipeCard> {
               ),
             );
           }
-          
+
           // Regular text
           return Padding(
             padding: const EdgeInsets.only(bottom: 2),
@@ -274,12 +270,9 @@ class _RecipeCardState extends State<RecipeCard> {
         }).toList(),
       );
     }
-    
+
     // Simple text without formatting
-    return Text(
-      stepText,
-      style: Theme.of(context).textTheme.bodyMedium,
-    );
+    return Text(stepText, style: Theme.of(context).textTheme.bodyMedium);
   }
 
   Widget _buildIngredientSection(
@@ -299,9 +292,9 @@ class _RecipeCardState extends State<RecipeCard> {
             Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -310,23 +303,25 @@ class _RecipeCardState extends State<RecipeCard> {
           spacing: 8,
           runSpacing: 4,
           children: ingredients
-              .map((ingredient) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+              .map(
+                (ingredient) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: color.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    ingredient,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: color.withValues(alpha: 0.8),
                     ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: color.withValues(alpha: 0.3)),
-                    ),
-                    child: Text(
-                      ingredient,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: color.withValues(alpha: 0.8),
-                          ),
-                    ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
         ),
       ],

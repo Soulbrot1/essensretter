@@ -15,11 +15,7 @@ class SimpleStatisticsPage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.bar_chart,
-              size: 80,
-              color: Colors.grey,
-            ),
+            Icon(Icons.bar_chart, size: 80, color: Colors.grey),
             SizedBox(height: 20),
             Text(
               'Statistiken funktionieren!',

@@ -25,17 +25,16 @@ class _FoodInputFieldState extends State<FoodInputField> {
     if (text.isNotEmpty) {
       // Tastatur ausblenden
       FocusScope.of(context).unfocus();
-      
+
       context.read<FoodBloc>().add(ShowFoodPreviewEvent(text));
       _controller.clear();
-      
+
       // Nach dem Senden automatisch einklappen
       setState(() {
         _isExpanded = false;
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -103,32 +102,35 @@ class _FoodInputFieldState extends State<FoodInputField> {
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
               opacity: _isExpanded ? 1.0 : 0.0,
-              child: _isExpanded ? Container(
-                padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Divider(height: 1),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _controller,
-                      maxLines: 3,
-                      keyboardType: TextInputType.text,
-                      textInputAction: TextInputAction.send,
-                      decoration: InputDecoration(
-                        hintText: 'z.B. "Honig 5 Tage, Salami 4.08, Milch morgen"',
-                        border: const OutlineInputBorder(),
-                        contentPadding: const EdgeInsets.all(12),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.send),
-                          onPressed: _submitText,
-                        ),
+              child: _isExpanded
+                  ? Container(
+                      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Divider(height: 1),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: _controller,
+                            maxLines: 3,
+                            keyboardType: TextInputType.text,
+                            textInputAction: TextInputAction.send,
+                            decoration: InputDecoration(
+                              hintText:
+                                  'z.B. "Honig 5 Tage, Salami 4.08, Milch morgen"',
+                              border: const OutlineInputBorder(),
+                              contentPadding: const EdgeInsets.all(12),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.send),
+                                onPressed: _submitText,
+                              ),
+                            ),
+                            onSubmitted: (_) => _submitText(),
+                          ),
+                        ],
                       ),
-                      onSubmitted: (_) => _submitText(),
-                    ),
-                  ],
-                ),
-              ) : const SizedBox.shrink(),
+                    )
+                  : const SizedBox.shrink(),
             ),
           ),
         ],

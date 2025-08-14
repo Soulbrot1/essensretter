@@ -10,18 +10,13 @@ class FoodCard extends StatefulWidget {
   final Food food;
   final bool isFirstCard; // Für Tutorial-Targeting
 
-  const FoodCard({
-    super.key,
-    required this.food,
-    this.isFirstCard = false,
-  });
+  const FoodCard({super.key, required this.food, this.isFirstCard = false});
 
   @override
   State<FoodCard> createState() => _FoodCardState();
 }
 
 class _FoodCardState extends State<FoodCard> {
-
   @override
   Widget build(BuildContext context) {
     final daysUntilExpiry = widget.food.daysUntilExpiry;
@@ -38,7 +33,9 @@ class _FoodCardState extends State<FoodCard> {
           children: [
             GestureDetector(
               onTap: () {
-                context.read<FoodBloc>().add(ToggleConsumedEvent(widget.food.id));
+                context.read<FoodBloc>().add(
+                  ToggleConsumedEvent(widget.food.id),
+                );
               },
               child: CircleAvatar(
                 key: widget.isFirstCard ? TutorialHelper.categoryIconKey : null,
@@ -58,8 +55,8 @@ class _FoodCardState extends State<FoodCard> {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  decoration: widget.food.isConsumed || isExpired 
-                      ? TextDecoration.lineThrough 
+                  decoration: widget.food.isConsumed || isExpired
+                      ? TextDecoration.lineThrough
                       : null,
                   color: widget.food.isConsumed ? Colors.grey : null,
                 ),
@@ -71,8 +68,13 @@ class _FoodCardState extends State<FoodCard> {
                 GestureDetector(
                   onTap: () => _showExpiryDatePicker(context, widget.food),
                   child: Container(
-                    key: widget.isFirstCard ? TutorialHelper.expiryDateKey : null,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    key: widget.isFirstCard
+                        ? TutorialHelper.expiryDateKey
+                        : null,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: urgencyColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -93,11 +95,7 @@ class _FoodCardState extends State<FoodCard> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Icon(
-                          Icons.edit,
-                          color: urgencyColor,
-                          size: 12,
-                        ),
+                        Icon(Icons.edit, color: urgencyColor, size: 12),
                       ],
                     ),
                   ),
@@ -107,11 +105,14 @@ class _FoodCardState extends State<FoodCard> {
                   onTap: () {
                     showDialog(
                       context: context,
-                      builder: (context) => FoodTipsDialog(foodName: widget.food.name),
+                      builder: (context) =>
+                          FoodTipsDialog(foodName: widget.food.name),
                     );
                   },
                   child: Container(
-                    key: widget.isFirstCard ? TutorialHelper.infoButtonKey : null,
+                    key: widget.isFirstCard
+                        ? TutorialHelper.infoButtonKey
+                        : null,
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
@@ -131,7 +132,9 @@ class _FoodCardState extends State<FoodCard> {
                     _showDeleteConfirmation(context, widget.food);
                   },
                   child: Container(
-                    key: widget.isFirstCard ? TutorialHelper.trashButtonKey : null,
+                    key: widget.isFirstCard
+                        ? TutorialHelper.trashButtonKey
+                        : null,
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
@@ -185,7 +188,7 @@ class _FoodCardState extends State<FoodCard> {
   void _showExpiryDatePicker(BuildContext context, Food food) async {
     final DateTime now = DateTime.now();
     final DateTime initialDate = food.expiryDate ?? now;
-    
+
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate.isAfter(now) ? initialDate : now,
@@ -218,18 +221,20 @@ class _FoodCardState extends State<FoodCard> {
             TextButton(
               onPressed: () {
                 // Als weggeworfen markieren (wasDisposed = true)
-                context.read<FoodBloc>().add(DeleteFoodEvent(food.id, wasDisposed: true));
+                context.read<FoodBloc>().add(
+                  DeleteFoodEvent(food.id, wasDisposed: true),
+                );
                 Navigator.of(dialogContext).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('${food.name} wurde als weggeworfen markiert'),
+                    content: Text(
+                      '${food.name} wurde als weggeworfen markiert',
+                    ),
                     backgroundColor: Colors.orange,
                   ),
                 );
               },
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.orange,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.orange),
               child: const Text('Ja, weggeworfen'),
             ),
           ],
@@ -237,5 +242,4 @@ class _FoodCardState extends State<FoodCard> {
       },
     );
   }
-
 }

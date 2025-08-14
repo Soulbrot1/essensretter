@@ -3,7 +3,6 @@ import '../entities/ingredient.dart';
 
 /// Service für Rezept-Berechnungen und -Umrechnungen
 class RecipeCalculator {
-  
   /// Skaliert ein Rezept für eine neue Personenanzahl
   static Recipe scaleRecipe(Recipe recipe, int newServings) {
     return recipe.scaleForServings(newServings);
@@ -19,10 +18,10 @@ class RecipeCalculator {
   static bool canScale(Recipe recipe, int newServings) {
     // Minimum 1 Person, Maximum 20 Personen
     if (newServings < 1 || newServings > 20) return false;
-    
+
     // Kann nicht skaliert werden wenn Original-Portionen unbekannt
     if (recipe.servings <= 0) return false;
-    
+
     return true;
   }
 
@@ -45,7 +44,7 @@ class RecipeCalculator {
   static RecipeStats analyzeRecipe(Recipe recipe) {
     int scalableIngredients = 0;
     int nonScalableIngredients = 0;
-    
+
     for (final ingredient in [...recipe.vorhanden, ...recipe.ueberpruefen]) {
       if (ingredient.amount != null && !ingredient._isNonScalableUnit()) {
         scalableIngredients++;
@@ -53,22 +52,23 @@ class RecipeCalculator {
         nonScalableIngredients++;
       }
     }
-    
+
     return RecipeStats(
       totalIngredients: recipe.vorhanden.length + recipe.ueberpruefen.length,
       scalableIngredients: scalableIngredients,
       nonScalableIngredients: nonScalableIngredients,
-      scalingAccuracy: scalableIngredients / (scalableIngredients + nonScalableIngredients),
+      scalingAccuracy:
+          scalableIngredients / (scalableIngredients + nonScalableIngredients),
     );
   }
 
   /// Erstellt eine Zutatenliste für den Einkauf (kombiniert vorhanden + überprüfen)
   static List<Ingredient> createShoppingList(Recipe recipe) {
     final shoppingList = <Ingredient>[];
-    
+
     // Nur "überprüfen" Zutaten kommen auf die Einkaufsliste
     shoppingList.addAll(recipe.ueberpruefen);
-    
+
     return shoppingList;
   }
 
@@ -99,7 +99,7 @@ class RecipeStats {
   final int totalIngredients;
   final int scalableIngredients;
   final int nonScalableIngredients;
-  final double scalingAccuracy;  // 0.0 - 1.0
+  final double scalingAccuracy; // 0.0 - 1.0
 
   const RecipeStats({
     required this.totalIngredients,
@@ -121,17 +121,19 @@ class RecipeStats {
 extension IngredientPrivate on Ingredient {
   bool _isNonScalableUnit() {
     if (unit == null) return false;
-    
+
     final nonScalableUnits = [
-      'prise', 'prisen',
-      'geschmack', 
+      'prise',
+      'prisen',
+      'geschmack',
       'belieben',
       'etwas',
     ];
-    
-    return nonScalableUnits.any((u) => 
-      unit!.toLowerCase().contains(u) || 
-      originalText.toLowerCase().contains(u)
+
+    return nonScalableUnits.any(
+      (u) =>
+          unit!.toLowerCase().contains(u) ||
+          originalText.toLowerCase().contains(u),
     );
   }
 }

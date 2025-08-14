@@ -16,12 +16,14 @@ class RecipeModel extends Recipe {
     // Handle backward compatibility: convert String lists to Ingredient lists
     final vorhandenList = List<String>.from(json['vorhanden'] as List);
     final ueberprufenList = List<String>.from(json['ueberpruefen'] as List);
-    
+
     return RecipeModel(
       title: json['title'] as String,
       cookingTime: json['cookingTime'] as String,
       vorhanden: vorhandenList.map((s) => Ingredient.fromString(s)).toList(),
-      ueberpruefen: ueberprufenList.map((s) => Ingredient.fromString(s)).toList(),
+      ueberpruefen: ueberprufenList
+          .map((s) => Ingredient.fromString(s))
+          .toList(),
       instructions: json['instructions'] as String,
       servings: json['servings'] as int? ?? 2,
       isBookmarked: json['isBookmarked'] as bool? ?? false,
@@ -32,8 +34,9 @@ class RecipeModel extends Recipe {
     return {
       'title': title,
       'cookingTime': cookingTime,
-      'vorhanden': vorhandenAsStrings,  // Convert back to strings for storage
-      'ueberpruefen': ueberprufenAsStrings,  // Convert back to strings for storage
+      'vorhanden': vorhandenAsStrings, // Convert back to strings for storage
+      'ueberpruefen':
+          ueberprufenAsStrings, // Convert back to strings for storage
       'instructions': instructions,
       'servings': servings,
       'isBookmarked': isBookmarked,

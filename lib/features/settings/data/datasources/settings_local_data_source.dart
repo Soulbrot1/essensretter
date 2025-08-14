@@ -17,7 +17,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
 
   @override
   Future<NotificationSettingsModel> getNotificationSettings() async {
-    final isEnabled = sharedPreferences.getBool(_notificationEnabledKey) ?? false;
+    final isEnabled =
+        sharedPreferences.getBool(_notificationEnabledKey) ?? false;
     final hour = sharedPreferences.getInt(_notificationHourKey) ?? 9;
     final minute = sharedPreferences.getInt(_notificationMinuteKey) ?? 0;
 
@@ -29,9 +30,20 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   }
 
   @override
-  Future<void> saveNotificationSettings(NotificationSettingsModel settings) async {
-    await sharedPreferences.setBool(_notificationEnabledKey, settings.isEnabled);
-    await sharedPreferences.setInt(_notificationHourKey, settings.notificationTime.hour);
-    await sharedPreferences.setInt(_notificationMinuteKey, settings.notificationTime.minute);
+  Future<void> saveNotificationSettings(
+    NotificationSettingsModel settings,
+  ) async {
+    await sharedPreferences.setBool(
+      _notificationEnabledKey,
+      settings.isEnabled,
+    );
+    await sharedPreferences.setInt(
+      _notificationHourKey,
+      settings.notificationTime.hour,
+    );
+    await sharedPreferences.setInt(
+      _notificationMinuteKey,
+      settings.notificationTime.minute,
+    );
   }
 }

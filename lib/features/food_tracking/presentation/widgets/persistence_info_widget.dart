@@ -11,7 +11,7 @@ class PersistenceInfoWidget extends StatelessWidget {
     return BlocBuilder<FoodBloc, FoodState>(
       builder: (context, state) {
         if (state is! FoodLoaded) return const SizedBox.shrink();
-        
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(12),
@@ -22,11 +22,7 @@ class PersistenceInfoWidget extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.save,
-                color: Colors.green[700],
-                size: 20,
-              ),
+              Icon(Icons.save, color: Colors.green[700], size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(

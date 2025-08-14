@@ -12,7 +12,7 @@ class ExpiryFilterChips extends StatelessWidget {
     return BlocBuilder<FoodBloc, FoodState>(
       builder: (context, state) {
         final activeFilter = state is FoodLoaded ? state.activeFilter : null;
-        
+
         return Container(
           height: 50,
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -95,7 +95,7 @@ class ExpiryFilterChips extends StatelessWidget {
     required int? activeFilter,
   }) {
     final isSelected = days == activeFilter;
-    
+
     return FilterChip(
       label: Text(label),
       selected: isSelected,

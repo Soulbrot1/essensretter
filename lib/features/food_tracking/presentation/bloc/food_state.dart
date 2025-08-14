@@ -39,7 +39,9 @@ class FoodLoaded extends FoodState {
     return FoodLoaded(
       foods: foods ?? this.foods,
       filteredFoods: filteredFoods ?? this.filteredFoods,
-      activeFilter: clearActiveFilter ? null : (activeFilter ?? this.activeFilter),
+      activeFilter: clearActiveFilter
+          ? null
+          : (activeFilter ?? this.activeFilter),
       sortOption: sortOption ?? this.sortOption,
     );
   }
@@ -87,5 +89,11 @@ class FoodPreviewReady extends FoodState {
   });
 
   @override
-  List<Object?> get props => [previewFoods, foods, filteredFoods, activeFilter, sortOption];
+  List<Object?> get props => [
+    previewFoods,
+    foods,
+    filteredFoods,
+    activeFilter,
+    sortOption,
+  ];
 }

@@ -48,7 +48,7 @@ Future<void> init() async {
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
-  
+
   // Services
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SpeechService());
@@ -66,7 +66,7 @@ Future<void> init() async {
       statisticsRepository: sl(),
     ),
   );
-  
+
   sl.registerFactory(
     () => RecipeBloc(
       generateRecipes: sl(),
@@ -75,7 +75,7 @@ Future<void> init() async {
       removeBookmarkedRecipe: sl(),
     ),
   );
-  
+
   sl.registerFactory(
     () => SettingsBloc(
       getNotificationSettings: sl(),
@@ -87,58 +87,57 @@ Future<void> init() async {
   // Use cases
   sl.registerLazySingleton(() => GetAllFoods(sl()));
   sl.registerLazySingleton(() => GetFoodsByExpiry(sl()));
-  sl.registerLazySingleton(() => AddFoodFromText(
-    textParserRepository: sl(),
-    foodRepository: sl(),
-  ));
+  sl.registerLazySingleton(
+    () => AddFoodFromText(textParserRepository: sl(), foodRepository: sl()),
+  );
   sl.registerLazySingleton(() => AddFoods(sl()));
   sl.registerLazySingleton(() => ParseFoodsFromText(sl()));
-  sl.registerLazySingleton(() => DeleteFood(
-    foodRepository: sl(),
-    statisticsRepository: sl(),
-    updateRecipesAfterFoodDeletion: sl(),
-  ));
+  sl.registerLazySingleton(
+    () => DeleteFood(
+      foodRepository: sl(),
+      statisticsRepository: sl(),
+      updateRecipesAfterFoodDeletion: sl(),
+    ),
+  );
   sl.registerLazySingleton(() => UpdateFood(sl()));
   sl.registerLazySingleton(() => GenerateRecipes(sl()));
-  sl.registerLazySingleton(() => GetBookmarkedRecipes(
-    repository: sl(),
-    foodRepository: sl(),
-  ));
+  sl.registerLazySingleton(
+    () => GetBookmarkedRecipes(repository: sl(), foodRepository: sl()),
+  );
   sl.registerLazySingleton(() => SaveBookmarkedRecipe(sl()));
   sl.registerLazySingleton(() => RemoveBookmarkedRecipe(sl()));
   sl.registerLazySingleton(() => UpdateRecipesAfterFoodDeletion(sl()));
   sl.registerLazySingleton(() => GetExpiringFoods(sl()));
   sl.registerLazySingleton(() => GetNotificationSettings(sl()));
   sl.registerLazySingleton(() => SaveNotificationSettings(sl()));
-  sl.registerLazySingleton(() => ScheduleDailyNotification(
-    getNotificationSettings: sl(),
-    getExpiringFoods: sl(),
-    notificationService: sl(),
-  ));
+  sl.registerLazySingleton(
+    () => ScheduleDailyNotification(
+      getNotificationSettings: sl(),
+      getExpiringFoods: sl(),
+      notificationService: sl(),
+    ),
+  );
 
   // Repositories
   sl.registerLazySingleton<FoodRepository>(
     () => FoodRepositoryImpl(localDataSource: sl()),
   );
-  
+
   // Wähle zwischen OpenAI und einfachem Parser
   sl.registerLazySingleton<TextParserRepository>(
     () => OpenAITextParserRepositoryImpl(openAITextParserService: sl()),
     // Fallback auf einfachen Parser:
     // () => TextParserRepositoryImpl(textParserService: sl<TextParserService>()),
   );
-  
+
   sl.registerLazySingleton<RecipeRepository>(
-    () => RecipeRepositoryImpl(
-      recipeService: sl(),
-      localDataSource: sl(),
-    ),
+    () => RecipeRepositoryImpl(recipeService: sl(), localDataSource: sl()),
   );
-  
+
   sl.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(localDataSource: sl()),
   );
-  
+
   sl.registerLazySingleton<StatisticsRepository>(
     () => StatisticsRepositoryImpl(localDataSource: sl()),
   );
@@ -150,18 +149,14 @@ Future<void> init() async {
   sl.registerLazySingleton<OpenAITextParserService>(
     () => OpenAITextParserService(),
   );
-  sl.registerLazySingleton<TextParserService>(
-    () => TextParserServiceImpl(),
-  );
+  sl.registerLazySingleton<TextParserService>(() => TextParserServiceImpl());
   sl.registerLazySingleton<FoodTipsLocalDataSource>(
     () => FoodTipsLocalDataSourceImpl(),
   );
   sl.registerLazySingleton<FoodTipsService>(
     () => OpenAIFoodTipsService(localDataSource: sl()),
   );
-  sl.registerLazySingleton<RecipeService>(
-    () => OpenAIRecipeService(),
-  );
+  sl.registerLazySingleton<RecipeService>(() => OpenAIRecipeService());
   sl.registerLazySingleton<RecipeLocalDataSource>(
     () => RecipeLocalDataSourceImpl(),
   );

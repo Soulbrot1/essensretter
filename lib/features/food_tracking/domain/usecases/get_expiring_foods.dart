@@ -11,27 +11,30 @@ class GetExpiringFoods implements UseCase<List<Food>, GetExpiringFoodsParams> {
   GetExpiringFoods(this.repository);
 
   @override
-  Future<Either<Failure, List<Food>>> call(GetExpiringFoodsParams params) async {
+  Future<Either<Failure, List<Food>>> call(
+    GetExpiringFoodsParams params,
+  ) async {
     final result = await repository.getAllFoods();
-    
+
     return result.map((foods) {
       final now = DateTime.now();
       final startOfToday = DateTime(now.year, now.month, now.day);
-      final endOfPeriod = startOfToday.add(Duration(days: params.daysAhead + 1));
-      
+      final endOfPeriod = startOfToday.add(
+        Duration(days: params.daysAhead + 1),
+      );
+
       return foods.where((food) {
         if (food.expiryDate == null) return false;
-        
+
         final expiryStart = DateTime(
           food.expiryDate!.year,
           food.expiryDate!.month,
           food.expiryDate!.day,
         );
-        
+
         // Inklusive abgelaufene Lebensmittel (vor heute) und die nächsten X Tage
         return expiryStart.isBefore(endOfPeriod);
-      }).toList()
-        ..sort((a, b) => a.expiryDate!.compareTo(b.expiryDate!));
+      }).toList()..sort((a, b) => a.expiryDate!.compareTo(b.expiryDate!));
     });
   }
 }

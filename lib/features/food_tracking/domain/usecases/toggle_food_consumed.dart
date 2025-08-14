@@ -11,7 +11,9 @@ class ToggleFoodConsumed implements UseCase<Food, ToggleFoodConsumedParams> {
 
   @override
   Future<Either<Failure, Food>> call(ToggleFoodConsumedParams params) async {
-    final updatedFood = params.food.copyWith(isConsumed: !params.food.isConsumed);
+    final updatedFood = params.food.copyWith(
+      isConsumed: !params.food.isConsumed,
+    );
     return await repository.updateFood(updatedFood);
   }
 }

@@ -7,7 +7,7 @@ class Recipe extends Equatable {
   final List<Ingredient> vorhanden;
   final List<Ingredient> ueberpruefen;
   final String instructions;
-  final int servings;            // Für wie viele Personen das Rezept ist
+  final int servings; // Für wie viele Personen das Rezept ist
   final bool isBookmarked;
 
   const Recipe({
@@ -16,20 +16,24 @@ class Recipe extends Equatable {
     required this.vorhanden,
     required this.ueberpruefen,
     required this.instructions,
-    this.servings = 2,           // Standard: 2 Personen
+    this.servings = 2, // Standard: 2 Personen
     this.isBookmarked = false,
   });
 
   /// Skaliert das Rezept für eine neue Personenanzahl
   Recipe scaleForServings(int newServings) {
     if (newServings == servings) return this;
-    
+
     final factor = newServings / servings;
-    
+
     return copyWith(
       servings: newServings,
-      vorhanden: vorhanden.map((ingredient) => ingredient.scale(factor)).toList(),
-      ueberpruefen: ueberpruefen.map((ingredient) => ingredient.scale(factor)).toList(),
+      vorhanden: vorhanden
+          .map((ingredient) => ingredient.scale(factor))
+          .toList(),
+      ueberpruefen: ueberpruefen
+          .map((ingredient) => ingredient.scale(factor))
+          .toList(),
     );
   }
 
@@ -55,8 +59,10 @@ class Recipe extends Equatable {
   }
 
   /// Backward compatibility: Konvertiert zu String-Listen
-  List<String> get vorhandenAsStrings => vorhanden.map((i) => i.displayText).toList();
-  List<String> get ueberprufenAsStrings => ueberpruefen.map((i) => i.displayText).toList();
+  List<String> get vorhandenAsStrings =>
+      vorhanden.map((i) => i.displayText).toList();
+  List<String> get ueberprufenAsStrings =>
+      ueberpruefen.map((i) => i.displayText).toList();
 
   Recipe copyWith({
     String? title,
@@ -80,12 +86,12 @@ class Recipe extends Equatable {
 
   @override
   List<Object?> get props => [
-        title,
-        cookingTime,
-        vorhanden,
-        ueberpruefen,
-        instructions,
-        servings,
-        isBookmarked,
-      ];
+    title,
+    cookingTime,
+    vorhanden,
+    ueberpruefen,
+    instructions,
+    servings,
+    isBookmarked,
+  ];
 }

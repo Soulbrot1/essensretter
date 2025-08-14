@@ -5,10 +5,7 @@ import '../../../../injection_container.dart' as di;
 class FoodTipsDialog extends StatefulWidget {
   final String foodName;
 
-  const FoodTipsDialog({
-    super.key,
-    required this.foodName,
-  });
+  const FoodTipsDialog({super.key, required this.foodName});
 
   @override
   State<FoodTipsDialog> createState() => _FoodTipsDialogState();
@@ -47,9 +44,7 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -58,11 +53,7 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.info_outline,
-                  color: Colors.blue,
-                  size: 24,
-                ),
+                const Icon(Icons.info_outline, color: Colors.blue, size: 24),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -101,10 +92,11 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
                       Expanded(
                         child: Text(
                           'Tipps zur längeren Haltbarkeit:',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.blue.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Colors.blue.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ],
@@ -113,16 +105,15 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
                   _isLoading
                       ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16.0),
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          child: Center(child: CircularProgressIndicator()),
                         )
                       : Text(
                           _tips ?? _getDefaultTips(widget.foodName),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.blue.shade800,
-                            height: 1.4,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Colors.blue.shade800,
+                                height: 1.4,
+                              ),
                         ),
                 ],
               ),
@@ -151,7 +142,7 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
 
   String _getDefaultTips(String foodName) {
     final name = foodName.toLowerCase();
-    
+
     if (name.contains('apfel') || name.contains('äpfel')) {
       return '• Im Kühlschrank aufbewahren\n• Getrennt von anderen Früchten lagern\n• Ethylen-Gas lässt andere Früchte schneller reifen\n• Druckstellen vermeiden';
     } else if (name.contains('brot')) {
@@ -174,5 +165,4 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
       return '• An einem kühlen, trockenen Ort lagern\n• Original-Verpackung beachten\n• Mindesthaltbarkeitsdatum prüfen\n• Bei Zweifeln an Geruch und Aussehen orientieren';
     }
   }
-  
 }

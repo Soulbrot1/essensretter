@@ -23,12 +23,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // Daten laden
       final now = DateTime.now();
       DateTime startDate;
-      
+
       switch (_selectedPeriod) {
         case 0: // Woche
           startDate = now.subtract(const Duration(days: 7));
@@ -49,7 +49,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Fehler beim Laden der Statistiken: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -69,21 +68,15 @@ class _StatisticsPageState extends State<StatisticsPage> {
             margin: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Expanded(
-                  child: _buildPeriodButton('Woche', 0),
-                ),
+                Expanded(child: _buildPeriodButton('Woche', 0)),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: _buildPeriodButton('Monat', 1),
-                ),
+                Expanded(child: _buildPeriodButton('Monat', 1)),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: _buildPeriodButton('Jahr', 2),
-                ),
+                Expanded(child: _buildPeriodButton('Jahr', 2)),
               ],
             ),
           ),
-          
+
           // Statistics Summary
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -100,10 +93,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   children: [
                     Text(
                       '${_wasteEntries.length}',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.red[700],
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     Text(
                       'Weggeworfen',
@@ -116,10 +110,11 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   children: [
                     Text(
                       _getCategoryCount(),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Colors.red[700],
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     Text(
                       'Kategorien',
@@ -130,64 +125,56 @@ class _StatisticsPageState extends State<StatisticsPage> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Waste Entries List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _wasteEntries.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.eco,
-                              size: 64,
-                              color: Colors.green[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Keine weggeworfenen Lebensmittel!',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            Text(
-                              'Toll gemacht! 🌱',
-                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Colors.green[600],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.eco, size: 64, color: Colors.green[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Keine weggeworfenen Lebensmittel!',
+                          style: Theme.of(context).textTheme.headlineSmall,
                         ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: _wasteEntries.length,
-                        itemBuilder: (context, index) {
-                          final entry = _wasteEntries[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.red[100],
-                                child: Icon(
-                                  _getCategoryIcon(entry.category),
-                                  color: Colors.red[700],
-                                ),
-                              ),
-                              title: Text(entry.name),
-                              subtitle: Text(
-                                '${entry.category ?? "Unbekannt"} • ${_formatDate(entry.deletedDate)}',
-                              ),
-                              trailing: Icon(
-                                Icons.delete,
-                                color: Colors.red[400],
-                              ),
+                        Text(
+                          'Toll gemacht! 🌱',
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: Colors.green[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _wasteEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = _wasteEntries[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Colors.red[100],
+                            child: Icon(
+                              _getCategoryIcon(entry.category),
+                              color: Colors.red[700],
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                          title: Text(entry.name),
+                          subtitle: Text(
+                            '${entry.category ?? "Unbekannt"} • ${_formatDate(entry.deletedDate)}',
+                          ),
+                          trailing: Icon(Icons.delete, color: Colors.red[400]),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -238,7 +225,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) return 'Heute';
     if (difference == 1) return 'Gestern';
     return 'vor $difference Tagen';

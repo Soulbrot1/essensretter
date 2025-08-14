@@ -15,7 +15,9 @@ class FoodModel extends Food {
     return FoodModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      expiryDate: json['expiryDate'] != null ? DateTime.parse(json['expiryDate'] as String) : null,
+      expiryDate: json['expiryDate'] != null
+          ? DateTime.parse(json['expiryDate'] as String)
+          : null,
       addedDate: DateTime.parse(json['addedDate'] as String),
       category: json['category'] as String?,
       notes: json['notes'] as String?,

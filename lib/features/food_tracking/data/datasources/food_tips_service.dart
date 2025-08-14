@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'food_tips_local_data_source.dart';
@@ -12,8 +11,8 @@ abstract class FoodTipsService {
 class OpenAIFoodTipsService implements FoodTipsService {
   final String _apiKey;
   final FoodTipsLocalDataSource _localDataSource;
-  
-  OpenAIFoodTipsService({FoodTipsLocalDataSource? localDataSource}) 
+
+  OpenAIFoodTipsService({FoodTipsLocalDataSource? localDataSource})
     : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '',
       _localDataSource = localDataSource ?? FoodTipsLocalDataSourceImpl();
 
@@ -22,18 +21,17 @@ class OpenAIFoodTipsService implements FoodTipsService {
     // 1. Zuerst in lokaler Datenbank suchen
     final localTips = await _localDataSource.getFoodTips(foodName);
     if (localTips != null) {
-      debugPrint('Gefunden in lokaler DB: $foodName');
       return localTips['storage_tips']!;
     }
-    
+
     // 2. Falls nicht gefunden und API Key vorhanden, OpenAI verwenden
     if (_apiKey.isEmpty) {
-      debugPrint('OpenAI API Key nicht gefunden, verwende Standard-Tipps');
       return _getDefaultTips(foodName);
     }
 
     try {
-      final prompt = '''
+      final prompt =
+          '''
 Gib 4 kurze, präzise Lagerungstipps für "$foodName" auf Deutsch.
 
 Format: Nur • + kurzer Stichpunkt (max. 6 Wörter)
@@ -56,10 +54,7 @@ Antworte NUR mit 4 Bullet Points für "$foodName":
         body: json.encode({
           'model': 'gpt-4o-mini',
           'messages': [
-            {
-              'role': 'user',
-              'content': prompt,
-            }
+            {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.1,
           'max_tokens': 150,
@@ -67,49 +62,50 @@ Antworte NUR mit 4 Bullet Points für "$foodName":
       );
 
       if (response.statusCode != 200) {
-        debugPrint('OpenAI API Fehler: ${response.statusCode} - ${response.body}');
         return _getDefaultTips(foodName);
       }
 
       final responseBody = json.decode(response.body);
-      final content = responseBody['choices'][0]['message']['content'] as String;
-      
+      final content =
+          responseBody['choices'][0]['message']['content'] as String;
+
       // Bereinige die Antwort von eventuellen zusätzlichen Texten
       final cleanedContent = content.trim();
-      
+
       // Validiere dass es Bullet Points sind
       String finalResult;
       if (cleanedContent.contains('•')) {
         finalResult = cleanedContent;
       } else {
         // Falls keine Bullet Points, füge sie hinzu
-        final lines = cleanedContent.split('\n')
+        final lines = cleanedContent
+            .split('\n')
             .where((line) => line.trim().isNotEmpty)
             .take(4);
         finalResult = lines.map((line) => '• ${line.trim()}').join('\n');
       }
-      
+
       // Hole auch die Spoilage-Tipps und speichere beide in der Datenbank
       try {
         final spoilageTips = await getSpoilageIndicators(foodName);
-        await _localDataSource.cacheFoodTips(foodName, finalResult, spoilageTips);
-        debugPrint('KI-Tipps für $foodName in Datenbank gespeichert');
+        await _localDataSource.cacheFoodTips(
+          foodName,
+          finalResult,
+          spoilageTips,
+        );
       } catch (e) {
-        debugPrint('Fehler beim Cachen der KI-Tipps: $e');
         // Fehler beim Cachen ignorieren - gib trotzdem das Ergebnis zurück
       }
-      
+
       return finalResult;
-      
     } catch (e) {
-      debugPrint('Fehler beim Abrufen der KI-Tipps: $e');
       return _getDefaultTips(foodName);
     }
   }
 
   String _getDefaultTips(String foodName) {
     final name = foodName.toLowerCase();
-    
+
     if (name.contains('apfel') || name.contains('äpfel')) {
       return '• Im Kühlschrank lagern\n• Getrennt von anderen Früchten\n• Druckstellen vermeiden\n• In Plastikbeutel aufbewahren';
     } else if (name.contains('brot')) {
@@ -132,24 +128,23 @@ Antworte NUR mit 4 Bullet Points für "$foodName":
       return '• Kühl und trocken lagern\n• Original-Verpackung beachten\n• Haltbarkeitsdatum prüfen\n• An Geruch orientieren';
     }
   }
-  
+
   @override
   Future<String> getSpoilageIndicators(String foodName) async {
     // 1. Zuerst in lokaler Datenbank suchen
     final localTips = await _localDataSource.getFoodTips(foodName);
     if (localTips != null) {
-      debugPrint('Spoilage-Hinweise gefunden in lokaler DB: $foodName');
       return localTips['spoilage_indicators']!;
     }
-    
+
     // 2. Falls nicht gefunden und API Key vorhanden, OpenAI verwenden
     if (_apiKey.isEmpty) {
-      debugPrint('OpenAI API Key nicht gefunden, verwende Standard-Hinweise');
       return _getDefaultSpoilageIndicators(foodName);
     }
 
     try {
-      final prompt = '''
+      final prompt =
+          '''
 Gib 4 kurze, präzise Hinweise zur Erkennung von verdorbenem "$foodName" auf Deutsch.
 
 Format: Nur • + kurzer Stichpunkt (max. 6 Wörter)
@@ -173,10 +168,7 @@ Antworte NUR mit 4 Bullet Points für verdorbenes "$foodName":
         body: json.encode({
           'model': 'gpt-4o-mini',
           'messages': [
-            {
-              'role': 'user',
-              'content': prompt,
-            }
+            {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.1,
           'max_tokens': 150,
@@ -184,47 +176,50 @@ Antworte NUR mit 4 Bullet Points für verdorbenes "$foodName":
       );
 
       if (response.statusCode != 200) {
-        debugPrint('OpenAI API Fehler: ${response.statusCode} - ${response.body}');
         return _getDefaultSpoilageIndicators(foodName);
       }
 
       final responseBody = json.decode(response.body);
-      final content = responseBody['choices'][0]['message']['content'] as String;
-      
+      final content =
+          responseBody['choices'][0]['message']['content'] as String;
+
       // Bereinige die Antwort
       final cleanedContent = content.trim();
-      
+
       String finalResult;
       if (cleanedContent.contains('•')) {
         finalResult = cleanedContent;
       } else {
-        final lines = cleanedContent.split('\n')
+        final lines = cleanedContent
+            .split('\n')
             .where((line) => line.trim().isNotEmpty)
             .take(4);
         finalResult = lines.map((line) => '• ${line.trim()}').join('\n');
       }
-      
+
       // Nur Spoilage-Hinweise einzeln cachen, da Storage-Tipps separat gecacht werden
       try {
-        final storageTips = _getDefaultTips(foodName); // Verwende Default-Tipps um Loop zu vermeiden
-        await _localDataSource.cacheFoodTips(foodName, storageTips, finalResult);
-        debugPrint('Spoilage-Hinweise für $foodName in Datenbank gespeichert');
+        final storageTips = _getDefaultTips(
+          foodName,
+        ); // Verwende Default-Tipps um Loop zu vermeiden
+        await _localDataSource.cacheFoodTips(
+          foodName,
+          storageTips,
+          finalResult,
+        );
       } catch (e) {
-        debugPrint('Fehler beim Cachen der Spoilage-Hinweise: $e');
         // Fehler beim Cachen ignorieren - gib trotzdem das Ergebnis zurück
       }
-      
+
       return finalResult;
-      
     } catch (e) {
-      debugPrint('Fehler beim Abrufen der Verderbnis-Hinweise: $e');
       return _getDefaultSpoilageIndicators(foodName);
     }
   }
-  
+
   String _getDefaultSpoilageIndicators(String foodName) {
     final name = foodName.toLowerCase();
-    
+
     if (name.contains('apfel') || name.contains('äpfel')) {
       return '• Braune, weiche Stellen\n• Fauliger Geruch\n• Runzelige Haut\n• Schimmelbildung am Stiel';
     } else if (name.contains('brot')) {

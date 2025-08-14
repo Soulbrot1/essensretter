@@ -53,7 +53,9 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> removeBookmarkedRecipe(String recipeTitle) async {
+  Future<Either<Failure, void>> removeBookmarkedRecipe(
+    String recipeTitle,
+  ) async {
     try {
       await localDataSource.removeBookmarkedRecipe(recipeTitle);
       return const Right(null);
@@ -63,7 +65,9 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRecipesAfterFoodDeletion(String foodName) async {
+  Future<Either<Failure, void>> updateRecipesAfterFoodDeletion(
+    String foodName,
+  ) async {
     try {
       await localDataSource.updateRecipesAfterFoodDeletion(foodName);
       return const Right(null);
@@ -73,7 +77,9 @@ class RecipeRepositoryImpl implements RecipeRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateAllBookmarkedRecipes(List<Recipe> recipes) async {
+  Future<Either<Failure, void>> updateAllBookmarkedRecipes(
+    List<Recipe> recipes,
+  ) async {
     try {
       await localDataSource.updateAllBookmarkedRecipes(
         recipes.map((r) => RecipeModel.fromEntity(r)).toList(),

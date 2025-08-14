@@ -10,45 +10,6 @@ import '../../domain/entities/ingredient.dart';
 class BookmarkedRecipesPage extends StatelessWidget {
   const BookmarkedRecipesPage({super.key});
 
-  void _addTestRecipe(BuildContext context) {
-    // DEBUG: Erstelle Test-Rezept mit korrekten Mengenangaben
-    final testRecipe = Recipe(
-      title: 'Test Pasta Bolognese',
-      cookingTime: '30 Minuten',
-      vorhanden: [
-        Ingredient.fromString('400g Pasta'),
-        Ingredient.fromString('2 EL Olivenöl'),
-        Ingredient.fromString('1 große Zwiebel'),
-      ],
-      ueberpruefen: [
-        Ingredient.fromString('500g Hackfleisch'),
-        Ingredient.fromString('400ml Tomatensoße'),
-        Ingredient.fromString('100g Parmesan'),
-      ],
-      instructions: '''1. Vorbereitung:
-• Zwiebel fein hacken
-• Wasser für Pasta aufsetzen
-
-2. Zubereitung:
-• Zwiebel in Olivenöl anbraten
-• Hackfleisch hinzufügen und anbraten
-• Tomatensoße hinzufügen und köcheln lassen
-• Pasta kochen
-
-3. Servieren:
-• Pasta mit Soße vermischen
-• Mit Parmesan bestreuen''',
-      servings: 2,
-      isBookmarked: true,
-    );
-    
-    context.read<RecipeBloc>().add(BookmarkRecipeEvent(recipe: testRecipe));
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Test-Rezept hinzugefügt!')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -68,22 +29,13 @@ class BookmarkedRecipesPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              Icon(
-                Icons.bookmark,
-                color: Colors.orange,
-              ),
+              Icon(Icons.bookmark, color: Colors.orange),
               const SizedBox(width: 8),
               Text(
                 'Gespeicherte Rezepte',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              // DEBUG: Test-Rezept Button
-              IconButton(
-                onPressed: () => _addTestRecipe(context),
-                icon: Icon(Icons.science, color: Colors.blue),
-                tooltip: 'Test-Rezept hinzufügen (Debug)',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -91,87 +43,84 @@ class BookmarkedRecipesPage extends StatelessWidget {
         const SizedBox(height: 16),
         Expanded(
           child: BlocBuilder<RecipeBloc, RecipeState>(
-        builder: (context, state) {
-          if (state is RecipeLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
+            builder: (context, state) {
+              if (state is RecipeLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (state is RecipeError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Zurück'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (state is BookmarkedRecipesLoaded) {
-            if (state.bookmarkedRecipes.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.bookmark_border,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Keine gespeicherten Rezepte',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.grey[600],
+              if (state is RecipeError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Speichern Sie Rezepte durch Tippen auf das Bookmark-Symbol',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[500],
+                      const SizedBox(height: 16),
+                      Text(
+                        state.message,
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: state.bookmarkedRecipes.length,
-              itemBuilder: (context, index) {
-                final recipe = state.bookmarkedRecipes[index];
-                return RecipeCard(
-                  recipe: recipe,
-                  onBookmark: () => _showRemoveConfirmationDialog(context, recipe),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Zurück'),
+                      ),
+                    ],
+                  ),
                 );
-              },
-            );
-          }
+              }
 
-          return const Center(
-            child: Text('Keine gespeicherten Rezepte verfügbar'),
-          );
-        },
+              if (state is BookmarkedRecipesLoaded) {
+                if (state.bookmarkedRecipes.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.bookmark_border,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Keine gespeicherten Rezepte',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: Colors.grey[600]),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Speichern Sie Rezepte durch Tippen auf das Bookmark-Symbol',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[500]),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: state.bookmarkedRecipes.length,
+                  itemBuilder: (context, index) {
+                    final recipe = state.bookmarkedRecipes[index];
+                    return RecipeCard(
+                      recipe: recipe,
+                      onBookmark: () =>
+                          _showRemoveConfirmationDialog(context, recipe),
+                    );
+                  },
+                );
+              }
+
+              return const Center(
+                child: Text('Keine gespeicherten Rezepte verfügbar'),
+              );
+            },
           ),
         ),
       ],
@@ -193,7 +142,9 @@ class BookmarkedRecipesPage extends StatelessWidget {
                   text: '"${recipe.title}"',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const TextSpan(text: ' wirklich aus deinen Favoriten entfernen?\n\n'),
+                const TextSpan(
+                  text: ' wirklich aus deinen Favoriten entfernen?\n\n',
+                ),
                 TextSpan(
                   text: '⚠️ Das Rezept wird unwiederbringlich gelöscht.',
                   style: TextStyle(

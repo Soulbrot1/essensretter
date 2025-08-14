@@ -11,15 +11,13 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Einstellungen'),
-      ),
+      appBar: AppBar(title: const Text('Einstellungen')),
       body: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, state) {
           if (state is SettingsLoading || state is SettingsInitial) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (state is SettingsError) {
             return Center(
               child: Column(
@@ -29,7 +27,9 @@ class SettingsPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      context.read<SettingsBloc>().add(LoadNotificationSettings());
+                      context.read<SettingsBloc>().add(
+                        LoadNotificationSettings(),
+                      );
                     },
                     child: const Text('Erneut versuchen'),
                   ),
@@ -37,7 +37,7 @@ class SettingsPage extends StatelessWidget {
               ),
             );
           }
-          
+
           if (state is SettingsLoaded) {
             return ListView(
               children: [
@@ -45,10 +45,7 @@ class SettingsPage extends StatelessWidget {
                   padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Benachrichtigungen',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
                 SwitchListTile(
@@ -68,15 +65,18 @@ class SettingsPage extends StatelessWidget {
                   ListTile(
                     title: const Text('Benachrichtigungszeit'),
                     subtitle: Text(
-                      state.notificationSettings.notificationTime.format(context),
+                      state.notificationSettings.notificationTime.format(
+                        context,
+                      ),
                     ),
                     trailing: const Icon(Icons.access_time),
                     onTap: () async {
                       final TimeOfDay? selectedTime = await showTimePicker(
                         context: context,
-                        initialTime: state.notificationSettings.notificationTime,
+                        initialTime:
+                            state.notificationSettings.notificationTime,
                       );
-                      
+
                       if (selectedTime != null && context.mounted) {
                         context.read<SettingsBloc>().add(
                           UpdateNotificationTime(selectedTime),
@@ -117,10 +117,7 @@ class SettingsPage extends StatelessWidget {
                   padding: EdgeInsets.all(16.0),
                   child: Text(
                     'Hilfe & Demo',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
                 ListTile(
@@ -140,14 +137,19 @@ class SettingsPage extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.add_shopping_cart, color: Colors.green),
+                  leading: const Icon(
+                    Icons.add_shopping_cart,
+                    color: Colors.green,
+                  ),
                   title: const Text('Demo-Lebensmittel laden'),
                   subtitle: const Text('3 Beispiel-Lebensmittel hinzufügen'),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     context.read<FoodBloc>().add(const LoadDemoFoodsEvent());
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Demo-Lebensmittel werden geladen...')),
+                      const SnackBar(
+                        content: Text('Demo-Lebensmittel werden geladen...'),
+                      ),
                     );
                     Navigator.of(context).pop();
                   },
@@ -155,7 +157,7 @@ class SettingsPage extends StatelessWidget {
               ],
             );
           }
-          
+
           return const SizedBox();
         },
       ),

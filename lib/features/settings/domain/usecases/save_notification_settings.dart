@@ -5,13 +5,16 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/notification_settings.dart';
 import '../repositories/settings_repository.dart';
 
-class SaveNotificationSettings implements UseCase<void, SaveNotificationSettingsParams> {
+class SaveNotificationSettings
+    implements UseCase<void, SaveNotificationSettingsParams> {
   final SettingsRepository repository;
 
   SaveNotificationSettings(this.repository);
 
   @override
-  Future<Either<Failure, void>> call(SaveNotificationSettingsParams params) async {
+  Future<Either<Failure, void>> call(
+    SaveNotificationSettingsParams params,
+  ) async {
     return await repository.saveNotificationSettings(params.settings);
   }
 }

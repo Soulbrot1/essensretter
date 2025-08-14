@@ -11,7 +11,9 @@ class GetFoodsByExpiry implements UseCase<List<Food>, GetFoodsByExpiryParams> {
   GetFoodsByExpiry(this.repository);
 
   @override
-  Future<Either<Failure, List<Food>>> call(GetFoodsByExpiryParams params) async {
+  Future<Either<Failure, List<Food>>> call(
+    GetFoodsByExpiryParams params,
+  ) async {
     return await repository.getFoodsByExpiryDays(params.daysUntilExpiry);
   }
 }

@@ -4,7 +4,8 @@ import '../../../../core/usecases/usecase.dart';
 import '../entities/notification_settings.dart';
 import '../repositories/settings_repository.dart';
 
-class GetNotificationSettings implements UseCase<NotificationSettings, NoParams> {
+class GetNotificationSettings
+    implements UseCase<NotificationSettings, NoParams> {
   final SettingsRepository repository;
 
   GetNotificationSettings(this.repository);

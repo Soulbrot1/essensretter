@@ -3,11 +3,11 @@ import '../../features/food_tracking/domain/entities/food.dart';
 
 class DemoFoods {
   static const String _demoLoadedKey = 'demo_foods_loaded';
-  
+
   static List<Food> createDemoFoods() {
     final now = DateTime.now();
     const uuid = Uuid();
-    
+
     return [
       Food(
         id: uuid.v4(),
@@ -32,6 +32,6 @@ class DemoFoods {
       ),
     ];
   }
-  
+
   static String get demoLoadedKey => _demoLoadedKey;
 }

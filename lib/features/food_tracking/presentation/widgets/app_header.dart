@@ -9,7 +9,9 @@ class AppHeader extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -20,19 +22,21 @@ class AppHeader extends StatelessWidget {
           // Logo
           Image.asset(
             'assets/images/image.png',
-            height: 131,
-            width: 131,
+            height: 170,
+            width: 170,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
               return Container(
-                height: 131,
-                width: 131,
+                height: 170,
+                width: 170,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -41,7 +45,7 @@ class AppHeader extends StatelessWidget {
                 child: Icon(
                   Icons.shopping_bag,
                   color: Theme.of(context).colorScheme.onPrimary,
-                  size: 66,
+                  size: 86,
                 ),
               );
             },
@@ -64,7 +68,9 @@ class AppHeader extends StatelessWidget {
                   'Rette deine Lebensmittel',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
                     fontStyle: FontStyle.italic,
                   ),
                 ),

@@ -23,7 +23,11 @@ class Food extends Equatable {
     if (expiryDate == null) return 999; // Large number for foods without date
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final expiry = DateTime(expiryDate!.year, expiryDate!.month, expiryDate!.day);
+    final expiry = DateTime(
+      expiryDate!.year,
+      expiryDate!.month,
+      expiryDate!.day,
+    );
     return expiry.difference(today).inDays;
   }
 
@@ -35,7 +39,7 @@ class Food extends Equatable {
     if (expiryDate == null) {
       return 'ohne Datum';
     }
-    
+
     final days = daysUntilExpiry;
     if (isExpired) {
       return 'vor ${-days} Tag${days == -1 ? '' : 'en'}';
@@ -63,7 +67,9 @@ class Food extends Equatable {
     return Food(
       id: id ?? this.id,
       name: name ?? this.name,
-      expiryDate: clearExpiryDate == true ? null : (expiryDate ?? this.expiryDate),
+      expiryDate: clearExpiryDate == true
+          ? null
+          : (expiryDate ?? this.expiryDate),
       addedDate: addedDate ?? this.addedDate,
       category: category ?? this.category,
       notes: notes ?? this.notes,
@@ -72,5 +78,13 @@ class Food extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, expiryDate, addedDate, category, notes, isConsumed];
+  List<Object?> get props => [
+    id,
+    name,
+    expiryDate,
+    addedDate,
+    category,
+    notes,
+    isConsumed,
+  ];
 }

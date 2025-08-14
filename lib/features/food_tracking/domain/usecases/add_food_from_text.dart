@@ -17,28 +17,29 @@ class AddFoodFromText implements UseCase<List<Food>, AddFoodFromTextParams> {
 
   @override
   Future<Either<Failure, List<Food>>> call(AddFoodFromTextParams params) async {
-    final parseResult = await textParserRepository.parseTextToFoods(params.text);
-    
-    return parseResult.fold(
-      (failure) => Left(failure),
-      (foods) async {
-        final List<Food> addedFoods = [];
-        
-        for (final food in foods) {
-          final result = await foodRepository.addFood(food);
-          result.fold(
-            (failure) => null,
-            (addedFood) => addedFoods.add(addedFood),
-          );
-        }
-        
-        if (addedFoods.isEmpty) {
-          return const Left(InputFailure('Keine Lebensmittel konnten hinzugefügt werden'));
-        }
-        
-        return Right(addedFoods);
-      },
+    final parseResult = await textParserRepository.parseTextToFoods(
+      params.text,
     );
+
+    return parseResult.fold((failure) => Left(failure), (foods) async {
+      final List<Food> addedFoods = [];
+
+      for (final food in foods) {
+        final result = await foodRepository.addFood(food);
+        result.fold(
+          (failure) => null,
+          (addedFood) => addedFoods.add(addedFood),
+        );
+      }
+
+      if (addedFoods.isEmpty) {
+        return const Left(
+          InputFailure('Keine Lebensmittel konnten hinzugefügt werden'),
+        );
+      }
+
+      return Right(addedFoods);
+    });
   }
 }
 

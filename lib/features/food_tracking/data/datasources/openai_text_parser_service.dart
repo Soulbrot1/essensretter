@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -9,33 +8,29 @@ import 'text_parser_service.dart';
 class OpenAITextParserService implements TextParserService {
   final String _apiKey;
   final Uuid uuid = const Uuid();
-  
+
   OpenAITextParserService() : _apiKey = dotenv.env['OPENAI_API_KEY'] ?? '';
 
   @override
   List<FoodModel> parseTextToFoods(String text) {
     // Fallback auf einfachen Parser wenn kein API Key
     if (_apiKey.isEmpty) {
-      debugPrint('OpenAI API Key nicht gefunden, verwende einfachen Parser');
       return TextParserServiceImpl().parseTextToFoods(text);
     }
-    
+
     // Für OpenAI verwenden wir die async Methode
     throw UnimplementedError('Verwende parseTextToFoodsAsync für OpenAI');
   }
 
   Future<List<FoodModel>> parseTextToFoodsAsync(String text) async {
-    debugPrint('OpenAI Parser aufgerufen mit Text: "$text"');
-    debugPrint('API Key vorhanden: ${_apiKey.isNotEmpty}');
-    
     if (_apiKey.isEmpty) {
-      debugPrint('OpenAI API Key nicht gefunden, verwende einfachen Parser');
       return TextParserServiceImpl().parseTextToFoods(text);
     }
 
     try {
       final now = DateTime.now();
-      final prompt = '''
+      final prompt =
+          '''
 Analysiere diesen deutschen Text und extrahiere ALLE Lebensmittel mit ihren Datumsangaben.
 
 Text: "$text"
@@ -91,10 +86,7 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
         body: json.encode({
           'model': 'gpt-4o-mini',
           'messages': [
-            {
-              'role': 'user',
-              'content': prompt,
-            }
+            {'role': 'user', 'content': prompt},
           ],
           'temperature': 0.1,
           'max_tokens': 500,
@@ -102,29 +94,23 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       );
 
       if (response.statusCode != 200) {
-        debugPrint('OpenAI API Fehler: ${response.statusCode}');
-        debugPrint('Response Body: ${response.body}');
         return _fallbackParsing(text);
       }
 
       final responseBody = json.decode(response.body);
       final content = responseBody['choices'][0]['message']['content'];
-      
+
       // Extrahiere JSON aus der Antwort (falls zusätzlicher Text vorhanden)
       final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(content);
       if (jsonMatch == null) {
-        debugPrint('Kein JSON in OpenAI Antwort gefunden');
         return _fallbackParsing(text);
       }
-      
+
       final parsedData = json.decode(jsonMatch.group(0)!);
-      debugPrint('OpenAI Response parsed: $parsedData');
-      
+
       final models = _createFoodModels(parsedData);
-      debugPrint('Erstellte ${models.length} FoodModels');
       return models;
     } catch (e) {
-      debugPrint('OpenAI Parsing Fehler: $e');
       return _fallbackParsing(text);
     }
   }
@@ -132,7 +118,7 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
   List<FoodModel> _createFoodModels(Map<String, dynamic> parsedData) {
     try {
       final foodsData = parsedData['foods'] as List<dynamic>? ?? [];
-      
+
       final now = DateTime.now();
       final List<FoodModel> foods = [];
 
@@ -141,24 +127,24 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
         final name = foodMap['name'] as String?;
         final dateText = foodMap['date_text'] as String?;
         final category = foodMap['category'] as String?;
-        
+
         if (name != null && name.trim().isNotEmpty) {
           final DateTime? expiryDate = _parseDateText(dateText, now);
-          debugPrint('Creating food: $name, dateText: $dateText, expiryDate: $expiryDate');
-          
-          foods.add(FoodModel(
-            id: uuid.v4(),
-            name: _capitalizeFirst(name.trim()),
-            expiryDate: expiryDate,
-            addedDate: now,
-            category: category,
-          ));
+
+          foods.add(
+            FoodModel(
+              id: uuid.v4(),
+              name: _capitalizeFirst(name.trim()),
+              expiryDate: expiryDate,
+              addedDate: now,
+              category: category,
+            ),
+          );
         }
       }
 
       return foods;
     } catch (e) {
-      debugPrint('Fehler beim Erstellen der FoodModels: $e');
       return [];
     }
   }
@@ -169,7 +155,6 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
     }
 
     final text = dateText.trim().toLowerCase();
-    debugPrint('Parsing date text: "$text"');
 
     try {
       // Direkte Zeitangaben
@@ -180,36 +165,34 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       // Numerische und textuelle Zeitangaben
       int? days = _extractDays(text);
       if (days != null) {
-        debugPrint('Extracted $days days from "$text"');
         return now.add(Duration(days: days));
       }
 
       int? weeks = _extractWeeks(text);
       if (weeks != null) {
-        debugPrint('Extracted $weeks weeks from "$text"');
         return now.add(Duration(days: weeks * 7));
       }
 
       int? months = _extractMonths(text);
       if (months != null) {
-        debugPrint('Extracted $months months from "$text"');
         return now.add(Duration(days: months * 30));
       }
 
       // Vollständige Datumsangaben (dd.mm.yyyy, dd.mm.yy)
-      final fullDateMatch = RegExp(r'(\d{1,2})\.(\d{1,2})\.(\d{2,4})').firstMatch(text);
+      final fullDateMatch = RegExp(
+        r'(\d{1,2})\.(\d{1,2})\.(\d{2,4})',
+      ).firstMatch(text);
       if (fullDateMatch != null) {
         final day = int.parse(fullDateMatch.group(1)!);
         final month = int.parse(fullDateMatch.group(2)!);
         var year = int.parse(fullDateMatch.group(3)!);
-        
+
         // 2-stellige Jahre behandeln
         if (year < 100) {
           year += 2000;
         }
-        
+
         final parsedDate = DateTime(year, month, day);
-        debugPrint('Parsed full date: $day.$month.$year -> $parsedDate');
         return parsedDate;
       }
 
@@ -218,29 +201,25 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
       if (dateMatch != null) {
         final day = int.parse(dateMatch.group(1)!);
         final month = int.parse(dateMatch.group(2)!);
-        
+
         // Verwende aktuelles Jahr
         var parsedDate = DateTime(now.year, month, day);
-        
+
         // Wenn das Datum in der Vergangenheit liegt, nimm nächstes Jahr
         if (parsedDate.isBefore(now)) {
           parsedDate = DateTime(now.year + 1, month, day);
         }
-        
-        debugPrint('Parsed date without year: $day.$month.${parsedDate.year} -> $parsedDate');
+
         return parsedDate;
       }
 
-      debugPrint('Could not parse date text: "$text"');
       return null;
     } catch (e) {
-      debugPrint('Error parsing date text "$text": $e');
       return null;
     }
   }
 
   List<FoodModel> _fallbackParsing(String text) {
-    debugPrint('Verwende Fallback-Parser');
     return TextParserServiceImpl().parseTextToFoods(text);
   }
 

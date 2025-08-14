@@ -4,7 +4,8 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../repositories/recipe_repository.dart';
 
-class UpdateRecipesAfterFoodDeletion implements UseCase<void, UpdateRecipesParams> {
+class UpdateRecipesAfterFoodDeletion
+    implements UseCase<void, UpdateRecipesParams> {
   final RecipeRepository repository;
 
   UpdateRecipesAfterFoodDeletion(this.repository);

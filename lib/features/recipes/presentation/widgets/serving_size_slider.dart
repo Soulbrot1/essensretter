@@ -42,9 +42,14 @@ class ServingSizeSlider extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -64,22 +69,29 @@ class ServingSizeSlider extends StatelessWidget {
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
               overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
               activeTrackColor: Theme.of(context).colorScheme.primary,
-              inactiveTrackColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              inactiveTrackColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.2),
               thumbColor: Theme.of(context).colorScheme.primary,
-              overlayColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              overlayColor: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
             ),
             child: Slider(
               value: currentServings.toDouble(),
               min: minServings.toDouble(),
               max: maxServings.toDouble(),
               divisions: recommendedServings.length - 1,
-              onChanged: enabled ? (value) {
-                final newServings = _findNearestRecommendedServing(value.round());
-                print('DEBUG: Slider changed from $currentServings to $newServings servings');
-                if (newServings != currentServings) {
-                  onServingsChanged(newServings);
-                }
-              } : null,
+              onChanged: enabled
+                  ? (value) {
+                      final newServings = _findNearestRecommendedServing(
+                        value.round(),
+                      );
+                      if (newServings != currentServings) {
+                        onServingsChanged(newServings);
+                      }
+                    }
+                  : null,
             ),
           ),
         ],
@@ -90,16 +102,16 @@ class ServingSizeSlider extends StatelessWidget {
   /// Findet die nächstgelegene empfohlene Personenanzahl
   int _findNearestRecommendedServing(int value) {
     final recommendedServings = RecipeCalculator.getRecommendedServings();
-    
+
     // Finde den Wert in der Liste oder den nächstgelegenen
     if (recommendedServings.contains(value)) {
       return value;
     }
-    
+
     // Finde den nächstgelegenen Wert
     int nearest = recommendedServings.first;
     int minDifference = (value - nearest).abs();
-    
+
     for (final serving in recommendedServings) {
       final difference = (value - serving).abs();
       if (difference < minDifference) {
@@ -107,7 +119,7 @@ class ServingSizeSlider extends StatelessWidget {
         nearest = serving;
       }
     }
-    
+
     return nearest;
   }
 }

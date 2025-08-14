@@ -11,5 +11,7 @@ abstract class RecipeRepository {
   Future<Either<Failure, void>> saveBookmarkedRecipe(Recipe recipe);
   Future<Either<Failure, void>> removeBookmarkedRecipe(String recipeTitle);
   Future<Either<Failure, void>> updateRecipesAfterFoodDeletion(String foodName);
-  Future<Either<Failure, void>> updateAllBookmarkedRecipes(List<Recipe> recipes);
+  Future<Either<Failure, void>> updateAllBookmarkedRecipes(
+    List<Recipe> recipes,
+  );
 }

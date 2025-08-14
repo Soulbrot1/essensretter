@@ -51,7 +51,9 @@ class FoodRepositoryImpl implements FoodRepository {
       final result = await localDataSource.addFood(foodModel);
       return Right(result);
     } on CacheException {
-      return const Left(CacheFailure('Fehler beim Speichern des Lebensmittels'));
+      return const Left(
+        CacheFailure('Fehler beim Speichern des Lebensmittels'),
+      );
     }
   }
 
@@ -72,7 +74,9 @@ class FoodRepositoryImpl implements FoodRepository {
       final result = await localDataSource.updateFood(foodModel);
       return Right(result);
     } on CacheException {
-      return const Left(CacheFailure('Fehler beim Aktualisieren des Lebensmittels'));
+      return const Left(
+        CacheFailure('Fehler beim Aktualisieren des Lebensmittels'),
+      );
     }
   }
 }

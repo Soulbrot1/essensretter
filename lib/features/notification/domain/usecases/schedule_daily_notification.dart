@@ -21,47 +21,41 @@ class ScheduleDailyNotification implements UseCase<void, NoParams> {
   Future<Either<Failure, void>> call(NoParams params) async {
     // Hole Benachrichtigungseinstellungen
     final settingsResult = await getNotificationSettings(NoParams());
-    
-    return settingsResult.fold(
-      (failure) => Left(failure),
-      (settings) async {
-        if (!settings.isEnabled) {
-          // Benachrichtigungen deaktiviert - lösche geplante Benachrichtigung
-          await notificationService.cancelDailyNotification();
-          return const Right(null);
+
+    return settingsResult.fold((failure) => Left(failure), (settings) async {
+      if (!settings.isEnabled) {
+        // Benachrichtigungen deaktiviert - lösche geplante Benachrichtigung
+        await notificationService.cancelDailyNotification();
+        return const Right(null);
+      }
+
+      // Hole ablaufende Lebensmittel (nächste 2 Tage)
+      final foodsResult = await getExpiringFoods(
+        const GetExpiringFoodsParams(daysAhead: 2),
+      );
+
+      return foodsResult.fold((failure) => Left(failure), (foods) async {
+        final notificationBody = _createNotificationBody(foods);
+
+        if (notificationBody.isNotEmpty) {
+          await notificationService.scheduleDailyNotification(
+            time: settings.notificationTime,
+            title: 'Lebensmittel-Erinnerung',
+            body: notificationBody,
+          );
+        } else {
+          // Keine ablaufenden Lebensmittel - trotzdem Benachrichtigung planen
+          // für zukünftige Checks
+          await notificationService.scheduleDailyNotification(
+            time: settings.notificationTime,
+            title: 'Alles frisch!',
+            body: 'Keine Lebensmittel laufen in den nächsten 2 Tagen ab.',
+          );
         }
 
-        // Hole ablaufende Lebensmittel (nächste 2 Tage)
-        final foodsResult = await getExpiringFoods(
-          const GetExpiringFoodsParams(daysAhead: 2),
-        );
-
-        return foodsResult.fold(
-          (failure) => Left(failure),
-          (foods) async {
-            final notificationBody = _createNotificationBody(foods);
-            
-            if (notificationBody.isNotEmpty) {
-              await notificationService.scheduleDailyNotification(
-                time: settings.notificationTime,
-                title: 'Lebensmittel-Erinnerung',
-                body: notificationBody,
-              );
-            } else {
-              // Keine ablaufenden Lebensmittel - trotzdem Benachrichtigung planen
-              // für zukünftige Checks
-              await notificationService.scheduleDailyNotification(
-                time: settings.notificationTime,
-                title: 'Alles frisch!',
-                body: 'Keine Lebensmittel laufen in den nächsten 2 Tagen ab.',
-              );
-            }
-            
-            return const Right(null);
-          },
-        );
-      },
-    );
+        return const Right(null);
+      });
+    });
   }
 
   String _createNotificationBody(List<Food> foods) {
@@ -77,15 +71,15 @@ class ScheduleDailyNotification implements UseCase<void, NoParams> {
 
     for (final food in foods) {
       if (food.expiryDate == null) continue;
-      
+
       final expiryDate = DateTime(
         food.expiryDate!.year,
         food.expiryDate!.month,
         food.expiryDate!.day,
       );
-      
+
       final daysDiff = expiryDate.difference(today).inDays;
-      
+
       if (daysDiff < 0) {
         expired.add(food);
       } else if (daysDiff == 0) {

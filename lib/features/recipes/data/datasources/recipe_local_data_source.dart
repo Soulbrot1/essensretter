@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/recipe_model.dart';
 
@@ -20,18 +19,17 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
       final recipesJsonString = prefs.getString(_bookmarkedRecipesKey);
-      
+
       if (recipesJsonString == null) {
-        debugPrint('No bookmarked recipes found');
         return [];
       }
 
       final List<dynamic> recipesJson = json.decode(recipesJsonString);
-      final recipes = recipesJson.map((json) => RecipeModel.fromJson(json)).toList();
-      debugPrint('Loaded ${recipes.length} bookmarked recipes from storage');
+      final recipes = recipesJson
+          .map((json) => RecipeModel.fromJson(json))
+          .toList();
       return recipes;
     } catch (e) {
-      debugPrint('Error loading bookmarked recipes: $e');
       return [];
     }
   }
@@ -40,12 +38,12 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
   Future<void> saveBookmarkedRecipe(RecipeModel recipe) async {
     try {
       final bookmarkedRecipes = await getBookmarkedRecipes();
-      
+
       // Check if recipe already exists (by title)
       final existingIndex = bookmarkedRecipes.indexWhere(
         (r) => r.title == recipe.title,
       );
-      
+
       final recipeModel = RecipeModel(
         title: recipe.title,
         cookingTime: recipe.cookingTime,
@@ -54,7 +52,7 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
         instructions: recipe.instructions,
         isBookmarked: true,
       );
-      
+
       if (existingIndex >= 0) {
         // Update existing recipe
         bookmarkedRecipes[existingIndex] = recipeModel;
@@ -64,9 +62,7 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
       }
 
       await _saveRecipes(bookmarkedRecipes);
-      debugPrint('Saved recipe: ${recipe.title}. Total bookmarks: ${bookmarkedRecipes.length}');
     } catch (e) {
-      debugPrint('Error saving bookmarked recipe: $e');
       rethrow;
     }
   }
@@ -77,9 +73,7 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
       final bookmarkedRecipes = await getBookmarkedRecipes();
       bookmarkedRecipes.removeWhere((recipe) => recipe.title == recipeTitle);
       await _saveRecipes(bookmarkedRecipes);
-      debugPrint('Removed recipe: $recipeTitle. Total bookmarks: ${bookmarkedRecipes.length}');
     } catch (e) {
-      debugPrint('Error removing bookmarked recipe: $e');
       rethrow;
     }
   }
@@ -89,9 +83,7 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_bookmarkedRecipesKey);
-      debugPrint('Cleared all bookmarked recipes');
     } catch (e) {
-      debugPrint('Error clearing bookmarked recipes: $e');
       rethrow;
     }
   }
@@ -107,45 +99,53 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
     try {
       final bookmarkedRecipes = await getBookmarkedRecipes();
       final updatedRecipes = <RecipeModel>[];
-      
+
       for (final recipe in bookmarkedRecipes) {
         // Check if the deleted food is in vorhanden list
-        if (recipe.vorhanden.any((ingredient) => 
-            ingredient.name.toLowerCase().contains(foodName.toLowerCase()))) {
+        if (recipe.vorhanden.any(
+          (ingredient) =>
+              ingredient.name.toLowerCase().contains(foodName.toLowerCase()),
+        )) {
           // Move the ingredient from vorhanden to ueberpruefen
           final updatedVorhanden = recipe.vorhanden
-              .where((ingredient) => 
-                  !ingredient.name.toLowerCase().contains(foodName.toLowerCase()))
+              .where(
+                (ingredient) => !ingredient.name.toLowerCase().contains(
+                  foodName.toLowerCase(),
+                ),
+              )
               .toList();
-          
+
           final matchingIngredients = recipe.vorhanden
-              .where((ingredient) => 
-                  ingredient.name.toLowerCase().contains(foodName.toLowerCase()))
+              .where(
+                (ingredient) => ingredient.name.toLowerCase().contains(
+                  foodName.toLowerCase(),
+                ),
+              )
               .toList();
-          
+
           final updatedUeberpruefen = [
             ...recipe.ueberpruefen,
             ...matchingIngredients,
           ];
-          
-          updatedRecipes.add(RecipeModel(
-            title: recipe.title,
-            cookingTime: recipe.cookingTime,
-            vorhanden: updatedVorhanden,
-            ueberpruefen: updatedUeberpruefen,
-            instructions: recipe.instructions,
-            isBookmarked: recipe.isBookmarked,
-          ));
+
+          updatedRecipes.add(
+            RecipeModel(
+              title: recipe.title,
+              cookingTime: recipe.cookingTime,
+              vorhanden: updatedVorhanden,
+              ueberpruefen: updatedUeberpruefen,
+              instructions: recipe.instructions,
+              isBookmarked: recipe.isBookmarked,
+            ),
+          );
         } else {
           // Recipe doesn't contain the deleted food, keep as is
           updatedRecipes.add(recipe);
         }
       }
-      
+
       await _saveRecipes(updatedRecipes);
-      debugPrint('Updated recipes after deletion of: $foodName');
     } catch (e) {
-      debugPrint('Error updating recipes after food deletion: $e');
       rethrow;
     }
   }
@@ -154,9 +154,7 @@ class RecipeLocalDataSourceImpl implements RecipeLocalDataSource {
   Future<void> updateAllBookmarkedRecipes(List<RecipeModel> recipes) async {
     try {
       await _saveRecipes(recipes);
-      debugPrint('Updated all bookmarked recipes. Total: ${recipes.length}');
     } catch (e) {
-      debugPrint('Error updating all bookmarked recipes: $e');
       rethrow;
     }
   }

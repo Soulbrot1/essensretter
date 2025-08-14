@@ -36,9 +36,8 @@ class _DictationTextFieldState extends State<DictationTextField> {
       final micPermission = await Permission.microphone.request();
       if (micPermission.isGranted) {
         _speechAvailable = await _speech.initialize(
-          onError: (error) => debugPrint('Speech error: $error'),
+          onError: (error) => {}, // Error handled silently
           onStatus: (status) {
-            debugPrint('Speech status: $status');
             if (status == 'done' || status == 'notListening') {
               setState(() {
                 _isListening = false;
@@ -51,13 +50,13 @@ class _DictationTextFieldState extends State<DictationTextField> {
         }
       }
     } catch (e) {
-      debugPrint('Speech initialization error: $e');
+      // Error handled silently
     }
   }
 
   void _startListening() async {
     if (!_speechAvailable || _isListening) return;
-    
+
     try {
       await _speech.listen(
         onResult: (result) {
@@ -71,20 +70,20 @@ class _DictationTextFieldState extends State<DictationTextField> {
         listenFor: const Duration(seconds: 30),
         pauseFor: const Duration(seconds: 3),
       );
-      
+
       if (mounted) {
         setState(() {
           _isListening = true;
         });
       }
     } catch (e) {
-      debugPrint('Start listening error: $e');
+      // Error handled silently
     }
   }
 
   void _stopListening() async {
     if (!_isListening) return;
-    
+
     try {
       await _speech.stop();
       if (mounted) {
@@ -93,7 +92,7 @@ class _DictationTextFieldState extends State<DictationTextField> {
         });
       }
     } catch (e) {
-      debugPrint('Stop listening error: $e');
+      // Error handled silently
     }
   }
 
@@ -115,14 +114,14 @@ class _DictationTextFieldState extends State<DictationTextField> {
             IconButton(
               icon: Icon(
                 _isListening ? Icons.mic : Icons.mic_none,
-                color: _isListening 
-                    ? Colors.red 
+                color: _isListening
+                    ? Colors.red
                     : (_speechAvailable ? null : Colors.grey),
               ),
-              onPressed: _speechAvailable 
+              onPressed: _speechAvailable
                   ? (_isListening ? _stopListening : _startListening)
                   : null,
-              tooltip: _speechAvailable 
+              tooltip: _speechAvailable
                   ? (_isListening ? 'Aufnahme stoppen' : 'Diktieren')
                   : 'Mikrofon nicht verfügbar',
             ),

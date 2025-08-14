@@ -16,13 +16,15 @@ class TextParserRepositoryImpl implements TextParserRepository {
       if (text.trim().isEmpty) {
         return const Left(InputFailure('Bitte geben Sie Text ein'));
       }
-      
+
       final foods = textParserService.parseTextToFoods(text);
-      
+
       if (foods.isEmpty) {
-        return const Left(ParsingFailure('Keine Lebensmittel im Text gefunden'));
+        return const Left(
+          ParsingFailure('Keine Lebensmittel im Text gefunden'),
+        );
       }
-      
+
       return Right(foods.cast<Food>());
     } on ParsingException catch (e) {
       return Left(ParsingFailure(e.message));

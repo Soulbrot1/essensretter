@@ -7,10 +7,7 @@ import 'speech_recording_dialog.dart';
 class VoiceInputDialog extends StatefulWidget {
   final Function(String) onResult;
 
-  const VoiceInputDialog({
-    super.key,
-    required this.onResult,
-  });
+  const VoiceInputDialog({super.key, required this.onResult});
 
   @override
   State<VoiceInputDialog> createState() => _VoiceInputDialogState();
@@ -39,12 +36,13 @@ class _VoiceInputDialogState extends State<VoiceInputDialog> {
       }
 
       // Prüfe Mikrofon-Berechtigung
-      final permissionStatus = await _speechService.getMicrophonePermissionStatus();
+      final permissionStatus = await _speechService
+          .getMicrophonePermissionStatus();
       if (permissionStatus == PermissionStatus.permanentlyDenied) {
         _showPermissionDialog();
         return;
       }
-      
+
       final hasPermission = await _speechService.requestMicrophonePermission();
       if (!hasPermission) {
         _showError('Mikrofon-Berechtigung erforderlich');
@@ -57,7 +55,6 @@ class _VoiceInputDialogState extends State<VoiceInputDialog> {
 
       // Starte automatisch die Aufnahme
       await _startListening();
-      
     } catch (e) {
       _showError('Fehler bei der Initialisierung: $e');
     }
@@ -106,7 +103,7 @@ class _VoiceInputDialogState extends State<VoiceInputDialog> {
       });
     }
   }
-  
+
   void _showPermissionDialog() {
     if (mounted) {
       setState(() {
@@ -160,17 +157,13 @@ class _VoiceInputDialogState extends State<VoiceInputDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.mic_off,
-                size: 64,
-                color: Colors.red,
-              ),
+              Icon(Icons.mic_off, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 'Mikrofon-Berechtigung erforderlich',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),

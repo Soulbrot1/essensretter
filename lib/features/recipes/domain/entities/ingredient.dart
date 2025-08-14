@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 
 class Ingredient extends Equatable {
-  final String name;           // "Mehl", "Zwiebel", "Salz"
-  final double? amount;        // 200, 1, null (für "Prise Salz")
-  final String? unit;          // "g", "EL", "Stück", null
-  final String originalText;   // "200g Mehl" - Original für Fallback
+  final String name; // "Mehl", "Zwiebel", "Salz"
+  final double? amount; // 200, 1, null (für "Prise Salz")
+  final String? unit; // "g", "EL", "Stück", null
+  final String originalText; // "200g Mehl" - Original für Fallback
 
   const Ingredient({
     required this.name,
@@ -26,28 +26,27 @@ class Ingredient extends Equatable {
     }
 
     final scaledAmount = amount! * factor;
-    return copyWith(
-      amount: _roundAmount(scaledAmount),
-    );
+    return copyWith(amount: _roundAmount(scaledAmount));
   }
 
   /// Prüft ob die Einheit nicht skalierbar ist (z.B. Prise, nach Geschmack)
   bool _isNonScalableUnit() {
     if (unit == null) return false;
-    
+
     final nonScalableUnits = [
       'prise', 'prisen',
-      'geschmack', 
+      'geschmack',
       'belieben',
       'etwas',
-      'große', 'großer', 'großes',  // Adjektive
+      'große', 'großer', 'großes', // Adjektive
       'kleine', 'kleiner', 'kleines',
       'mittelgroße', 'mittlere',
     ];
-    
-    return nonScalableUnits.any((u) => 
-      unit!.toLowerCase().contains(u) || 
-      originalText.toLowerCase().contains(u)
+
+    return nonScalableUnits.any(
+      (u) =>
+          unit!.toLowerCase().contains(u) ||
+          originalText.toLowerCase().contains(u),
     );
   }
 
@@ -69,7 +68,7 @@ class Ingredient extends Equatable {
     }
 
     // Spezielle Formatierung für ganze Zahlen
-    final amountText = amount! % 1 == 0 
+    final amountText = amount! % 1 == 0
         ? amount!.toInt().toString()
         : amount!.toString();
 
@@ -114,12 +113,7 @@ class Ingredient extends Equatable {
     }
 
     // Fallback: Kein Parse möglich, als Text speichern
-    return Ingredient(
-      name: text,
-      amount: null,
-      unit: null,
-      originalText: text,
-    );
+    return Ingredient(name: text, amount: null, unit: null, originalText: text);
   }
 
   @override

@@ -30,9 +30,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     Emitter<SettingsState> emit,
   ) async {
     emit(SettingsLoading());
-    
+
     final result = await getNotificationSettings(NoParams());
-    
+
     result.fold(
       (failure) => emit(SettingsError(failure.message)),
       (settings) => emit(SettingsLoaded(settings)),
@@ -46,13 +46,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).notificationSettings;
       final newSettings = currentSettings.copyWith(isEnabled: event.isEnabled);
-      
+
       emit(SettingsLoading());
-      
+
       final saveResult = await saveNotificationSettings(
         SaveNotificationSettingsParams(settings: newSettings),
       );
-      
+
       await saveResult.fold(
         (failure) async => emit(SettingsError(failure.message)),
         (_) async {
@@ -70,14 +70,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   ) async {
     if (state is SettingsLoaded) {
       final currentSettings = (state as SettingsLoaded).notificationSettings;
-      final newSettings = currentSettings.copyWith(notificationTime: event.time);
-      
+      final newSettings = currentSettings.copyWith(
+        notificationTime: event.time,
+      );
+
       emit(SettingsLoading());
-      
+
       final saveResult = await saveNotificationSettings(
         SaveNotificationSettingsParams(settings: newSettings),
       );
-      
+
       await saveResult.fold(
         (failure) async => emit(SettingsError(failure.message)),
         (_) async {

@@ -86,9 +86,9 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      food.expiryDate != null 
-                                        ? 'bis ${DateFormat('d.M.yyyy').format(food.expiryDate!)}'
-                                        : 'ohne Datum',
+                                      food.expiryDate != null
+                                          ? 'bis ${DateFormat('d.M.yyyy').format(food.expiryDate!)}'
+                                          : 'ohne Datum',
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey[600],
@@ -140,7 +140,9 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _foodItems.isEmpty ? null : () => widget.onConfirm(_foodItems),
+                    onPressed: _foodItems.isEmpty
+                        ? null
+                        : () => widget.onConfirm(_foodItems),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red[600],
                       foregroundColor: Colors.white,
@@ -153,9 +155,7 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                         const SizedBox(width: 8),
                         const Text(
                           'Alle speichern',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),

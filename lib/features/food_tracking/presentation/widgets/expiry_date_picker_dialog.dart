@@ -66,10 +66,7 @@ class _ExpiryDatePickerDialogState extends State<ExpiryDatePickerDialog> {
               ),
               child: Row(
                 children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    color: Colors.grey,
-                  ),
+                  const Icon(Icons.calendar_today, color: Colors.grey),
                   const SizedBox(width: 12),
                   Text(
                     'ohne Datum',
@@ -130,7 +127,7 @@ class _ExpiryDatePickerDialogState extends State<ExpiryDatePickerDialog> {
   Future<void> _showDatePicker() async {
     final DateTime now = DateTime.now();
     final DateTime initialDate = selectedDate ?? now;
-    
+
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: initialDate.isAfter(now) ? initialDate : now,
