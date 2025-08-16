@@ -20,11 +20,20 @@ class FoodPreviewDialog extends StatefulWidget {
 
 class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
   late List<Food> _foodItems;
+  int? _editingNameIndex;
+  late TextEditingController _nameController;
 
   @override
   void initState() {
     super.initState();
     _foodItems = List.from(widget.foods);
+    _nameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   void _removeFood(int index) {
@@ -33,12 +42,74 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
     });
   }
 
+  void _startEditingName(int index) {
+    setState(() {
+      _editingNameIndex = index;
+      _nameController.text = _foodItems[index].name;
+    });
+  }
+
+  void _saveEditedName(int index) {
+    if (_nameController.text.trim().isNotEmpty) {
+      setState(() {
+        final oldFood = _foodItems[index];
+        _foodItems[index] = Food(
+          id: oldFood.id,
+          name: _nameController.text.trim(),
+          expiryDate: oldFood.expiryDate,
+          addedDate: oldFood.addedDate,
+          category: oldFood.category,
+          notes: oldFood.notes,
+        );
+        _editingNameIndex = null;
+      });
+    }
+  }
+
+  void _cancelEditingName() {
+    setState(() {
+      _editingNameIndex = null;
+    });
+  }
+
+  Future<void> _selectDate(int index) async {
+    final currentFood = _foodItems[index];
+    final initialDate = currentFood.expiryDate ?? DateTime.now().add(const Duration(days: 7));
+    
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+      locale: const Locale('de', 'DE'),
+    );
+    
+    if (picked != null) {
+      setState(() {
+        final oldFood = _foodItems[index];
+        _foodItems[index] = Food(
+          id: oldFood.id,
+          name: oldFood.name,
+          expiryDate: picked,
+          addedDate: oldFood.addedDate,
+          category: oldFood.category,
+          notes: oldFood.notes,
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
-        padding: const EdgeInsets.all(24),
+        constraints: BoxConstraints(
+          maxWidth: screenWidth - 24,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,41 +140,113 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                       itemCount: _foodItems.length,
                       itemBuilder: (context, index) {
                         final food = _foodItems[index];
+                        final isEditingName = _editingNameIndex == index;
+                        
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                           child: Row(
                             children: [
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Row(
                                   children: [
-                                    Text(
-                                      food.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: isEditingName
+                                          ? Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextField(
+                                                    controller: _nameController,
+                                                    autofocus: true,
+                                                    decoration: const InputDecoration(
+                                                      isDense: true,
+                                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                                      border: OutlineInputBorder(),
+                                                    ),
+                                                    onSubmitted: (_) => _saveEditedName(index),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                InkWell(
+                                                  onTap: () => _saveEditedName(index),
+                                                  child: const Icon(Icons.check, color: Colors.green, size: 20),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                InkWell(
+                                                  onTap: _cancelEditingName,
+                                                  child: const Icon(Icons.close, color: Colors.grey, size: 20),
+                                                ),
+                                              ],
+                                            )
+                                          : InkWell(
+                                              onTap: () => _startEditingName(index),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      food.name,
+                                                      style: const TextStyle(
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  const Icon(Icons.edit, size: 14, color: Colors.grey),
+                                                ],
+                                              ),
+                                            ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      food.expiryDate != null
-                                          ? 'bis ${DateFormat('d.M.yyyy').format(food.expiryDate!)}'
-                                          : 'ohne Datum',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
+                                    const SizedBox(width: 12),
+                                    InkWell(
+                                      onTap: () => _selectDate(index),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: food.expiryDate != null ? Colors.grey.shade100 : Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(4),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today, 
+                                              size: 14, 
+                                              color: food.expiryDate != null ? Colors.grey[700] : Colors.blue[700],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              food.expiryDate != null
+                                                  ? DateFormat('dd.MM.yy').format(food.expiryDate!)
+                                                  : '+ Datum',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: food.expiryDate != null ? Colors.grey[700] : Colors.blue[700],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                onPressed: () => _removeFood(index),
-                                icon: const Icon(
-                                  Icons.close,
+                              const SizedBox(width: 8),
+                              InkWell(
+                                onTap: () => _removeFood(index),
+                                child: const Icon(
+                                  Icons.delete_outline,
                                   color: Colors.red,
+                                  size: 22,
                                 ),
-                                tooltip: 'Lebensmittel entfernen',
                               ),
                             ],
                           ),
