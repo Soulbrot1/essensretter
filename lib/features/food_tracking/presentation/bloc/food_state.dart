@@ -18,16 +18,18 @@ class FoodLoaded extends FoodState {
   final List<Food> filteredFoods;
   final int? activeFilter;
   final SortOption sortOption;
+  final String searchText;
 
   const FoodLoaded({
     required this.foods,
     required this.filteredFoods,
     this.activeFilter,
     this.sortOption = SortOption.date,
+    this.searchText = '',
   });
 
   @override
-  List<Object?> get props => [foods, filteredFoods, activeFilter, sortOption];
+  List<Object?> get props => [foods, filteredFoods, activeFilter, sortOption, searchText];
 
   FoodLoaded copyWith({
     List<Food>? foods,
@@ -35,6 +37,7 @@ class FoodLoaded extends FoodState {
     int? activeFilter,
     bool clearActiveFilter = false,
     SortOption? sortOption,
+    String? searchText,
   }) {
     return FoodLoaded(
       foods: foods ?? this.foods,
@@ -43,6 +46,7 @@ class FoodLoaded extends FoodState {
           ? null
           : (activeFilter ?? this.activeFilter),
       sortOption: sortOption ?? this.sortOption,
+      searchText: searchText ?? this.searchText,
     );
   }
 }
@@ -61,16 +65,18 @@ class FoodOperationInProgress extends FoodState {
   final List<Food> filteredFoods;
   final int? activeFilter;
   final SortOption sortOption;
+  final String searchText;
 
   const FoodOperationInProgress({
     required this.foods,
     required this.filteredFoods,
     this.activeFilter,
     this.sortOption = SortOption.date,
+    this.searchText = '',
   });
 
   @override
-  List<Object?> get props => [foods, filteredFoods, activeFilter, sortOption];
+  List<Object?> get props => [foods, filteredFoods, activeFilter, sortOption, searchText];
 }
 
 class FoodPreviewReady extends FoodState {
@@ -79,6 +85,7 @@ class FoodPreviewReady extends FoodState {
   final List<Food> filteredFoods;
   final int? activeFilter;
   final SortOption sortOption;
+  final String searchText;
 
   const FoodPreviewReady({
     required this.previewFoods,
@@ -86,6 +93,7 @@ class FoodPreviewReady extends FoodState {
     required this.filteredFoods,
     this.activeFilter,
     this.sortOption = SortOption.date,
+    this.searchText = '',
   });
 
   @override
@@ -95,5 +103,6 @@ class FoodPreviewReady extends FoodState {
     filteredFoods,
     activeFilter,
     sortOption,
+    searchText,
   ];
 }

@@ -5,8 +5,38 @@ import '../bloc/food_event.dart';
 import '../bloc/food_state.dart';
 import '../../../../core/utils/tutorial_helper.dart';
 
-class FoodFilterBar extends StatelessWidget {
+class FoodFilterBar extends StatefulWidget {
   const FoodFilterBar({super.key});
+
+  @override
+  State<FoodFilterBar> createState() => _FoodFilterBarState();
+}
+
+class _FoodFilterBarState extends State<FoodFilterBar> {
+  bool _isSearching = false;
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+        context.read<FoodBloc>().add(const SearchFoodsByNameEvent(''));
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +61,68 @@ class FoodFilterBar extends StatelessWidget {
               ),
             ),
           ),
-          child: Row(
-            children: [
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _isSearching
+                ? Row(
+                    key: const ValueKey('search'),
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 40,
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            decoration: InputDecoration(
+                              hintText: 'Lebensmittel suchen...',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Colors.grey[600],
+                                size: 20,
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            onChanged: (value) {
+                              context.read<FoodBloc>().add(SearchFoodsByNameEvent(value));
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: _toggleSearch,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                    ],
+                  )
+                : Row(
+                    key: const ValueKey('normal'),
+                    children: [
+                      // Such-Button (Lupe)
+                      IconButton(
+                        onPressed: _toggleSearch,
+                        icon: const Icon(Icons.search),
+                        tooltip: 'Nach Namen suchen',
+                        padding: const EdgeInsets.all(8),
+                      ),
+
               // Active filter button (replaces both clock icon and filter indicator)
               Expanded(
                 child: PopupMenuButton<int?>(
@@ -347,7 +437,8 @@ class FoodFilterBar extends StatelessWidget {
                   );
                 },
               ),
-            ],
+                    ],
+                  ),
           ),
         );
       },

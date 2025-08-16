@@ -28,6 +28,15 @@ class FilterFoodsByExpiryEvent extends FoodEvent {
   List<Object?> get props => [daysUntilExpiry];
 }
 
+class SearchFoodsByNameEvent extends FoodEvent {
+  final String searchText;
+
+  const SearchFoodsByNameEvent(this.searchText);
+
+  @override
+  List<Object> get props => [searchText];
+}
+
 class DeleteFoodEvent extends FoodEvent {
   final String id;
   final bool
