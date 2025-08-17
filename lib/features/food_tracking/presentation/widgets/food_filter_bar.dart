@@ -126,24 +126,10 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               color: Colors.grey.withValues(alpha: 0.3),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.search,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Suchen',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
+                          child: Icon(
+                            Icons.search,
+                            size: 20,
+                            color: Colors.grey[600],
                           ),
                         ),
                       ),
@@ -172,38 +158,12 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                   : Colors.grey.withValues(alpha: 0.3),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 16,
-                                color: activeFilter != null
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey[600],
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                activeFilter != null
-                                    ? _getFilterText(activeFilter)
-                                    : 'Alle',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: activeFilter != null
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_drop_down,
-                                size: 16,
-                                color: activeFilter != null
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.grey[600],
-                              ),
-                            ],
+                          child: Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                            color: activeFilter != null
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey[600],
                           ),
                         ),
                         itemBuilder: (context) => [
@@ -387,30 +347,10 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               color: Colors.grey.withValues(alpha: 0.3),
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.sort,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _getSortText(currentSort),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_drop_down,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ],
+                          child: Icon(
+                            Icons.sort,
+                            size: 20,
+                            color: Colors.grey[600],
                           ),
                         ),
                         itemBuilder: (context) => [
@@ -500,24 +440,10 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                       : Colors.grey.withValues(alpha: 0.3),
                                 ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.clear_all,
-                                    size: 16,
-                                    color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Löschen',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                              child: Icon(
+                                Icons.cleaning_services,
+                                size: 20,
+                                color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
                               ),
                             ),
                           );
@@ -531,39 +457,6 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
     );
   }
 
-  String _getFilterText(int days) {
-    switch (days) {
-      case 0:
-        return 'Heute';
-      case 1:
-        return 'Morgen';
-      case 2:
-        return 'Übermorgen';
-      case 3:
-        return '3 Tage';
-      case 4:
-        return '4 Tage';
-      case 5:
-        return '5 Tage';
-      case 6:
-        return '6 Tage';
-      case 7:
-        return '7 Tage';
-      default:
-        return '$days Tage';
-    }
-  }
-
-  String _getSortText(SortOption sortOption) {
-    switch (sortOption) {
-      case SortOption.date:
-        return 'Datum';
-      case SortOption.alphabetical:
-        return 'A-Z';
-      case SortOption.category:
-        return 'Kategorie';
-    }
-  }
 
   void _showClearConsumedConfirmation(BuildContext context) {
     showDialog(
