@@ -112,28 +112,21 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                   )
                 : Row(
                     key: const ValueKey('normal'),
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       // Such-Button (Lupe)
-                      GestureDetector(
-                        onTap: _toggleSearch,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.grey.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.search,
-                            size: 20,
-                            color: Colors.grey[600],
-                          ),
+                      IconButton(
+                        onPressed: _toggleSearch,
+                        icon: Icon(
+                          Icons.search,
+                          size: 24,
+                          color: Colors.grey[600],
                         ),
+                        style: IconButton.styleFrom(
+                          padding: const EdgeInsets.all(12),
+                        ),
+                        tooltip: 'Suchen',
                       ),
-                      const SizedBox(width: 5),
 
                       // Filter-Button
                       PopupMenuButton<int?>(
@@ -142,29 +135,19 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                             FilterFoodsByExpiryEvent(value),
                           );
                         },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: activeFilter != null
-                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                                : Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: activeFilter != null
-                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-                                  : Colors.grey.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Icon(
+                        child: IconButton(
+                          onPressed: null, // Will be handled by PopupMenuButton
+                          icon: Icon(
                             Icons.calendar_today,
-                            size: 20,
+                            size: 24,
                             color: activeFilter != null
                                 ? Theme.of(context).colorScheme.primary
                                 : Colors.grey[600],
                           ),
+                          style: IconButton.styleFrom(
+                            padding: const EdgeInsets.all(12),
+                          ),
+                          tooltip: 'Filter',
                         ),
                         itemBuilder: (context) => [
                           PopupMenuItem<int?>(
@@ -331,27 +314,23 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 5),
 
                       // Sort Dropdown
                       PopupMenuButton<SortOption>(
                         onSelected: (value) {
                           context.read<FoodBloc>().add(SortFoodsEvent(value));
                         },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.grey.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Icon(
+                        child: IconButton(
+                          onPressed: null, // Will be handled by PopupMenuButton
+                          icon: Icon(
                             Icons.sort,
-                            size: 20,
+                            size: 24,
                             color: Colors.grey[600],
                           ),
+                          style: IconButton.styleFrom(
+                            padding: const EdgeInsets.all(12),
+                          ),
+                          tooltip: 'Sortieren',
                         ),
                         itemBuilder: (context) => [
                           PopupMenuItem<SortOption>(
@@ -410,7 +389,6 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 5),
 
                       // Clear consumed foods button - permanently visible
                       BlocBuilder<FoodBloc, FoodState>(
@@ -419,33 +397,23 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               state is FoodLoaded &&
                               state.foods.any((food) => food.isConsumed);
 
-                          return GestureDetector(
-                            onTap: () {
+                          return IconButton(
+                            onPressed: () {
                               if (hasConsumedFoods) {
                                 _showClearConsumedConfirmation(context);
                               } else {
                                 _showNoConsumedFoodsMessage(context);
                               }
                             },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: hasConsumedFoods 
-                                    ? Colors.red.withValues(alpha: 0.1)
-                                    : Colors.grey.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: hasConsumedFoods 
-                                      ? Colors.red.withValues(alpha: 0.3)
-                                      : Colors.grey.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.cleaning_services,
-                                size: 20,
-                                color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
-                              ),
+                            icon: Icon(
+                              Icons.cleaning_services,
+                              size: 24,
+                              color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
                             ),
+                            style: IconButton.styleFrom(
+                              padding: const EdgeInsets.all(12),
+                            ),
+                            tooltip: 'Verbrauchte Lebensmittel aufräumen',
                           );
                         },
                       ),
