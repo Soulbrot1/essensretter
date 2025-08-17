@@ -50,104 +50,135 @@ class _FoodCardState extends State<FoodCard> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                widget.food.name,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  decoration: widget.food.isConsumed || isExpired
-                      ? TextDecoration.lineThrough
-                      : null,
-                  color: widget.food.isConsumed ? Colors.grey : null,
-                ),
-              ),
-            ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () => _showExpiryDatePicker(context, widget.food),
-                  child: Container(
-                    key: widget.isFirstCard
-                        ? TutorialHelper.expiryDateKey
-                        : null,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+              child: Stack(
+                children: [
+                  Text(
+                    widget.food.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: widget.food.isConsumed ? Colors.grey : null,
                     ),
-                    decoration: BoxDecoration(
-                      color: urgencyColor.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: urgencyColor.withValues(alpha: 0.5),
-                        width: 1,
+                  ),
+                  if (widget.food.isConsumed || isExpired)
+                    Positioned.fill(
+                      child: Center(
+                        child: Container(
+                          height: 1.5,
+                          color: widget.food.isConsumed ? Colors.grey : Colors.red,
+                        ),
                       ),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          widget.food.expiryStatus,
-                          style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
+                ],
+              ),
+            ),
+            Stack(
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _showExpiryDatePicker(context, widget.food),
+                      child: Container(
+                        key: widget.isFirstCard
+                            ? TutorialHelper.expiryDateKey
+                            : null,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: urgencyColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: urgencyColor.withValues(alpha: 0.5),
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.edit, color: urgencyColor, size: 12),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.food.expiryStatus,
+                              style: TextStyle(
+                                color: widget.food.isConsumed ? Colors.grey : Colors.black,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.edit, 
+                              color: widget.food.isConsumed ? Colors.grey : urgencyColor, 
+                              size: 12,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) =>
+                              FoodTipsDialog(foodName: widget.food.name),
+                        );
+                      },
+                      child: Container(
+                        key: widget.isFirstCard
+                            ? TutorialHelper.infoButtonKey
+                            : null,
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: widget.food.isConsumed 
+                              ? Colors.grey.withValues(alpha: 0.2)
+                              : Colors.blue.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.info_outline,
+                          color: widget.food.isConsumed ? Colors.grey : Colors.blue,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        _showDeleteConfirmation(context, widget.food);
+                      },
+                      child: Container(
+                        key: widget.isFirstCard
+                            ? TutorialHelper.trashButtonKey
+                            : null,
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: widget.food.isConsumed 
+                              ? Colors.grey.withValues(alpha: 0.2)
+                              : Colors.red.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: widget.food.isConsumed ? Colors.grey : Colors.red,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (widget.food.isConsumed || isExpired)
+                  Positioned.fill(
+                    child: Center(
+                      child: Container(
+                        height: 1.5,
+                        color: widget.food.isConsumed ? Colors.grey : Colors.red,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) =>
-                          FoodTipsDialog(foodName: widget.food.name),
-                    );
-                  },
-                  child: Container(
-                    key: widget.isFirstCard
-                        ? TutorialHelper.infoButtonKey
-                        : null,
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.info_outline,
-                      color: Colors.blue,
-                      size: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    _showDeleteConfirmation(context, widget.food);
-                  },
-                  child: Container(
-                    key: widget.isFirstCard
-                        ? TutorialHelper.trashButtonKey
-                        : null,
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.red,
-                      size: 18,
-                    ),
-                  ),
-                ),
               ],
             ),
           ],
