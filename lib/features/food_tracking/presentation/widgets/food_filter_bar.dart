@@ -51,9 +51,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
           key: TutorialHelper.filterBarKey,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(
-              0xFFE0F2E0,
-            ), // Ausgewogenes helles Grün, harmonisch zur Header-Farbe
+            color: const Color(0xFFE0F2E0),
             border: Border(
               bottom: BorderSide(
                 color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
@@ -114,370 +112,417 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                   )
                 : Row(
                     key: const ValueKey('normal'),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Such-Button (Lupe)
-                      IconButton(
-                        onPressed: _toggleSearch,
-                        icon: const Icon(Icons.search),
-                        tooltip: 'Nach Namen suchen',
-                        padding: const EdgeInsets.all(8),
-                      ),
-
-              // Active filter button (replaces both clock icon and filter indicator)
-              Expanded(
-                child: PopupMenuButton<int?>(
-                  onSelected: (value) {
-                    context.read<FoodBloc>().add(
-                      FilterFoodsByExpiryEvent(value),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: activeFilter != null
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.1)
-                          : Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: activeFilter != null
-                            ? Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3)
-                            : Colors.grey.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.filter_list,
-                            size: 16,
-                            color: activeFilter != null
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey[600],
+                      GestureDetector(
+                        onTap: _toggleSearch,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
                           ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              activeFilter != null
-                                  ? _getFilterText(activeFilter)
-                                  : 'Alle',
-                              style: TextStyle(
-                                fontSize: 13,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.search,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Suchen',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+
+                      // Filter-Button
+                      PopupMenuButton<int?>(
+                        onSelected: (value) {
+                          context.read<FoodBloc>().add(
+                            FilterFoodsByExpiryEvent(value),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: activeFilter != null
+                                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                                : Colors.grey.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: activeFilter != null
+                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+                                  : Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
                                 color: activeFilter != null
                                     ? Theme.of(context).colorScheme.primary
                                     : Colors.grey[600],
-                                fontWeight: FontWeight.w500,
                               ),
-                              overflow: TextOverflow.ellipsis,
+                              const SizedBox(width: 6),
+                              Text(
+                                activeFilter != null
+                                    ? _getFilterText(activeFilter)
+                                    : 'Alle',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: activeFilter != null
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_drop_down,
+                                size: 16,
+                                color: activeFilter != null
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey[600],
+                              ),
+                            ],
+                          ),
+                        ),
+                        itemBuilder: (context) => [
+                          PopupMenuItem<int?>(
+                            value: null,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == null
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == null
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Alle'),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.arrow_drop_down,
-                            size: 16,
-                            color: activeFilter != null
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey[600],
+                          PopupMenuItem<int?>(
+                            value: 0,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 0
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 0
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Heute'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 1,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 1
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 1
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Morgen'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 2,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 2
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 2
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Übermorgen'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 3,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 3
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 3
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('3 Tage'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 4,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 4
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 4
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('4 Tage'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 5,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 5
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 5
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('5 Tage'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 6,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 6
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 6
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('6 Tage'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<int?>(
+                            value: 7,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  activeFilter == 7
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: activeFilter == 7
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('7 Tage'),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  itemBuilder: (context) => [
-                    PopupMenuItem<int?>(
-                      value: null,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == null
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == null
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Alle'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 0,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 0
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 0
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Heute'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 1,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 1
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 1
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Morgen'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 2,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 2
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 2
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Übermorgen'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 3,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 3
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 3
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('3 Tage'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 4,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 4
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 4
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('4 Tage'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 5,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 5
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 5
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('5 Tage'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 6,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 6
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 6
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('6 Tage'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<int?>(
-                      value: 7,
-                      child: Row(
-                        children: [
-                          Icon(
-                            activeFilter == 7
-                                ? Icons.radio_button_checked
-                                : Icons.radio_button_unchecked,
-                            color: activeFilter == 7
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('7 Tage'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                      const SizedBox(width: 5),
 
-              // Sort Dropdown
-              PopupMenuButton<SortOption>(
-                onSelected: (value) {
-                  context.read<FoodBloc>().add(SortFoodsEvent(value));
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.grey.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.sort,
-                        size: 16,
-                        color: Colors.grey[600],
+                      // Sort Dropdown
+                      PopupMenuButton<SortOption>(
+                        onSelected: (value) {
+                          context.read<FoodBloc>().add(SortFoodsEvent(value));
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.sort,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _getSortText(currentSort),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_drop_down,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ],
+                          ),
+                        ),
+                        itemBuilder: (context) => [
+                          PopupMenuItem<SortOption>(
+                            value: SortOption.date,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  currentSort == SortOption.date
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: currentSort == SortOption.date
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Nach Datum'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<SortOption>(
+                            value: SortOption.alphabetical,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  currentSort == SortOption.alphabetical
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: currentSort == SortOption.alphabetical
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('A-Z'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem<SortOption>(
+                            value: SortOption.category,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  currentSort == SortOption.category
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: currentSort == SortOption.category
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Nach Kategorie'),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _getSortText(currentSort),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
+                      const SizedBox(width: 5),
+
+                      // Clear consumed foods button - permanently visible
+                      BlocBuilder<FoodBloc, FoodState>(
+                        builder: (context, state) {
+                          final hasConsumedFoods =
+                              state is FoodLoaded &&
+                              state.foods.any((food) => food.isConsumed);
+
+                          return GestureDetector(
+                            onTap: () {
+                              if (hasConsumedFoods) {
+                                _showClearConsumedConfirmation(context);
+                              } else {
+                                _showNoConsumedFoodsMessage(context);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: hasConsumedFoods 
+                                    ? Colors.red.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: hasConsumedFoods 
+                                      ? Colors.red.withValues(alpha: 0.3)
+                                      : Colors.grey.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.clear_all,
+                                    size: 16,
+                                    color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Löschen',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.arrow_drop_down,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ],
-                  ),
-                ),
-                itemBuilder: (context) => [
-                  PopupMenuItem<SortOption>(
-                    value: SortOption.date,
-                    child: Row(
-                      children: [
-                        Icon(
-                          currentSort == SortOption.date
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_unchecked,
-                          color: currentSort == SortOption.date
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Nach Datum'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<SortOption>(
-                    value: SortOption.alphabetical,
-                    child: Row(
-                      children: [
-                        Icon(
-                          currentSort == SortOption.alphabetical
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_unchecked,
-                          color: currentSort == SortOption.alphabetical
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('A-Z'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<SortOption>(
-                    value: SortOption.category,
-                    child: Row(
-                      children: [
-                        Icon(
-                          currentSort == SortOption.category
-                              ? Icons.radio_button_checked
-                              : Icons.radio_button_unchecked,
-                          color: currentSort == SortOption.category
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Nach Kategorie'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              // Clear consumed foods button
-              BlocBuilder<FoodBloc, FoodState>(
-                builder: (context, state) {
-                  // Check if there are any consumed foods
-                  final hasConsumedFoods =
-                      state is FoodLoaded &&
-                      state.foods.any((food) => food.isConsumed);
-
-                  if (!hasConsumedFoods) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return IconButton(
-                    onPressed: () {
-                      _showClearConsumedConfirmation(context);
-                    },
-                    icon: Icon(Icons.clear_all, color: Colors.red[600]),
-                    tooltip: 'Verbrauchte Lebensmittel löschen',
-                    padding: const EdgeInsets.all(8),
-                  );
-                },
-              ),
                     ],
                   ),
           ),
@@ -549,6 +594,15 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
           ],
         );
       },
+    );
+  }
+
+  void _showNoConsumedFoodsMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Keine verbrauchten Lebensmittel vorhanden'),
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 }
