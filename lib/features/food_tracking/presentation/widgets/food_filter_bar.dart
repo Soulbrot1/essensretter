@@ -358,61 +358,102 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                 ),
               ),
 
-              // Sort Buttons - A-Z
-              Expanded(
-                child: IconButton(
-                  onPressed: () {
-                    context.read<FoodBloc>().add(
-                      const SortFoodsEvent(SortOption.alphabetical),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.sort_by_alpha,
-                    color: currentSort == SortOption.alphabetical
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600],
+              // Sort Dropdown
+              PopupMenuButton<SortOption>(
+                onSelected: (value) {
+                  context.read<FoodBloc>().add(SortFoodsEvent(value));
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                    ),
                   ),
-                  tooltip: 'A-Z sortieren',
-                  padding: const EdgeInsets.all(8),
-                ),
-              ),
-
-              // Sort Buttons - Date
-              Expanded(
-                child: IconButton(
-                  onPressed: () {
-                    context.read<FoodBloc>().add(
-                      const SortFoodsEvent(SortOption.date),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.date_range,
-                    color: currentSort == SortOption.date
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.sort,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _getSortText(currentSort),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        size: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ],
                   ),
-                  tooltip: 'Nach Datum sortieren',
-                  padding: const EdgeInsets.all(8),
                 ),
-              ),
-
-              // Sort Buttons - Category
-              Expanded(
-                child: IconButton(
-                  onPressed: () {
-                    context.read<FoodBloc>().add(
-                      const SortFoodsEvent(SortOption.category),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.category,
-                    color: currentSort == SortOption.category
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[600],
+                itemBuilder: (context) => [
+                  PopupMenuItem<SortOption>(
+                    value: SortOption.date,
+                    child: Row(
+                      children: [
+                        Icon(
+                          currentSort == SortOption.date
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: currentSort == SortOption.date
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Nach Datum'),
+                      ],
+                    ),
                   ),
-                  tooltip: 'Nach Kategorie sortieren',
-                  padding: const EdgeInsets.all(8),
-                ),
+                  PopupMenuItem<SortOption>(
+                    value: SortOption.alphabetical,
+                    child: Row(
+                      children: [
+                        Icon(
+                          currentSort == SortOption.alphabetical
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: currentSort == SortOption.alphabetical
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('A-Z'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<SortOption>(
+                    value: SortOption.category,
+                    child: Row(
+                      children: [
+                        Icon(
+                          currentSort == SortOption.category
+                              ? Icons.radio_button_checked
+                              : Icons.radio_button_unchecked,
+                          color: currentSort == SortOption.category
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Nach Kategorie'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
 
               // Clear consumed foods button
@@ -465,6 +506,17 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
         return '7 Tage';
       default:
         return '$days Tage';
+    }
+  }
+
+  String _getSortText(SortOption sortOption) {
+    switch (sortOption) {
+      case SortOption.date:
+        return 'Datum';
+      case SortOption.alphabetical:
+        return 'A-Z';
+      case SortOption.category:
+        return 'Kategorie';
     }
   }
 
