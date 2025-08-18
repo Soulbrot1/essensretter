@@ -72,6 +72,9 @@ dependencies:
   
   # Tutorial
   tutorial_coach_mark: ^1.2.11
+  
+  # Native Splash Screen
+  flutter_native_splash: ^2.3.10
 
 dev_dependencies:
   flutter_test:
@@ -140,3 +143,27 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Splash Screen Configuration
+flutter_native_splash:
+  # The color that will be used as background
+  color: "#2E7D32"
+  
+  # The image that will be shown in the center - fullscreen on iOS
+  image: assets/images/splashscreen.png
+  
+  # Fill the entire screen with the image
+  ios_content_mode: scaleAspectFill
+  
+  # Android 12+ specific configuration
+  android_12:
+    color: "#2E7D32"
+    image: assets/images/splashscreen.png
+  
+  # Fullscreen mode for both platforms
+  fullscreen: true
+  
+  # Platform specific settings
+  ios: true
+  android: true
+  web: false

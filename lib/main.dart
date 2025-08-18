@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/food_tracking/presentation/pages/food_tracking_page.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
@@ -10,9 +11,11 @@ import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
 import 'injection_container.dart' as di;
+import 'splash_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // Lade Environment Variablen
   await dotenv.load(fileName: ".env");
@@ -58,7 +61,9 @@ class MyApp extends StatelessWidget {
                 di.sl<SettingsBloc>()..add(LoadNotificationSettings()),
           ),
         ],
-        child: const FoodTrackingPage(),
+        child: const SplashScreen(
+          child: FoodTrackingPage(),
+        ),
       ),
     );
   }

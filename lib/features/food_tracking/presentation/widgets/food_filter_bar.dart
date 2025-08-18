@@ -130,6 +130,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
 
                       // Filter-Button
                       PopupMenuButton<int?>(
+                        offset: const Offset(-12, 48),
                         onSelected: (value) {
                           context.read<FoodBloc>().add(
                             FilterFoodsByExpiryEvent(value),
@@ -317,6 +318,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
 
                       // Sort Dropdown
                       PopupMenuButton<SortOption>(
+                        offset: const Offset(-80, 48),
                         onSelected: (value) {
                           context.read<FoodBloc>().add(SortFoodsEvent(value));
                         },

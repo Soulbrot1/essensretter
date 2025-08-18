@@ -42,14 +42,10 @@ class RecipeGenerationButton extends StatelessWidget {
                 IconButton(
                   key: TutorialHelper.addButtonKey,
                   onPressed: () => _showAddFoodDialog(context),
-                  icon: const Icon(Icons.add, size: 24),
+                  icon: const Icon(Icons.add, size: 31),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.9),
-                    foregroundColor: const Color(0xFF2E7D32),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                   ),
                   tooltip: 'Lebensmittel hinzufügen',
                 ),
@@ -59,18 +55,12 @@ class RecipeGenerationButton extends StatelessWidget {
                   onPressed: hasFood
                       ? () => _generateRecipes(context, availableFoods)
                       : null,
-                  icon: const Icon(Icons.restaurant_menu, size: 20),
+                  icon: const Icon(Icons.restaurant_menu, size: 31),
                   style: IconButton.styleFrom(
-                    backgroundColor: hasFood
-                        ? Colors.white.withValues(alpha: 0.9)
-                        : Colors.white.withValues(alpha: 0.3),
                     foregroundColor: hasFood
-                        ? const Color(0xFF2E7D32)
-                        : Colors.grey,
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                     padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                   ),
                   tooltip: 'Rezepte generieren',
                 ),
@@ -78,28 +68,20 @@ class RecipeGenerationButton extends StatelessWidget {
                 IconButton(
                   key: TutorialHelper.bookmarkButtonKey,
                   onPressed: () => _showBookmarkedRecipes(context),
-                  icon: const Icon(Icons.bookmark, size: 20),
+                  icon: const Icon(Icons.bookmark, size: 31),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.9),
-                    foregroundColor: const Color(0xFF2E7D32),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                   ),
                   tooltip: 'Gespeicherte Rezepte',
                 ),
                 // Statistik Button
                 IconButton(
                   onPressed: () => _showStatistics(context),
-                  icon: const Icon(Icons.bar_chart, size: 20),
+                  icon: const Icon(Icons.bar_chart, size: 31),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.9),
-                    foregroundColor: const Color(0xFF2E7D32),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
                   ),
                   tooltip: 'Statistiken',
                 ),

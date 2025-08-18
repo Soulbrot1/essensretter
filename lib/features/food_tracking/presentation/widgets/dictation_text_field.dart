@@ -103,34 +103,14 @@ class _DictationTextFieldState extends State<DictationTextField> {
       maxLines: widget.maxLines,
       keyboardType: TextInputType.multiline,
       textInputAction: TextInputAction.newline,
+      autofocus: true,
       decoration: InputDecoration(
         hintText: widget.hintText,
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.all(16),
-        suffixIcon: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Mikrofon Button
-            IconButton(
-              icon: Icon(
-                _isListening ? Icons.mic : Icons.mic_none,
-                color: _isListening
-                    ? Colors.red
-                    : (_speechAvailable ? null : Colors.grey),
-              ),
-              onPressed: _speechAvailable
-                  ? (_isListening ? _stopListening : _startListening)
-                  : null,
-              tooltip: _speechAvailable
-                  ? (_isListening ? 'Aufnahme stoppen' : 'Diktieren')
-                  : 'Mikrofon nicht verfügbar',
-            ),
-            // Send Button
-            IconButton(
-              icon: const Icon(Icons.send),
-              onPressed: widget.onSubmitted,
-            ),
-          ],
+        suffixIcon: IconButton(
+          icon: const Icon(Icons.send),
+          onPressed: widget.onSubmitted,
         ),
       ),
       onSubmitted: (_) => widget.onSubmitted?.call(),
