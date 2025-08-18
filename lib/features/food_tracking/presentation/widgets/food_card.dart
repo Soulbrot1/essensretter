@@ -52,13 +52,46 @@ class _FoodCardState extends State<FoodCard> {
             Expanded(
               child: Stack(
                 children: [
-                  Text(
-                    widget.food.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: widget.food.isConsumed ? Colors.grey : null,
-                    ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Berechne die optimale Schriftgröße basierend auf der Textlänge
+                      double fontSize = 16.0; // Maximale Größe
+                      final textPainter = TextPainter(
+                        text: TextSpan(
+                          text: widget.food.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: fontSize,
+                          ),
+                        ),
+                        maxLines: 1,
+                        textDirection: TextDirection.ltr,
+                      )..layout(maxWidth: double.infinity);
+                      
+                      // Wenn der Text zu breit ist, verkleinere die Schriftgröße
+                      while (textPainter.width > constraints.maxWidth && fontSize > 10) {
+                        fontSize -= 0.5;
+                        textPainter.text = TextSpan(
+                          text: widget.food.name,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: fontSize,
+                          ),
+                        );
+                        textPainter.layout(maxWidth: double.infinity);
+                      }
+                      
+                      return Text(
+                        widget.food.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: fontSize,
+                          color: widget.food.isConsumed ? Colors.grey : null,
+                        ),
+                      );
+                    },
                   ),
                   if (widget.food.isConsumed || isExpired)
                     Positioned.fill(
