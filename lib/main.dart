@@ -11,7 +11,7 @@ import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
 import 'injection_container.dart' as di;
-import 'splash_screen.dart';
+import 'modern_splash_screen.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -61,7 +61,7 @@ class MyApp extends StatelessWidget {
                 di.sl<SettingsBloc>()..add(LoadNotificationSettings()),
           ),
         ],
-        child: const SplashScreen(
+        child: const ModernSplashScreen(
           child: FoodTrackingPage(),
         ),
       ),
