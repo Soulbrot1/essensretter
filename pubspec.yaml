@@ -70,9 +70,6 @@ dependencies:
   flutter_local_notifications: ^17.2.1
   timezone: ^0.9.4
   
-  # Tutorial
-  tutorial_coach_mark: ^1.2.11
-  
   # Native Splash Screen
   flutter_native_splash: ^2.3.10
 

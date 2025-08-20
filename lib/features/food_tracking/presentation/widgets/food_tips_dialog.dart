@@ -53,8 +53,6 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
           children: [
             Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.blue, size: 24),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Haltbarkeitstipps für ${widget.foodName}',
@@ -81,27 +79,6 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.lightbulb_outline,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Tipps zur längeren Haltbarkeit:',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: Colors.blue.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
                   _isLoading
                       ? const Padding(
                           padding: EdgeInsets.symmetric(vertical: 16.0),

@@ -12,6 +12,7 @@ import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
 import 'injection_container.dart' as di;
 import 'modern_splash_screen.dart';
+import 'features/onboarding/presentation/pages/onboarding_screen.dart';
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -62,7 +63,9 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: const ModernSplashScreen(
-          child: FoodTrackingPage(),
+          child: OnboardingScreen(
+            child: FoodTrackingPage(),
+          ),
         ),
       ),
     );

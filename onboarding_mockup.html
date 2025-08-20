@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onboarding Screenshots Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .phone-container {
+            width: 390px;
+            height: 844px;
+            position: relative;
+            background: white;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .screenshot {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+        }
+
+        /* Footer Highlight */
+        .highlight-footer .overlay {
+            clip-path: polygon(
+                0 0, 100% 0, 100% 80%, 0 80%
+            );
+        }
+
+        .highlight-footer .highlight-box {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 20%;
+            border: 3px solid #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 20px 20px 40px 40px;
+            margin: 10px;
+        }
+
+        .highlight-footer .info-bubble {
+            position: absolute;
+            bottom: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .highlight-footer .arrow {
+            position: absolute;
+            bottom: 22%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid white;
+        }
+
+        /* Header Highlight */
+        .highlight-header .overlay {
+            clip-path: polygon(
+                0 15%, 100% 15%, 100% 100%, 0 100%
+            );
+        }
+
+        .highlight-header .highlight-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 15%;
+            border: 3px solid #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 40px 40px 20px 20px;
+            margin: 10px;
+        }
+
+        .highlight-header .info-bubble {
+            position: absolute;
+            top: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .highlight-header .arrow {
+            position: absolute;
+            top: 16%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid white;
+        }
+
+        /* Food Card Highlight */
+        .highlight-card .overlay {
+            clip-path: polygon(
+                0 0, 100% 0, 100% 25%,
+                100% 35%, 0 35%, 0 25%,
+                0 100%, 100% 100%, 100% 35%,
+                100% 100%, 0 100%, 0 0
+            );
+        }
+
+        .highlight-card .highlight-box {
+            position: absolute;
+            top: 25%;
+            left: 10px;
+            right: 10px;
+            height: 10%;
+            border: 3px solid #4CAF50;
+            background: rgba(76, 175, 80, 0.05);
+            border-radius: 15px;
+        }
+
+        .highlight-card .info-bubble {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .highlight-card .arrow {
+            position: absolute;
+            top: 37%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid white;
+        }
+
+        .info-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2E7D32;
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2E7D32;
+            margin-bottom: 10px;
+        }
+
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            max-width: 600px;
+        }
+
+        .emoji {
+            font-size: 24px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>📸 Anleitung zum Screenshot erstellen:</h2>
+        <ol>
+            <li>Scrolle zu dem gewünschten Screenshot</li>
+            <li>Drücke <strong>Cmd + Shift + 4</strong> auf deinem Mac</li>
+            <li>Wähle den Bereich des Telefon-Mockups aus</li>
+            <li>Speichere als screen1.png, screen2.png, screen3.png</li>
+        </ol>
+    </div>
+
+    <!-- Screenshot 1: Footer Highlight -->
+    <div>
+        <h2>Screenshot 1: Footer - Hauptfunktionen</h2>
+        <div class="phone-container highlight-footer">
+            <img src="file:///Users/davidrumpf/Coding/Bilder/onboarding.png" class="screenshot" alt="App Screenshot">
+            <div class="overlay"></div>
+            <div class="highlight-box"></div>
+            <div class="arrow"></div>
+            <div class="info-bubble">
+                <div class="info-title">Schnellzugriff</div>
+                <div class="info-text">
+                    <span class="emoji">➕</span> Lebensmittel hinzufügen<br>
+                    <span class="emoji">🍽️</span> Rezepte generieren<br>
+                    <span class="emoji">📊</span> Statistiken ansehen
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot 2: Header Highlight -->
+    <div>
+        <h2>Screenshot 2: Header - Filter & Suche</h2>
+        <div class="phone-container highlight-header">
+            <img src="file:///Users/davidrumpf/Coding/Bilder/onboarding.png" class="screenshot" alt="App Screenshot">
+            <div class="overlay"></div>
+            <div class="highlight-box"></div>
+            <div class="arrow"></div>
+            <div class="info-bubble">
+                <div class="info-title">Organisiere deine Lebensmittel</div>
+                <div class="info-text">
+                    Suche, filtere und sortiere deine Lebensmittel nach Ablaufdatum oder Kategorie
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenshot 3: Food Card Highlight -->
+    <div>
+        <h2>Screenshot 3: Lebensmittelkarte - Verwaltung</h2>
+        <div class="phone-container highlight-card">
+            <img src="file:///Users/davidrumpf/Coding/Bilder/onboarding.png" class="screenshot" alt="App Screenshot">
+            <div class="overlay"></div>
+            <div class="highlight-box"></div>
+            <div class="arrow"></div>
+            <div class="info-bubble">
+                <div class="info-title">Alles im Blick</div>
+                <div class="info-text">
+                    Tippe auf das Datum zum Bearbeiten<br>
+                    <span class="emoji">ℹ️</span> für Tipps | <span class="emoji">🗑️</span> zum Löschen
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

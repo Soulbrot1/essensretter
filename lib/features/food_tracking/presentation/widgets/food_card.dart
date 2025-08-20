@@ -4,13 +4,10 @@ import '../../domain/entities/food.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import 'food_tips_dialog.dart';
-import '../../../../core/utils/tutorial_helper.dart';
 
 class FoodCard extends StatefulWidget {
   final Food food;
-  final bool isFirstCard; // Für Tutorial-Targeting
-
-  const FoodCard({super.key, required this.food, this.isFirstCard = false});
+  const FoodCard({super.key, required this.food});
 
   @override
   State<FoodCard> createState() => _FoodCardState();
@@ -24,7 +21,6 @@ class _FoodCardState extends State<FoodCard> {
     final urgencyColor = _getUrgencyColor(daysUntilExpiry, isExpired);
 
     return Card(
-      key: widget.isFirstCard ? TutorialHelper.foodCardKey : null,
       elevation: 2,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       child: Padding(
@@ -38,7 +34,6 @@ class _FoodCardState extends State<FoodCard> {
                 );
               },
               child: CircleAvatar(
-                key: widget.isFirstCard ? TutorialHelper.categoryIconKey : null,
                 backgroundColor: urgencyColor.withValues(alpha: 0.2),
                 radius: 18,
                 child: Icon(
@@ -113,9 +108,6 @@ class _FoodCardState extends State<FoodCard> {
                     GestureDetector(
                       onTap: () => _showExpiryDatePicker(context, widget.food),
                       child: Container(
-                        key: widget.isFirstCard
-                            ? TutorialHelper.expiryDateKey
-                            : null,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
@@ -159,9 +151,6 @@ class _FoodCardState extends State<FoodCard> {
                         );
                       },
                       child: Container(
-                        key: widget.isFirstCard
-                            ? TutorialHelper.infoButtonKey
-                            : null,
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
@@ -183,9 +172,6 @@ class _FoodCardState extends State<FoodCard> {
                         _showDeleteConfirmation(context, widget.food);
                       },
                       child: Container(
-                        key: widget.isFirstCard
-                            ? TutorialHelper.trashButtonKey
-                            : null,
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(

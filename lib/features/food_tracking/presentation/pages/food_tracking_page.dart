@@ -9,7 +9,6 @@ import '../widgets/recipe_generation_button.dart';
 import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
-import '../../../../core/utils/tutorial_helper.dart';
 
 class FoodTrackingPage extends StatefulWidget {
   const FoodTrackingPage({super.key});
@@ -23,19 +22,6 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
   void initState() {
     super.initState();
     context.read<FoodBloc>().add(LoadFoodsEvent());
-    _checkAndShowTutorial();
-  }
-
-  Future<void> _checkAndShowTutorial() async {
-    await Future.delayed(
-      const Duration(seconds: 1),
-    ); // Warte bis UI aufgebaut ist
-    if (mounted) {
-      final shouldShow = await TutorialHelper.shouldShowTutorial();
-      if (shouldShow) {
-        TutorialHelper.showTutorial(context);
-      }
-    }
   }
 
   @override
@@ -200,7 +186,6 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
                           itemBuilder: (context, index) {
                             return FoodCard(
                               food: foods[index],
-                              isFirstCard: index == 0,
                             );
                           },
                         ),

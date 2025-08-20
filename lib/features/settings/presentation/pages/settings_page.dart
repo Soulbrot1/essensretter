@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_event.dart';
-import '../../../../core/utils/tutorial_helper.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -119,22 +118,6 @@ class SettingsPage extends StatelessWidget {
                     'Hilfe & Demo',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.school, color: Colors.blue),
-                  title: const Text('Tutorial anzeigen'),
-                  subtitle: const Text('Interaktive Einführung starten'),
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () async {
-                    await TutorialHelper.resetTutorial();
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                      await Future.delayed(const Duration(milliseconds: 300));
-                      if (context.mounted) {
-                        TutorialHelper.showTutorial(context);
-                      }
-                    }
-                  },
                 ),
                 ListTile(
                   leading: const Icon(

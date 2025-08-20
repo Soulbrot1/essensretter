@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import '../bloc/food_state.dart';
-import '../../../../core/utils/tutorial_helper.dart';
 
 class FoodFilterBar extends StatefulWidget {
   const FoodFilterBar({super.key});
@@ -48,7 +47,6 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
             : SortOption.date;
 
         return Container(
-          key: TutorialHelper.filterBarKey,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFE0F2E0),
