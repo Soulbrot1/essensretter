@@ -140,8 +140,8 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
     await Future.delayed(const Duration(milliseconds: 600));
     _pulseController.repeat(reverse: true);
     
-    // Warte 7 Sekunden insgesamt
-    await Future.delayed(const Duration(seconds: 5));
+    // Warte 6 Sekunden insgesamt (1 Sekunde kürzer)
+    await Future.delayed(const Duration(seconds: 4));
     
     if (mounted) {
       // Fade out Animation
