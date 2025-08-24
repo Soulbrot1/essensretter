@@ -9,6 +9,7 @@ import '../widgets/recipe_generation_button.dart';
 import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
+import '../../domain/entities/food.dart';
 
 class FoodTrackingPage extends StatefulWidget {
   const FoodTrackingPage({super.key});
@@ -149,6 +150,9 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
                     final foods = state is FoodLoaded
                         ? state.filteredFoods
                         : (state as FoodOperationInProgress).filteredFoods;
+                    final sortOption = state is FoodLoaded
+                        ? state.sortOption
+                        : (state as FoodOperationInProgress).sortOption;
 
                     if (foods.isEmpty) {
                       return Center(
@@ -180,13 +184,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
 
                     return Stack(
                       children: [
-                        ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: foods.length,
-                          itemBuilder: (context, index) {
-                            return FoodCard(food: foods[index]);
-                          },
-                        ),
+                        _buildFoodList(foods, sortOption),
                         if (state is FoodOperationInProgress)
                           const Positioned.fill(
                             child: Center(child: CircularProgressIndicator()),
@@ -204,5 +202,76 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
       ),
       bottomNavigationBar: const RecipeGenerationButton(),
     );
+  }
+
+  Widget _buildFoodList(List<Food> foods, SortOption sortOption) {
+    if (sortOption == SortOption.category) {
+      // Gruppiere nach Kategorien
+      final Map<String, List<Food>> groupedFoods = {};
+      for (final food in foods) {
+        final category = food.category ?? 'Sonstiges';
+        groupedFoods.putIfAbsent(category, () => []).add(food);
+      }
+
+      return ListView.builder(
+        padding: const EdgeInsets.only(bottom: 16),
+        itemCount: _calculateGroupedItemCount(groupedFoods),
+        itemBuilder: (context, index) {
+          return _buildGroupedItem(groupedFoods, index);
+        },
+      );
+    } else {
+      // Normale Liste
+      return ListView.builder(
+        padding: const EdgeInsets.only(bottom: 16),
+        itemCount: foods.length,
+        itemBuilder: (context, index) {
+          return FoodCard(food: foods[index]);
+        },
+      );
+    }
+  }
+
+  int _calculateGroupedItemCount(Map<String, List<Food>> groupedFoods) {
+    int count = 0;
+    for (final foods in groupedFoods.values) {
+      count += 1 + foods.length; // 1 für Header + Anzahl Foods
+    }
+    return count;
+  }
+
+  Widget _buildGroupedItem(Map<String, List<Food>> groupedFoods, int index) {
+    int currentIndex = 0;
+
+    for (final entry in groupedFoods.entries) {
+      final category = entry.key;
+      final foods = entry.value;
+
+      // Header Index
+      if (currentIndex == index) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+          child: Text(
+            category,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+        );
+      }
+      currentIndex++;
+
+      // Food Items
+      for (int i = 0; i < foods.length; i++) {
+        if (currentIndex == index) {
+          return FoodCard(food: foods[i]);
+        }
+        currentIndex++;
+      }
+    }
+
+    return const SizedBox.shrink();
   }
 }

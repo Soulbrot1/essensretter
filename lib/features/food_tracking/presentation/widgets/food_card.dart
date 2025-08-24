@@ -33,14 +33,24 @@ class _FoodCardState extends State<FoodCard> {
                   ToggleConsumedEvent(widget.food.id),
                 );
               },
-              child: CircleAvatar(
-                backgroundColor: urgencyColor.withValues(alpha: 0.2),
-                radius: 18,
-                child: Icon(
-                  _getCategoryIcon(widget.food.category),
-                  color: urgencyColor,
-                  size: 18,
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: widget.food.isConsumed
+                        ? Colors.green
+                        : Colors.grey.shade400,
+                    width: 1.5,
+                  ),
+                  color: widget.food.isConsumed
+                      ? Colors.green
+                      : Colors.transparent,
                 ),
+                child: widget.food.isConsumed
+                    ? const Icon(Icons.check, color: Colors.white, size: 12)
+                    : null,
               ),
             ),
             const SizedBox(width: 12),
@@ -227,25 +237,6 @@ class _FoodCardState extends State<FoodCard> {
     if (days <= 1) return Colors.orange;
     if (days <= 3) return Colors.amber;
     return Colors.green;
-  }
-
-  IconData _getCategoryIcon(String? category) {
-    switch (category) {
-      case 'Obst':
-        return Icons.apple;
-      case 'Gemüse':
-        return Icons.eco;
-      case 'Milchprodukte':
-        return Icons.local_drink; // Milchglas-Symbol
-      case 'Fleisch':
-        return Icons.restaurant;
-      case 'Brot & Backwaren':
-        return Icons.bakery_dining;
-      case 'Getränke':
-        return Icons.water_drop;
-      default:
-        return Icons.fastfood;
-    }
   }
 
   void _showExpiryDatePicker(BuildContext context, Food food) async {

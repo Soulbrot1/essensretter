@@ -121,8 +121,12 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                 const SizedBox(width: 12),
                 Text(
                   'Erkannte Lebensmittel bestätigen',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontSize:
+                        (Theme.of(context).textTheme.titleLarge?.fontSize ??
+                            22) *
+                        0.8,
                   ),
                 ),
               ],
