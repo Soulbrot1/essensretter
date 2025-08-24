@@ -4,8 +4,6 @@ import '../bloc/recipe_bloc.dart';
 import '../bloc/recipe_event.dart';
 import '../bloc/recipe_state.dart';
 import '../widgets/recipe_card.dart';
-import '../../domain/entities/recipe.dart';
-import '../../domain/entities/ingredient.dart';
 
 class BookmarkedRecipesPage extends StatelessWidget {
   const BookmarkedRecipesPage({super.key});

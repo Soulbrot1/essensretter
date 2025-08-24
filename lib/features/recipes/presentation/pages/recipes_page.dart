@@ -4,8 +4,6 @@ import '../bloc/recipe_bloc.dart';
 import '../bloc/recipe_event.dart';
 import '../bloc/recipe_state.dart';
 import '../widgets/recipe_card.dart';
-import 'bookmarked_recipes_page.dart';
-import '../../../../injection_container.dart' as di;
 
 class RecipesPage extends StatelessWidget {
   final List<String>? availableIngredients;
@@ -144,27 +142,5 @@ class RecipesPage extends StatelessWidget {
         GenerateRecipesEvent(availableIngredients: availableIngredients!),
       );
     }
-  }
-
-  void _showBookmarkedRecipes(BuildContext context) {
-    final recipeBloc = di.sl<RecipeBloc>();
-    recipeBloc.add(LoadBookmarkedRecipesEvent());
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.93,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: BlocProvider.value(
-          value: recipeBloc,
-          child: const BookmarkedRecipesPage(),
-        ),
-      ),
-    );
   }
 }

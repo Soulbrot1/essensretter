@@ -166,26 +166,6 @@ class TextParserServiceImpl implements TextParserService {
     return null;
   }
 
-  List<String> _extractFoodItems(String text) {
-    // Entferne häufige Füllwörter
-    final cleanText = text
-        .replaceAll(
-          RegExp(r'\b(und|oder|mit|ohne|für|in|auf|zu|von|bis)\b'),
-          ',',
-        )
-        .replaceAll(RegExp(r'[^\w\s,äöüÄÖÜß-]'), '')
-        .replaceAll(RegExp(r'\s+'), ' ');
-
-    // Teile bei Kommas und mehreren Leerzeichen
-    final items = cleanText.split(RegExp(r'[,\s]{2,}|,'));
-
-    // Filtere leere und zu kurze Einträge
-    return items
-        .map((item) => item.trim())
-        .where((item) => item.length > 1)
-        .toList();
-  }
-
   String _capitalizeFirst(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();

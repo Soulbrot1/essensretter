@@ -64,7 +64,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                     key: const ValueKey('search'),
                     children: [
                       Expanded(
-                        child: Container(
+                        child: SizedBox(
                           height: 40,
                           child: TextField(
                             controller: _searchController,

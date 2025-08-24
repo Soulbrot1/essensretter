@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:mocktail/mocktail.dart';
 
 /// Test Helper für EssensRetter App Tests
 /// Enthält häufig genutzte Test-Utilities und Helper-Funktionen
@@ -30,11 +29,11 @@ class TestWidgetWrapper extends StatelessWidget {
   final ThemeData? theme;
 
   const TestWidgetWrapper({
-    Key? key,
+    super.key,
     required this.child,
     this.providers = const [],
     this.theme,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +59,7 @@ extension WidgetTesterExtension on WidgetTester {
     ThemeData? theme,
   }) async {
     await pumpWidget(
-      TestWidgetWrapper(child: widget, providers: providers, theme: theme),
+      TestWidgetWrapper(providers: providers, theme: theme, child: widget),
     );
   }
 

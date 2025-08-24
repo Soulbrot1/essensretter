@@ -346,9 +346,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     result.fold(
       (failure) {
         emit(FoodError(failure.message));
-        if (currentState is FoodLoaded) {
-          emit(currentState);
-        }
+        emit(currentState);
       },
       (_) {
         // Update local state and maintain filters
@@ -506,9 +504,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       add(LoadFoodsEvent());
     } catch (e) {
       emit(FoodError('Fehler beim Löschen verbrauchter Lebensmittel: $e'));
-      if (currentState is FoodLoaded) {
-        emit(currentState);
-      }
+      emit(currentState);
     }
   }
 
@@ -547,9 +543,5 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     } catch (e) {
       emit(FoodError('Fehler beim Laden der Demo-Lebensmittel: $e'));
     }
-  }
-
-  List<Food> _sortFoodsByExpiry(List<Food> foods) {
-    return _sortFoods(foods, SortOption.date);
   }
 }
