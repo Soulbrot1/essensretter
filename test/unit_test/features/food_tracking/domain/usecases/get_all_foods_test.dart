@@ -17,12 +17,14 @@ void main() {
   setUp(() {
     mockFoodRepository = MockFoodRepository();
     usecase = GetAllFoods(mockFoodRepository);
-    registerFallbackValue(Food(
-      id: 'fallback',
-      name: 'fallback',
-      expiryDate: DateTime.now(),
-      addedDate: DateTime.now(),
-    ));
+    registerFallbackValue(
+      Food(
+        id: 'fallback',
+        name: 'fallback',
+        expiryDate: DateTime.now(),
+        addedDate: DateTime.now(),
+      ),
+    );
   });
 
   group('GetAllFoods', () {
@@ -43,8 +45,9 @@ void main() {
 
     test('should get foods from the repository', () async {
       // arrange
-      when(() => mockFoodRepository.getAllFoods())
-          .thenAnswer((_) async => Right(tFoodList));
+      when(
+        () => mockFoodRepository.getAllFoods(),
+      ).thenAnswer((_) async => Right(tFoodList));
 
       // act
       final result = await usecase(NoParams());
@@ -58,8 +61,9 @@ void main() {
     test('should return failure when repository fails', () async {
       // arrange
       const tFailure = CacheFailure('Database error');
-      when(() => mockFoodRepository.getAllFoods())
-          .thenAnswer((_) async => const Left(tFailure));
+      when(
+        () => mockFoodRepository.getAllFoods(),
+      ).thenAnswer((_) async => const Left(tFailure));
 
       // act
       final result = await usecase(NoParams());
@@ -72,14 +76,15 @@ void main() {
 
     test('should return empty list when no foods exist', () async {
       // arrange
-      when(() => mockFoodRepository.getAllFoods())
-          .thenAnswer((_) async => const Right([]));
+      when(
+        () => mockFoodRepository.getAllFoods(),
+      ).thenAnswer((_) async => const Right([]));
 
       // act
       final result = await usecase(NoParams());
 
       // assert
-      expect(result, const Right<Failure, List<Food>>([]));  
+      expect(result, const Right<Failure, List<Food>>([]));
       verify(() => mockFoodRepository.getAllFoods());
       verifyNoMoreInteractions(mockFoodRepository);
     });

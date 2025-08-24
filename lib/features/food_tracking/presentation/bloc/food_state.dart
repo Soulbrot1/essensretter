@@ -29,7 +29,13 @@ class FoodLoaded extends FoodState {
   });
 
   @override
-  List<Object?> get props => [foods, filteredFoods, activeFilter, sortOption, searchText];
+  List<Object?> get props => [
+    foods,
+    filteredFoods,
+    activeFilter,
+    sortOption,
+    searchText,
+  ];
 
   FoodLoaded copyWith({
     List<Food>? foods,
@@ -76,7 +82,13 @@ class FoodOperationInProgress extends FoodState {
   });
 
   @override
-  List<Object?> get props => [foods, filteredFoods, activeFilter, sortOption, searchText];
+  List<Object?> get props => [
+    foods,
+    filteredFoods,
+    activeFilter,
+    sortOption,
+    searchText,
+  ];
 }
 
 class FoodPreviewReady extends FoodState {

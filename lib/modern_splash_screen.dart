@@ -4,23 +4,23 @@ import 'dart:async';
 
 class ModernSplashScreen extends StatefulWidget {
   final Widget child;
-  
+
   const ModernSplashScreen({super.key, required this.child});
 
   @override
   State<ModernSplashScreen> createState() => _ModernSplashScreenState();
 }
 
-class _ModernSplashScreenState extends State<ModernSplashScreen> 
+class _ModernSplashScreenState extends State<ModernSplashScreen>
     with TickerProviderStateMixin {
   bool _showSplash = true;
-  
+
   // Animation Controllers
   late AnimationController _titleController;
   late AnimationController _subtitle1Controller;
   late AnimationController _subtitle2Controller;
   late AnimationController _pulseController;
-  
+
   // Animations
   late Animation<double> _titleFade;
   late Animation<double> _titleScale;
@@ -33,90 +33,76 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Entferne den nativen Splash sofort
     FlutterNativeSplash.remove();
-    
+
     // Setup Title Animation (Food Rescue)
     _titleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
-    _titleFade = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _titleController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
-    
-    _titleScale = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _titleController,
-      curve: const Interval(0.0, 0.8, curve: Curves.elasticOut),
-    ));
-    
+
+    _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _titleController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _titleScale = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _titleController,
+        curve: const Interval(0.0, 0.8, curve: Curves.elasticOut),
+      ),
+    );
+
     // Setup Subtitle 1 Animation (Stop the waste)
     _subtitle1Controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
-    _subtitle1Fade = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _subtitle1Controller,
-      curve: Curves.easeInOut,
-    ));
-    
-    _subtitle1Slide = Tween<Offset>(
-      begin: const Offset(-0.5, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _subtitle1Controller,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _subtitle1Fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _subtitle1Controller, curve: Curves.easeInOut),
+    );
+
+    _subtitle1Slide =
+        Tween<Offset>(begin: const Offset(-0.5, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _subtitle1Controller,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
     // Setup Subtitle 2 Animation (Start good taste)
     _subtitle2Controller = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    
-    _subtitle2Fade = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _subtitle2Controller,
-      curve: Curves.easeInOut,
-    ));
-    
-    _subtitle2Slide = Tween<Offset>(
-      begin: const Offset(0.5, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _subtitle2Controller,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _subtitle2Fade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _subtitle2Controller, curve: Curves.easeInOut),
+    );
+
+    _subtitle2Slide =
+        Tween<Offset>(begin: const Offset(0.5, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _subtitle2Controller,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
     // Pulse Animation für den Titel
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     // Starte die Animationen
     _startAnimations();
   }
@@ -124,25 +110,25 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
   Future<void> _startAnimations() async {
     // Kleine Verzögerung
     await Future.delayed(const Duration(milliseconds: 300));
-    
+
     // Starte Title Animation
     _titleController.forward();
-    
+
     // Warte und starte erste Subtitle
     await Future.delayed(const Duration(milliseconds: 800));
     _subtitle1Controller.forward();
-    
+
     // Warte und starte zweite Subtitle
     await Future.delayed(const Duration(milliseconds: 400));
     _subtitle2Controller.forward();
-    
+
     // Starte Pulse Animation nach allen anderen
     await Future.delayed(const Duration(milliseconds: 600));
     _pulseController.repeat(reverse: true);
-    
+
     // Warte 6 Sekunden insgesamt (1 Sekunde kürzer)
     await Future.delayed(const Duration(seconds: 4));
-    
+
     if (mounted) {
       // Fade out Animation
       await _titleController.reverse();
@@ -168,8 +154,10 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
     }
 
     final screenHeight = MediaQuery.of(context).size.height;
-    final topTextPosition = screenHeight * 0.25 - 140; // 140px nach oben (30 + 60 + 50)
-    final bottomTextPosition = screenHeight * 0.65 + 50; // 50px nach unten (30 + 20)
+    final topTextPosition =
+        screenHeight * 0.25 - 140; // 140px nach oben (30 + 60 + 50)
+    final bottomTextPosition =
+        screenHeight * 0.65 + 50; // 50px nach unten (30 + 20)
 
     return Scaffold(
       backgroundColor: const Color(0xFF2E7D32),
@@ -181,13 +169,11 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
               'assets/images/splashscreen.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: const Color(0xFF2E7D32),
-                );
+                return Container(color: const Color(0xFF2E7D32));
               },
             ),
           ),
-          
+
           // Food Rescue - Über dem Logo mit Scale und Pulse
           Positioned(
             top: topTextPosition,
@@ -207,7 +193,10 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
                   child: ScaleTransition(
                     scale: _titleScale,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
@@ -230,7 +219,9 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
                           shadows: [
                             Shadow(
                               blurRadius: 20,
-                              color: Colors.green.shade900.withValues(alpha: 0.8),
+                              color: Colors.green.shade900.withValues(
+                                alpha: 0.8,
+                              ),
                               offset: const Offset(0, 4),
                             ),
                             const Shadow(
@@ -247,7 +238,7 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
               ),
             ),
           ),
-          
+
           // Subtitles unter dem Logo
           Positioned(
             top: bottomTextPosition,
@@ -291,9 +282,9 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 15),
-                
+
                 // Start good taste - von rechts eingleiten
                 FadeTransition(
                   opacity: _subtitle2Fade,

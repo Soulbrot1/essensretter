@@ -207,7 +207,11 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     // Erst nach Namen filtern, falls Suchtext vorhanden
     if (currentState.searchText.isNotEmpty) {
       filtered = filtered
-          .where((food) => food.name.toLowerCase().contains(currentState.searchText.toLowerCase()))
+          .where(
+            (food) => food.name.toLowerCase().contains(
+              currentState.searchText.toLowerCase(),
+            ),
+          )
           .toList();
     }
 
@@ -239,7 +243,11 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     // Erst nach Namen filtern
     if (event.searchText.isNotEmpty) {
       filtered = filtered
-          .where((food) => food.name.toLowerCase().contains(event.searchText.toLowerCase()))
+          .where(
+            (food) => food.name.toLowerCase().contains(
+              event.searchText.toLowerCase(),
+            ),
+          )
           .toList();
     }
 
@@ -335,41 +343,47 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     // Update the food in the database
     final result = await updateFood(updatedFood);
 
-    result.fold((failure) {
-      emit(FoodError(failure.message));
-      if (currentState is FoodLoaded) {
-        emit(currentState);
-      }
-    }, (_) {
-      // Update local state and maintain filters
-      final updatedFoods = currentState.foods.map((food) {
-        return food.id == event.id ? updatedFood : food;
-      }).toList();
-      
-      final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
-      
-      // Re-apply current filters
-      List<Food> filtered = sortedFoods;
-      
-      // Apply search filter if active
-      if (currentState.searchText.isNotEmpty) {
-        filtered = filtered
-            .where((food) => food.name.toLowerCase().contains(currentState.searchText.toLowerCase()))
-            .toList();
-      }
-      
-      // Apply expiry filter if active
-      if (currentState.activeFilter != null) {
-        filtered = filtered
-            .where((food) => food.expiresInDays(currentState.activeFilter!))
-            .toList();
-      }
-      
-      emit(currentState.copyWith(
-        foods: sortedFoods,
-        filteredFoods: filtered,
-      ));
-    });
+    result.fold(
+      (failure) {
+        emit(FoodError(failure.message));
+        if (currentState is FoodLoaded) {
+          emit(currentState);
+        }
+      },
+      (_) {
+        // Update local state and maintain filters
+        final updatedFoods = currentState.foods.map((food) {
+          return food.id == event.id ? updatedFood : food;
+        }).toList();
+
+        final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
+
+        // Re-apply current filters
+        List<Food> filtered = sortedFoods;
+
+        // Apply search filter if active
+        if (currentState.searchText.isNotEmpty) {
+          filtered = filtered
+              .where(
+                (food) => food.name.toLowerCase().contains(
+                  currentState.searchText.toLowerCase(),
+                ),
+              )
+              .toList();
+        }
+
+        // Apply expiry filter if active
+        if (currentState.activeFilter != null) {
+          filtered = filtered
+              .where((food) => food.expiresInDays(currentState.activeFilter!))
+              .toList();
+        }
+
+        emit(
+          currentState.copyWith(foods: sortedFoods, filteredFoods: filtered),
+        );
+      },
+    );
   }
 
   Future<void> _onUpdateFood(

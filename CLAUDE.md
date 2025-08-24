@@ -16,10 +16,17 @@ flutter test
 # Tests mit Coverage
 flutter test --coverage
 
+# Coverage Report generieren
+./scripts/coverage-report.sh
+
 # Spezifische Test-Suites
 flutter test test/unit_test/        # Unit Tests
 flutter test test/widget_test/      # Widget Tests
+flutter test test/features/         # Feature Tests
 flutter test integration_test/      # Integration Tests
+
+# Pre-Commit Hook manuell ausführen
+./scripts/flutter-pre-commit.sh
 
 # Code-Analyse (PFLICHT vor jedem Commit)
 flutter analyze
@@ -127,7 +134,37 @@ Wir verwenden BLoC (Business Logic Component) für State Management:
 - **Jede neue Funktion**: Braucht Tests vor Implementation
 - **Jeder Bug-Fix**: Braucht Test, der den Bug reproduziert
 - **Code Coverage**: Minimum 80% Overall, 90% für Domain Layer
-- **Tests laufen**: Bei jedem Commit (CI/CD)
+- **Tests laufen**: Bei jedem Commit (automatisch via Pre-Commit Hook)
+- **CI/CD Pipeline**: GitHub Actions führt Tests bei jedem Push aus
+
+### Test-Integration im Entwicklungsprozess
+
+#### Automatische Checks (Pre-Commit)
+Der Pre-Commit Hook führt automatisch folgende Checks aus:
+1. Code-Formatierung (`dart format`)
+2. Static Analysis (`flutter analyze`)
+3. Alle Tests (`flutter test`)
+4. Coverage-Check (minimum 80%)
+5. Print-Statement Check
+
+#### Test-Helper und Utilities
+- **Test Helper**: `test/helpers/test_helper.dart` - Widget-Wrapper, Custom Matchers
+- **Mock Factory**: `test/helpers/mock_factory.dart` - Zentrale Mock-Erstellung
+- **Fixtures**: `test/fixtures/` - Vordefinierte Test-Daten
+
+#### Coverage Monitoring
+```bash
+# Coverage Report mit Details generieren
+./scripts/coverage-report.sh
+
+# Coverage Badge für README
+# Automatisch generiert bei CI/CD Runs
+```
+
+#### GitHub Actions CI/CD
+- **Trigger**: Bei Push auf main/develop und Pull Requests
+- **Jobs**: Test, Analyze, Coverage Report, Build (iOS/Android)
+- **Coverage Upload**: Automatisch zu Codecov
 
 ## Wichtige Dependencies
 

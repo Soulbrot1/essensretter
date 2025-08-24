@@ -71,7 +71,10 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                             autofocus: true,
                             decoration: InputDecoration(
                               hintText: 'Lebensmittel suchen...',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               prefixIcon: Icon(
                                 Icons.search,
                                 color: Colors.grey[600],
@@ -92,7 +95,9 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ),
                             ),
                             onChanged: (value) {
-                              context.read<FoodBloc>().add(SearchFoodsByNameEvent(value));
+                              context.read<FoodBloc>().add(
+                                SearchFoodsByNameEvent(value),
+                              );
                             },
                           ),
                         ),
@@ -325,7 +330,9 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           icon: Icon(
                             Icons.sort,
                             size: 24,
-                            color: Colors.grey[600],
+                            color: currentSort != SortOption.date
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey[600],
                           ),
                           style: IconButton.styleFrom(
                             padding: const EdgeInsets.all(12),
@@ -408,7 +415,9 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                             icon: Icon(
                               Icons.cleaning_services,
                               size: 24,
-                              color: hasConsumedFoods ? Colors.red[600] : Colors.grey[600],
+                              color: hasConsumedFoods
+                                  ? Colors.red[600]
+                                  : Colors.grey[600],
                             ),
                             style: IconButton.styleFrom(
                               padding: const EdgeInsets.all(12),
@@ -424,7 +433,6 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
       },
     );
   }
-
 
   void _showClearConsumedConfirmation(BuildContext context) {
     showDialog(

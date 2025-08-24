@@ -62,9 +62,10 @@ class _FoodCardState extends State<FoodCard> {
                         maxLines: 1,
                         textDirection: TextDirection.ltr,
                       )..layout(maxWidth: double.infinity);
-                      
+
                       // Wenn der Text zu breit ist, verkleinere die Schriftgröße
-                      while (textPainter.width > constraints.maxWidth && fontSize > 10) {
+                      while (textPainter.width > constraints.maxWidth &&
+                          fontSize > 10) {
                         fontSize -= 0.5;
                         textPainter.text = TextSpan(
                           text: widget.food.name,
@@ -75,7 +76,7 @@ class _FoodCardState extends State<FoodCard> {
                         );
                         textPainter.layout(maxWidth: double.infinity);
                       }
-                      
+
                       return Text(
                         widget.food.name,
                         maxLines: 1,
@@ -93,7 +94,9 @@ class _FoodCardState extends State<FoodCard> {
                       child: Center(
                         child: Container(
                           height: 1.5,
-                          color: widget.food.isConsumed ? Colors.grey : Colors.red,
+                          color: widget.food.isConsumed
+                              ? Colors.grey
+                              : Colors.red,
                         ),
                       ),
                     ),
@@ -126,15 +129,19 @@ class _FoodCardState extends State<FoodCard> {
                             Text(
                               widget.food.expiryStatus,
                               style: TextStyle(
-                                color: widget.food.isConsumed ? Colors.grey : Colors.black,
+                                color: widget.food.isConsumed
+                                    ? Colors.grey
+                                    : Colors.black,
                                 fontWeight: FontWeight.w500,
                                 fontSize: 12,
                               ),
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.edit, 
-                              color: widget.food.isConsumed ? Colors.grey : urgencyColor, 
+                              Icons.edit,
+                              color: widget.food.isConsumed
+                                  ? Colors.grey
+                                  : urgencyColor,
                               size: 12,
                             ),
                           ],
@@ -154,14 +161,16 @@ class _FoodCardState extends State<FoodCard> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: widget.food.isConsumed 
+                          color: widget.food.isConsumed
                               ? Colors.grey.withValues(alpha: 0.2)
                               : Colors.blue.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.info_outline,
-                          color: widget.food.isConsumed ? Colors.grey : Colors.blue,
+                          color: widget.food.isConsumed
+                              ? Colors.grey
+                              : Colors.blue,
                           size: 18,
                         ),
                       ),
@@ -175,14 +184,16 @@ class _FoodCardState extends State<FoodCard> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: widget.food.isConsumed 
+                          color: widget.food.isConsumed
                               ? Colors.grey.withValues(alpha: 0.2)
                               : Colors.red.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.delete_outline,
-                          color: widget.food.isConsumed ? Colors.grey : Colors.red,
+                          color: widget.food.isConsumed
+                              ? Colors.grey
+                              : Colors.red,
                           size: 18,
                         ),
                       ),
@@ -194,7 +205,9 @@ class _FoodCardState extends State<FoodCard> {
                     child: Center(
                       child: Container(
                         height: 1.5,
-                        color: widget.food.isConsumed ? Colors.grey : Colors.red,
+                        color: widget.food.isConsumed
+                            ? Colors.grey
+                            : Colors.red,
                       ),
                     ),
                   ),
@@ -223,13 +236,13 @@ class _FoodCardState extends State<FoodCard> {
       case 'Gemüse':
         return Icons.eco;
       case 'Milchprodukte':
-        return Icons.breakfast_dining;
+        return Icons.local_drink; // Milchglas-Symbol
       case 'Fleisch':
         return Icons.restaurant;
       case 'Brot & Backwaren':
         return Icons.bakery_dining;
       case 'Getränke':
-        return Icons.local_drink;
+        return Icons.water_drop;
       default:
         return Icons.fastfood;
     }

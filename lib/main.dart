@@ -63,9 +63,7 @@ class MyApp extends StatelessWidget {
           ),
         ],
         child: const ModernSplashScreen(
-          child: OnboardingScreen(
-            child: FoodTrackingPage(),
-          ),
+          child: OnboardingScreen(child: FoodTrackingPage()),
         ),
       ),
     );

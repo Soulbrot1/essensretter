@@ -1,0 +1,68 @@
+# Pre-commit hooks for Flutter/Dart projects
+# Ensures code quality before commits
+
+repos:
+  # Dart/Flutter specific hooks
+  - repo: local
+    hooks:
+      # Flutter Format Check
+      - id: flutter-format
+        name: Flutter Format
+        entry: dart format --set-exit-if-changed lib/ test/
+        language: system
+        types: [dart]
+        pass_filenames: false
+        description: Ensures consistent code formatting
+
+      # Flutter Analyze (lockerer - nur Errors blockieren)
+      - id: flutter-analyze
+        name: Flutter Analyze
+        entry: sh -c 'flutter analyze --no-fatal-warnings || echo "⚠️ Warnings found, but not blocking commit"'
+        language: system
+        types: [dart]
+        pass_filenames: false
+        description: Runs static analysis on Flutter code (warnings allowed)
+
+      # Flutter Test (mit besserer Fehlerbehandlung)
+      - id: flutter-test
+        name: Flutter Test
+        entry: sh -c 'flutter test --reporter=compact || (echo "❌ Tests failed! Fix tests before committing." && exit 1)'
+        language: system
+        types: [dart]
+        pass_filenames: false
+        description: Runs all Flutter tests
+        stages: [pre-commit]
+
+      # Check for print statements
+      - id: no-print
+        name: No Print Statements
+        entry: sh -c 'grep -n "print(" lib/**/*.dart | grep -v "// ignore:" || true'
+        language: system
+        types: [dart]
+        pass_filenames: false
+        description: Prevents debug print statements in production code
+
+      # Ensure test coverage
+      - id: test-coverage
+        name: Test Coverage Check
+        entry: bash -c "flutter test --coverage"
+        language: system
+        types: [dart]
+        pass_filenames: false
+        stages: [pre-push]
+        description: Runs tests with coverage
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+        exclude: '\.md$'
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']

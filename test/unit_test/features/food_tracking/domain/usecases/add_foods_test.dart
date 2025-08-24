@@ -16,12 +16,14 @@ void main() {
   setUp(() {
     mockFoodRepository = MockFoodRepository();
     usecase = AddFoods(mockFoodRepository);
-    registerFallbackValue(Food(
-      id: 'fallback',
-      name: 'fallback',
-      expiryDate: DateTime.now(),
-      addedDate: DateTime.now(),
-    ));
+    registerFallbackValue(
+      Food(
+        id: 'fallback',
+        name: 'fallback',
+        expiryDate: DateTime.now(),
+        addedDate: DateTime.now(),
+      ),
+    );
   });
 
   group('AddFoods', () {
@@ -44,8 +46,9 @@ void main() {
 
     test('should add all foods successfully', () async {
       // arrange
-      when(() => mockFoodRepository.addFood(any()))
-          .thenAnswer((invocation) async => Right(invocation.positionalArguments[0] as Food));
+      when(() => mockFoodRepository.addFood(any())).thenAnswer(
+        (invocation) async => Right(invocation.positionalArguments[0] as Food),
+      );
 
       // act
       final result = await usecase(tParams);
@@ -60,8 +63,9 @@ void main() {
     test('should return failure when first food fails to add', () async {
       // arrange
       const tFailure = CacheFailure('Failed to add food');
-      when(() => mockFoodRepository.addFood(tFood1))
-          .thenAnswer((_) async => const Left(tFailure));
+      when(
+        () => mockFoodRepository.addFood(tFood1),
+      ).thenAnswer((_) async => const Left(tFailure));
 
       // act
       final result = await usecase(tParams);
@@ -75,10 +79,12 @@ void main() {
     test('should return failure when second food fails to add', () async {
       // arrange
       const tFailure = CacheFailure('Failed to add food');
-      when(() => mockFoodRepository.addFood(tFood1))
-          .thenAnswer((_) async => Right(tFood1));
-      when(() => mockFoodRepository.addFood(tFood2))
-          .thenAnswer((_) async => const Left(tFailure));
+      when(
+        () => mockFoodRepository.addFood(tFood1),
+      ).thenAnswer((_) async => Right(tFood1));
+      when(
+        () => mockFoodRepository.addFood(tFood2),
+      ).thenAnswer((_) async => const Left(tFailure));
 
       // act
       final result = await usecase(tParams);
@@ -103,14 +109,18 @@ void main() {
 
     test('should return cache failure on exception', () async {
       // arrange
-      when(() => mockFoodRepository.addFood(any()))
-          .thenThrow(Exception('Database error'));
+      when(
+        () => mockFoodRepository.addFood(any()),
+      ).thenThrow(Exception('Database error'));
 
       // act
       final result = await usecase(tParams);
 
       // assert
-      expect(result, const Left(CacheFailure('Fehler beim Speichern der Lebensmittel')));
+      expect(
+        result,
+        const Left(CacheFailure('Fehler beim Speichern der Lebensmittel')),
+      );
       verify(() => mockFoodRepository.addFood(tFood1)).called(1);
     });
   });

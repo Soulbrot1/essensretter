@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final Widget child;
-  
+
   const OnboardingScreen({super.key, required this.child});
 
   @override
@@ -24,19 +24,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description: 'Reduziere Lebensmittelverschwendung und spare Geld',
     ),
     OnboardingPage(
-      imagePath: 'assets/images/onboarding/screen2.png', 
+      imagePath: 'assets/images/onboarding/screen2.png',
       title: 'Lebensmittel hinzufügen',
       description: 'Füge ganz einfach deine Lebensmittel mit Ablaufdatum hinzu',
     ),
     OnboardingPage(
       imagePath: 'assets/images/onboarding/screen3.png',
       title: 'Rechtzeitig erinnert werden',
-      description: 'Erhalte Benachrichtigungen bevor deine Lebensmittel ablaufen',
+      description:
+          'Erhalte Benachrichtigungen bevor deine Lebensmittel ablaufen',
     ),
     OnboardingPage(
       imagePath: 'assets/images/onboarding/screen4.png',
       title: 'Rezepte generieren',
-      description: 'Lass dir passende Rezepte für deine Lebensmittel vorschlagen',
+      description:
+          'Lass dir passende Rezepte für deine Lebensmittel vorschlagen',
     ),
   ];
 
@@ -49,10 +51,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _checkOnboardingStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
-    
+
     // DEBUG: Zum Testen immer Onboarding zeigen
     await prefs.setBool('hasSeenOnboarding', false);
-    
+
     setState(() {
       _shouldShowOnboarding = !hasSeenOnboarding;
       _isLoading = false;
@@ -62,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasSeenOnboarding', true);
-    
+
     if (mounted) {
       setState(() {
         _shouldShowOnboarding = false;
@@ -79,9 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!_shouldShowOnboarding) {
@@ -110,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ),
             ),
-            
+
             // Page Content
             Expanded(
               child: PageView.builder(
@@ -155,7 +155,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           Icons.image_outlined,
@@ -178,9 +179,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 40),
-                        
+
                         // Title
                         Text(
                           page.title,
@@ -191,9 +192,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Description
                         Text(
                           page.description,
@@ -209,7 +210,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 },
               ),
             ),
-            
+
             // Page Indicators & Navigation
             Padding(
               padding: const EdgeInsets.all(24.0),
@@ -234,7 +235,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // Next/Finish Button
                   ElevatedButton(
                     onPressed: () {
@@ -261,10 +262,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       _currentPage < _onboardingPages.length - 1
                           ? 'Weiter'
                           : 'Los geht\'s',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                 ],

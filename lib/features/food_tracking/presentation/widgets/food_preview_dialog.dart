@@ -74,8 +74,9 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
 
   Future<void> _selectDate(int index) async {
     final currentFood = _foodItems[index];
-    final initialDate = currentFood.expiryDate ?? DateTime.now().add(const Duration(days: 7));
-    
+    final initialDate =
+        currentFood.expiryDate ?? DateTime.now().add(const Duration(days: 7));
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initialDate,
@@ -83,7 +84,7 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
       locale: const Locale('de', 'DE'),
     );
-    
+
     if (picked != null) {
       setState(() {
         final oldFood = _foodItems[index];
@@ -141,14 +142,17 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                       itemBuilder: (context, index) {
                         final food = _foodItems[index];
                         final isEditingName = _editingNameIndex == index;
-                        
+
                         return Container(
                           margin: const EdgeInsets.only(bottom: 10),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade300),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           child: Row(
                             children: [
                               Expanded(
@@ -165,26 +169,42 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                                                     autofocus: true,
                                                     decoration: const InputDecoration(
                                                       isDense: true,
-                                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                                                      border: OutlineInputBorder(),
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                            horizontal: 8,
+                                                            vertical: 6,
+                                                          ),
+                                                      border:
+                                                          OutlineInputBorder(),
                                                     ),
-                                                    onSubmitted: (_) => _saveEditedName(index),
+                                                    onSubmitted: (_) =>
+                                                        _saveEditedName(index),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 InkWell(
-                                                  onTap: () => _saveEditedName(index),
-                                                  child: const Icon(Icons.check, color: Colors.green, size: 20),
+                                                  onTap: () =>
+                                                      _saveEditedName(index),
+                                                  child: const Icon(
+                                                    Icons.check,
+                                                    color: Colors.green,
+                                                    size: 20,
+                                                  ),
                                                 ),
                                                 const SizedBox(width: 4),
                                                 InkWell(
                                                   onTap: _cancelEditingName,
-                                                  child: const Icon(Icons.close, color: Colors.grey, size: 20),
+                                                  child: const Icon(
+                                                    Icons.close,
+                                                    color: Colors.grey,
+                                                    size: 20,
+                                                  ),
                                                 ),
                                               ],
                                             )
                                           : InkWell(
-                                              onTap: () => _startEditingName(index),
+                                              onTap: () =>
+                                                  _startEditingName(index),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
@@ -193,13 +213,19 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                                                       food.name,
                                                       style: const TextStyle(
                                                         fontSize: 15,
-                                                        fontWeight: FontWeight.w600,
+                                                        fontWeight:
+                                                            FontWeight.w600,
                                                       ),
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     ),
                                                   ),
                                                   const SizedBox(width: 4),
-                                                  const Icon(Icons.edit, size: 14, color: Colors.grey),
+                                                  const Icon(
+                                                    Icons.edit,
+                                                    size: 14,
+                                                    color: Colors.grey,
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -208,27 +234,40 @@ class _FoodPreviewDialogState extends State<FoodPreviewDialog> {
                                     InkWell(
                                       onTap: () => _selectDate(index),
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: food.expiryDate != null ? Colors.grey.shade100 : Colors.blue.shade50,
-                                          borderRadius: BorderRadius.circular(4),
+                                          color: food.expiryDate != null
+                                              ? Colors.grey.shade100
+                                              : Colors.blue.shade50,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(
-                                              Icons.calendar_today, 
-                                              size: 14, 
-                                              color: food.expiryDate != null ? Colors.grey[700] : Colors.blue[700],
+                                              Icons.calendar_today,
+                                              size: 14,
+                                              color: food.expiryDate != null
+                                                  ? Colors.grey[700]
+                                                  : Colors.blue[700],
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               food.expiryDate != null
-                                                  ? DateFormat('dd.MM.yy').format(food.expiryDate!)
+                                                  ? DateFormat(
+                                                      'dd.MM.yy',
+                                                    ).format(food.expiryDate!)
                                                   : '+ Datum',
                                               style: TextStyle(
                                                 fontSize: 13,
-                                                color: food.expiryDate != null ? Colors.grey[700] : Colors.blue[700],
+                                                color: food.expiryDate != null
+                                                    ? Colors.grey[700]
+                                                    : Colors.blue[700],
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
