@@ -20,6 +20,8 @@ import 'features/food_tracking/domain/usecases/parse_foods_from_text.dart';
 import 'features/food_tracking/domain/usecases/update_food.dart';
 import 'features/food_tracking/domain/usecases/get_expiring_foods.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
+import 'features/food_tracking/presentation/bloc/food_data_bloc.dart';
+import 'features/food_tracking/presentation/bloc/food_ui_bloc.dart';
 import 'features/recipes/data/datasources/recipe_service.dart';
 import 'features/recipes/data/datasources/openai_recipe_service.dart';
 import 'features/recipes/data/datasources/recipe_local_data_source.dart';
@@ -52,7 +54,7 @@ Future<void> init() async {
   // Services
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SpeechService());
-  // BLoCs
+  // BLoCs - Old monolithic FoodBloc (deprecated, will be removed)
   sl.registerFactory(
     () => FoodBloc(
       getAllFoods: sl(),
@@ -65,6 +67,22 @@ Future<void> init() async {
       updateRecipesAfterFoodDeletion: sl(),
       statisticsRepository: sl(),
     ),
+  );
+
+  // New split BLoCs
+  sl.registerFactory(
+    () => FoodDataBloc(
+      getAllFoods: sl(),
+      addFoods: sl(),
+      deleteFood: sl(),
+      updateFood: sl(),
+      updateRecipesAfterFoodDeletion: sl(),
+      statisticsRepository: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => FoodUIBloc(addFoodFromText: sl(), parseFoodsFromText: sl()),
   );
 
   sl.registerFactory(
