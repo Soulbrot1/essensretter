@@ -99,15 +99,10 @@ class _FoodCardState extends State<FoodCard> {
                       );
                     },
                   ),
-                  if (widget.food.isConsumed || isExpired)
+                  if (widget.food.isConsumed)
                     Positioned.fill(
                       child: Center(
-                        child: Container(
-                          height: 1.5,
-                          color: widget.food.isConsumed
-                              ? Colors.grey
-                              : Colors.red,
-                        ),
+                        child: Container(height: 1.5, color: Colors.grey),
                       ),
                     ),
                 ],
@@ -210,15 +205,10 @@ class _FoodCardState extends State<FoodCard> {
                     ),
                   ],
                 ),
-                if (widget.food.isConsumed || isExpired)
+                if (widget.food.isConsumed)
                   Positioned.fill(
                     child: Center(
-                      child: Container(
-                        height: 1.5,
-                        color: widget.food.isConsumed
-                            ? Colors.grey
-                            : Colors.red,
-                      ),
+                      child: Container(height: 1.5, color: Colors.grey),
                     ),
                   ),
               ],

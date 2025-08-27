@@ -55,129 +55,159 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Weggeworfene Lebensmittel'),
-        backgroundColor: Colors.red[400],
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
-        children: [
-          // Period Selector
-          Container(
-            margin: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(child: _buildPeriodButton('Woche', 0)),
-                const SizedBox(width: 8),
-                Expanded(child: _buildPeriodButton('Monat', 1)),
-                const SizedBox(width: 8),
-                Expanded(child: _buildPeriodButton('Jahr', 2)),
-              ],
-            ),
+    return Column(
+      children: [
+        // Bottom Sheet Handle
+        Container(
+          margin: const EdgeInsets.only(top: 8, bottom: 8),
+          width: 40,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Colors.grey[400],
+            borderRadius: BorderRadius.circular(2),
           ),
-
-          // Statistics Summary
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red[50],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red[200]!),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Column(
+        ),
+        // Title Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline, color: Colors.red[400], size: 28),
+              const SizedBox(width: 12),
+              Text(
+                'Weggeworfene Lebensmittel',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(color: Colors.grey[300]),
+        Expanded(
+          child: Column(
+            children: [
+              // Period Selector
+              Container(
+                margin: const EdgeInsets.all(16),
+                child: Row(
                   children: [
-                    Text(
-                      '${_wasteEntries.length}',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: Colors.red[700],
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Text(
-                      'Weggeworfen',
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
+                    Expanded(child: _buildPeriodButton('Woche', 0)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildPeriodButton('Monat', 1)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildPeriodButton('Jahr', 2)),
                   ],
                 ),
-                Container(width: 1, height: 40, color: Colors.red[300]),
-                Column(
-                  children: [
-                    Text(
-                      _getCategoryCount(),
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            color: Colors.red[700],
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Text(
-                      'Kategorien',
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                  ],
+              ),
+
+              // Statistics Summary
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red[200]!),
                 ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Waste Entries List
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _wasteEntries.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
                       children: [
-                        Icon(Icons.eco, size: 64, color: Colors.green[400]),
-                        const SizedBox(height: 16),
                         Text(
-                          'Keine weggeworfenen Lebensmittel!',
-                          style: Theme.of(context).textTheme.headlineSmall,
+                          '${_wasteEntries.length}',
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.red[700],
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         Text(
-                          'Toll gemacht! 🌱',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: Colors.green[600]),
+                          'Weggeworfen',
+                          style: TextStyle(color: Colors.red[700]),
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _wasteEntries.length,
-                    itemBuilder: (context, index) {
-                      final entry = _wasteEntries[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.red[100],
-                            child: Icon(
-                              _getCategoryIcon(entry.category),
-                              color: Colors.red[700],
-                            ),
-                          ),
-                          title: Text(entry.name),
-                          subtitle: Text(
-                            '${entry.category ?? "Unbekannt"} • ${_formatDate(entry.deletedDate)}',
-                          ),
-                          trailing: Icon(Icons.delete, color: Colors.red[400]),
+                    Container(width: 1, height: 40, color: Colors.red[300]),
+                    Column(
+                      children: [
+                        Text(
+                          _getCategoryCount(),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                color: Colors.red[700],
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
-                      );
-                    },
-                  ),
+                        Text(
+                          'Kategorien',
+                          style: TextStyle(color: Colors.red[700]),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Waste Entries List
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _wasteEntries.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.eco, size: 64, color: Colors.green[400]),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Keine weggeworfenen Lebensmittel!',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            Text(
+                              'Toll gemacht! 🌱',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(color: Colors.green[600]),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _wasteEntries.length,
+                        itemBuilder: (context, index) {
+                          final entry = _wasteEntries[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.red[100],
+                                child: Icon(
+                                  _getCategoryIcon(entry.category),
+                                  color: Colors.red[700],
+                                ),
+                              ),
+                              title: Text(entry.name),
+                              subtitle: Text(
+                                '${entry.category ?? "Unbekannt"} • ${_formatDate(entry.deletedDate)}',
+                              ),
+                              trailing: Icon(
+                                Icons.delete,
+                                color: Colors.red[400],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
