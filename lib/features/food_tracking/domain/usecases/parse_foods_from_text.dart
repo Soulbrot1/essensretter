@@ -14,7 +14,11 @@ class ParseFoodsFromText
   Future<Either<Failure, List<Food>>> call(
     ParseFoodsFromTextParams params,
   ) async {
-    return await repository.parseFoodsFromText(params.text);
+    try {
+      return await repository.parseFoodsFromText(params.text);
+    } catch (e) {
+      return Left(ServerFailure('Parsing fehlgeschlagen: $e'));
+    }
   }
 }
 

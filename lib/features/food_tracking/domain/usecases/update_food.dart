@@ -9,6 +9,10 @@ class UpdateFood {
   UpdateFood(this.repository);
 
   Future<Either<Failure, Food>> call(Food food) async {
-    return await repository.updateFood(food);
+    try {
+      return await repository.updateFood(food);
+    } catch (e) {
+      return Left(CacheFailure('Update fehlgeschlagen: $e'));
+    }
   }
 }
