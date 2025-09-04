@@ -100,13 +100,8 @@ class ExpiryFilterChips extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        // Wenn bereits ausgewählt und nochmal getappt -> Filter entfernen
-        // Wenn nicht ausgewählt -> diesen Filter setzen
-        if (isSelected) {
-          context.read<FoodBloc>().add(const FilterFoodsByExpiryEvent(null));
-        } else {
-          context.read<FoodBloc>().add(FilterFoodsByExpiryEvent(days));
-        }
+        // Immer den gewählten Filter setzen
+        context.read<FoodBloc>().add(FilterFoodsByExpiryEvent(days));
       },
       selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
       checkmarkColor: Theme.of(context).primaryColor,
