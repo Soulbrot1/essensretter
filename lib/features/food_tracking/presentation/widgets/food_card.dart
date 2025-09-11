@@ -27,33 +27,45 @@ class _FoodCardState extends State<FoodCard> {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
+            // Erweiterter Touch-Bereich für die Checkbox
             GestureDetector(
+              behavior:
+                  HitTestBehavior.opaque, // Macht den gesamten Bereich klickbar
               onTap: () {
                 context.read<FoodBloc>().add(
                   ToggleConsumedEvent(widget.food.id),
                 );
               },
-              child: Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: widget.food.isConsumed
-                        ? Colors.green
-                        : Colors.grey.shade400,
-                    width: 1.5,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  right: 12.0,
+                ), // Erweitert den Touch-Bereich
+                child: Container(
+                  width: 32, // Größerer Touch-Bereich
+                  height: 40, // Erweitert auf die volle Kartenhöhe
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: 20, // Visuelle Checkbox bleibt gleich groß
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: widget.food.isConsumed
+                            ? Colors.green
+                            : Colors.grey.shade400,
+                        width: 1.5,
+                      ),
+                      color: widget.food.isConsumed
+                          ? Colors.green
+                          : Colors.transparent,
+                    ),
+                    child: widget.food.isConsumed
+                        ? const Icon(Icons.check, color: Colors.white, size: 12)
+                        : null,
                   ),
-                  color: widget.food.isConsumed
-                      ? Colors.green
-                      : Colors.transparent,
                 ),
-                child: widget.food.isConsumed
-                    ? const Icon(Icons.check, color: Colors.white, size: 12)
-                    : null,
               ),
             ),
-            const SizedBox(width: 12),
             Expanded(
               child: Stack(
                 children: [
