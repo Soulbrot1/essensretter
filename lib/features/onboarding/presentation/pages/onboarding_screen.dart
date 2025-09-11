@@ -16,29 +16,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _shouldShowOnboarding = false;
   bool _isLoading = true;
 
-  // Liste der Screenshot-Pfade - hier später deine Screenshots einfügen
+  // Liste der Screenshot-Pfade mit deinen Onboarding-Bildern
   final List<OnboardingPage> _onboardingPages = [
     OnboardingPage(
-      imagePath: 'assets/images/onboarding/screen1.png',
-      title: 'Willkommen bei Food Rescue',
+      imagePath: 'assets/images/onboarding/Onboarding 1 .png',
+      title: 'Willkommen bei EssensRetter',
       description: 'Reduziere Lebensmittelverschwendung und spare Geld',
     ),
     OnboardingPage(
-      imagePath: 'assets/images/onboarding/screen2.png',
+      imagePath: 'assets/images/onboarding/Onboarding 2.png',
       title: 'Lebensmittel hinzufügen',
       description: 'Füge ganz einfach deine Lebensmittel mit Ablaufdatum hinzu',
     ),
     OnboardingPage(
-      imagePath: 'assets/images/onboarding/screen3.png',
+      imagePath: 'assets/images/onboarding/Onboarding 3.png',
       title: 'Rechtzeitig erinnert werden',
       description:
           'Erhalte Benachrichtigungen bevor deine Lebensmittel ablaufen',
     ),
     OnboardingPage(
-      imagePath: 'assets/images/onboarding/screen4.png',
+      imagePath: 'assets/images/onboarding/Onboarding 4.png',
+      title: 'Statistiken einsehen',
+      description: 'Verfolge deinen Fortschritt und reduziere Verschwendung',
+    ),
+    OnboardingPage(
+      imagePath: 'assets/images/onboarding/Onboarding 5.png',
       title: 'Rezepte generieren',
       description:
           'Lass dir passende Rezepte für deine Lebensmittel vorschlagen',
+    ),
+    OnboardingPage(
+      imagePath: 'assets/images/onboarding/Onboarding 6.png',
+      title: 'Intelligente Features',
+      description: 'Nutze KI für automatisches Erfassen und clevere Vorschläge',
+    ),
+    OnboardingPage(
+      imagePath: 'assets/images/onboarding/Onboarding 7.png',
+      title: 'Bereit loszulegen!',
+      description: 'Starte jetzt und rette Lebensmittel vor der Verschwendung',
     ),
   ];
 
@@ -91,27 +106,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            // Skip Button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextButton(
-                  onPressed: _completeOnboarding,
-                  child: Text(
-                    'Überspringen',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-            // Page Content
+            // Images that fill the screen except navigation bar
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
@@ -124,148 +122,129 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, index) {
                   final page = _onboardingPages[index];
                   return Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Screenshot Placeholder
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10),
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Image.asset(
+                      page.imagePath,
+                      fit: BoxFit.contain,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stackTrace) {
+                        // Fallback wenn Screenshot noch nicht vorhanden
+                        return Container(
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.image_outlined,
+                                  size: 80,
+                                  color: Colors.grey[400],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Bild ${index + 1}',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 18,
+                                  ),
                                 ),
                               ],
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Image.asset(
-                                page.imagePath,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) {
-                                  // Fallback wenn Screenshot noch nicht vorhanden
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.image_outlined,
-                                          size: 80,
-                                          color: Colors.grey[400],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Text(
-                                          'Screenshot ${index + 1}',
-                                          style: TextStyle(
-                                            color: Colors.grey[600],
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
                           ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        // Title
-                        Text(
-                          page.title,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2E7D32),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Description
-                        Text(
-                          page.description,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   );
                 },
               ),
             ),
 
-            // Page Indicators & Navigation
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Page Indicators
-                  Row(
-                    children: List.generate(
-                      _onboardingPages.length,
-                      (index) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.only(right: 8),
-                        height: 8,
-                        width: _currentPage == index ? 24 : 8,
-                        decoration: BoxDecoration(
-                          color: _currentPage == index
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(4),
+            // Fixed Navigation Bar
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Skip Button
+                    TextButton(
+                      onPressed: _completeOnboarding,
+                      child: Text(
+                        'Überspringen',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      ),
+                    ),
+
+                    // Page Indicators
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          _onboardingPages.length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            margin: const EdgeInsets.only(right: 6),
+                            height: 6,
+                            width: _currentPage == index ? 20 : 6,
+                            decoration: BoxDecoration(
+                              color: _currentPage == index
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.grey[300],
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Next/Finish Button
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_currentPage < _onboardingPages.length - 1) {
-                        _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeInOut,
-                        );
-                      } else {
-                        _completeOnboarding();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
+                    // Next/Finish Button
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_currentPage < _onboardingPages.length - 1) {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        } else {
+                          _completeOnboarding();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                      child: Text(
+                        _currentPage < _onboardingPages.length - 1
+                            ? 'Weiter'
+                            : 'Los geht\'s',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
-                    child: Text(
-                      _currentPage < _onboardingPages.length - 1
-                          ? 'Weiter'
-                          : 'Los geht\'s',
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
