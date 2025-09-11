@@ -45,8 +45,8 @@ class _FoodCardState extends State<FoodCard> {
                   height: 40, // Erweitert auf die volle Kartenhöhe
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    width: 20, // Visuelle Checkbox bleibt gleich groß
-                    height: 20,
+                    width: 22, // Checkbox um 10% vergrößert (20 * 1.1)
+                    height: 22,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(

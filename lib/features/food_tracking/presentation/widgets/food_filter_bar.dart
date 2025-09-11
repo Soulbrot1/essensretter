@@ -47,7 +47,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
             : SortOption.date;
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
           decoration: BoxDecoration(
             color: const Color(0xFFE0F2E0),
             border: Border(
@@ -126,7 +126,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           color: Colors.grey[600],
                         ),
                         style: IconButton.styleFrom(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(8),
                         ),
                         tooltip: 'Suchen',
                       ),
@@ -135,8 +135,10 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                       PopupMenuButton<int?>(
                         offset: const Offset(-12, 48),
                         onSelected: (value) {
+                          // Wenn "Alle" ausgewählt wird (-1), null an den BLoC senden
+                          final filterValue = value == -1 ? null : value;
                           context.read<FoodBloc>().add(
-                            FilterFoodsByExpiryEvent(value),
+                            FilterFoodsByExpiryEvent(filterValue),
                           );
                         },
                         child: IconButton(
@@ -149,13 +151,13 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                 : Colors.grey[600],
                           ),
                           style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(10),
                           ),
                           tooltip: 'Filter',
                         ),
                         itemBuilder: (context) => [
                           PopupMenuItem<int?>(
-                            value: null,
+                            value: -1, // Eindeutiger Wert für "Alle"
                             child: Row(
                               children: [
                                 Icon(
@@ -335,7 +337,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                 : Colors.grey[600],
                           ),
                           style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(10),
                           ),
                           tooltip: 'Sortieren',
                         ),
@@ -420,7 +422,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                   : Colors.grey[600],
                             ),
                             style: IconButton.styleFrom(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                             ),
                             tooltip: 'Verbrauchte Lebensmittel aufräumen',
                           );

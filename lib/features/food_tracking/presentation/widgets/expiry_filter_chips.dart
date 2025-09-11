@@ -14,8 +14,8 @@ class ExpiryFilterChips extends StatelessWidget {
         final activeFilter = state is FoodLoaded ? state.activeFilter : null;
 
         return Container(
-          height: 50,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
@@ -100,7 +100,7 @@ class ExpiryFilterChips extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
-        // Immer den gewählten Filter setzen
+        // Immer den gewünschten Filter aktivieren (egal ob selected true oder false ist)
         context.read<FoodBloc>().add(FilterFoodsByExpiryEvent(days));
       },
       selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),

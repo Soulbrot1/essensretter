@@ -22,7 +22,7 @@ class RecipeGenerationButton extends StatelessWidget {
         final List availableFoods = state is FoodLoaded ? state.foods : [];
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
           decoration: BoxDecoration(
             color: const Color(0xFF2E7D32),
             boxShadow: [
@@ -40,10 +40,10 @@ class RecipeGenerationButton extends StatelessWidget {
                 // Hinzufügen Button
                 IconButton(
                   onPressed: () => _showAddFoodDialog(context),
-                  icon: const Icon(Icons.add, size: 31),
+                  icon: const Icon(Icons.add, size: 28),
                   style: IconButton.styleFrom(
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
                   ),
                   tooltip: 'Lebensmittel hinzufügen',
                 ),
@@ -52,32 +52,32 @@ class RecipeGenerationButton extends StatelessWidget {
                   onPressed: hasFood
                       ? () => _generateRecipes(context, availableFoods)
                       : null,
-                  icon: const Icon(Icons.restaurant_menu, size: 31),
+                  icon: const Icon(Icons.restaurant_menu, size: 28),
                   style: IconButton.styleFrom(
                     foregroundColor: hasFood
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.5),
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
                   ),
                   tooltip: 'Rezepte generieren',
                 ),
                 // Bookmark Button
                 IconButton(
                   onPressed: () => _showBookmarkedRecipes(context),
-                  icon: const Icon(Icons.bookmark, size: 31),
+                  icon: const Icon(Icons.bookmark, size: 28),
                   style: IconButton.styleFrom(
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
                   ),
                   tooltip: 'Gespeicherte Rezepte',
                 ),
                 // Statistik Button
                 IconButton(
                   onPressed: () => _showStatistics(context),
-                  icon: const Icon(Icons.bar_chart, size: 31),
+                  icon: const Icon(Icons.bar_chart, size: 28),
                   style: IconButton.styleFrom(
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(8),
                   ),
                   tooltip: 'Statistiken',
                 ),
