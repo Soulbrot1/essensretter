@@ -47,3 +47,8 @@ app.*.map.json
 # Environment variables (API Keys)
 .env
 *.env
+
+# Coverage files
+coverage/
+*.lcov
+lcov.info
