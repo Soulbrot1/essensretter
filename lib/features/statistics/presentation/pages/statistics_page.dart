@@ -72,13 +72,13 @@ class _StatisticsPageState extends State<StatisticsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              Icon(Icons.delete_outline, color: Colors.red[400], size: 28),
+              Icon(Icons.delete_outline, color: Colors.green[600], size: 28),
               const SizedBox(width: 12),
               Text(
                 'Weggeworfene Lebensmittel',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.red[700],
+                  color: Colors.green[700],
                 ),
               ),
             ],
@@ -107,9 +107,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.red[50],
+                  color: Colors.green[50],
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[200]!),
+                  border: Border.all(color: Colors.green[200]!),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -120,30 +120,30 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           '${_wasteEntries.length}',
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                color: Colors.red[700],
+                                color: Colors.green[700],
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
                         Text(
                           'Weggeworfen',
-                          style: TextStyle(color: Colors.red[700]),
+                          style: TextStyle(color: Colors.green[700]),
                         ),
                       ],
                     ),
-                    Container(width: 1, height: 40, color: Colors.red[300]),
+                    Container(width: 1, height: 40, color: Colors.green[300]),
                     Column(
                       children: [
                         Text(
                           _getCategoryCount(),
                           style: Theme.of(context).textTheme.headlineMedium
                               ?.copyWith(
-                                color: Colors.red[700],
+                                color: Colors.green[700],
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
                         Text(
                           'Kategorien',
-                          style: TextStyle(color: Colors.red[700]),
+                          style: TextStyle(color: Colors.green[700]),
                         ),
                       ],
                     ),
@@ -185,10 +185,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Colors.red[100],
+                                backgroundColor: Colors.green[100],
                                 child: Icon(
                                   _getCategoryIcon(entry.category),
-                                  color: Colors.red[700],
+                                  color: Colors.green[700],
                                 ),
                               ),
                               title: Text(entry.name),
@@ -197,7 +197,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                               ),
                               trailing: Icon(
                                 Icons.delete,
-                                color: Colors.red[400],
+                                color: Colors.green[600],
                               ),
                             ),
                           );
@@ -219,7 +219,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         _loadData();
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.red[400] : Colors.grey[200],
+        backgroundColor: isSelected ? Colors.green[600] : Colors.grey[200],
         foregroundColor: isSelected ? Colors.white : Colors.black,
         elevation: isSelected ? 2 : 0,
       ),

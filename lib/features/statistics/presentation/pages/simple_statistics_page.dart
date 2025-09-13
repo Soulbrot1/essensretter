@@ -8,7 +8,7 @@ class SimpleStatisticsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statistiken'),
-        backgroundColor: Colors.red[400],
+        backgroundColor: Colors.green[600],
         foregroundColor: Colors.white,
       ),
       body: const Center(
