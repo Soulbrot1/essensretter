@@ -70,47 +70,6 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
               ],
             ),
             const SizedBox(height: 16),
-            // Prüfhinweise für Haltbarkeit
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200, width: 1),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        color: Colors.green.shade700,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Ist es noch gut?',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green.shade700,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _getQualityCheckTips(widget.foodName),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.green.shade800,
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
             // Haltbarkeit nach MHD
             Container(
               padding: const EdgeInsets.all(16),
@@ -217,36 +176,6 @@ class _FoodTipsDialogState extends State<FoodTipsDialog> {
         ),
       ),
     );
-  }
-
-  String _getQualityCheckTips(String foodName) {
-    final name = foodName.toLowerCase();
-
-    if (name.contains('apfel') || name.contains('äpfel')) {
-      return '• Aussehen: Keine Schimmelstellen, braune Stellen sind meist unbedenklich\n• Geruch: Frisch und fruchtig, nicht gärig\n• Konsistenz: Fest, nicht matschig\n• Geschmack: Süß-säuerlich, nicht vergoren';
-    } else if (name.contains('brot')) {
-      return '• Aussehen: Kein sichtbarer Schimmel (bei Schimmel ganzes Brot entsorgen!)\n• Geruch: Neutral bis leicht hefig, nicht muffig\n• Konsistenz: Kann hart sein, aber noch genießbar\n• Tipp: Hartes Brot kann zu Semmelbröseln verarbeitet werden';
-    } else if (name.contains('milch')) {
-      return '• Aussehen: Keine Klumpen oder Flocken\n• Geruch: Neutral bis leicht süßlich, nicht sauer\n• Konsistenz: Flüssig, nicht dickflüssig\n• Test: Kleine Menge probieren - säuerlicher Geschmack = entsorgen';
-    } else if (name.contains('banane')) {
-      return '• Aussehen: Braune Flecken sind normal und zeigen Reife\n• Geruch: Süß und fruchtig, nicht alkoholisch\n• Konsistenz: Weich ist okay, matschig vermeiden\n• Tipp: Überreife Bananen perfekt für Smoothies oder Bananenbrot';
-    } else if (name.contains('tomate')) {
-      return '• Aussehen: Keine Schimmelstellen, runzelige Haut ist oft noch okay\n• Geruch: Frisch und aromatisch\n• Konsistenz: Weich ist okay für Soßen, nicht matschig\n• Drucktest: Sollte auf Druck leicht nachgeben';
-    } else if (name.contains('salat') || name.contains('kopfsalat')) {
-      return '• Aussehen: Keine schleimigen oder schwarzen Stellen\n• Blätter: Welke Außenblätter entfernen, Innere oft noch gut\n• Konsistenz: Knackig bis leicht welk ist essbar\n• Geruch: Frisch, nicht faulig';
-    } else if (name.contains('kartoffel')) {
-      return '• Aussehen: Grüne Stellen und Keime entfernen\n• Konsistenz: Fest, keine weichen Stellen\n• Schale: Runzelig ist okay, schimmelig nicht\n• Wichtig: Stark gekeimte oder grüne Kartoffeln nicht verwenden';
-    } else if (name.contains('fleisch') || name.contains('wurst')) {
-      return '• Farbe: Keine grauen oder grünlichen Verfärbungen\n• Geruch: Neutral bis leicht fleischig, NICHT süßlich oder faulig\n• Oberfläche: Nicht schmierig oder klebrig\n• Bei Zweifeln: Lieber entsorgen - Gesundheitsrisiko!';
-    } else if (name.contains('käse')) {
-      return '• Schimmel: Bei Hartkäse großzügig wegschneiden möglich\n• Weichkäse: Bei Schimmel komplett entsorgen\n• Geruch: Typischer Käsegeruch, nicht ammoniakartig\n• Konsistenz: Keine untypische Schmierigkeit';
-    } else if (name.contains('joghurt') || name.contains('yoghurt')) {
-      return '• Deckel: Nicht gewölbt (Gärung)\n• Konsistenz: Keine Trennung von Molke normal\n• Geruch: Mild säuerlich, nicht stark sauer\n• Schimmel: Bei kleinsten Spuren komplett entsorgen';
-    } else if (name.contains('ei')) {
-      return '• Wassertest: Sinkt = frisch, schwimmt = alt (aber oft noch gut)\n• Aufschlagen: Eigelb gewölbt = frisch, flach = älter\n• Geruch: Neutral, faule Eier riechen stark schwefelartig\n• Eiklar: Klar und zähflüssig = frisch';
-    } else {
-      return '• Aussehen: Keine Schimmelbildung oder Verfärbungen\n• Geruch: Typisch für das Produkt, nicht sauer oder faulig\n• Konsistenz: Keine untypischen Veränderungen\n• Bei Zweifeln: Kleine Menge probieren oder entsorgen';
-    }
   }
 
   String _getExpiryExtensionInfo(String foodName) {
