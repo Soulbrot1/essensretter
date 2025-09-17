@@ -9,7 +9,6 @@ import 'features/recipes/presentation/bloc/recipe_bloc.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 import 'core/services/notification_service.dart';
-import 'core/services/local_key_service.dart';
 import 'core/usecases/usecase.dart';
 import 'injection_container.dart' as di;
 import 'modern_splash_screen.dart';
@@ -23,13 +22,6 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   await di.init();
-
-  // Initialisiere Master-Key (wird bei erster App-Nutzung generiert)
-  final keyService = di.sl<LocalKeyService>();
-  final masterKey = await keyService.initializeMasterKey();
-  debugPrint(
-    'App initialized with master key: ${masterKey.substring(0, 4)}...',
-  );
 
   // Initialisiere Notification Service
   final notificationService = di.sl<NotificationService>();
