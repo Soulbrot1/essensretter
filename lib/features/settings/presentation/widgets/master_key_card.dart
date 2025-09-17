@@ -148,6 +148,190 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
     );
   }
 
+  Future<void> _showSubKeyManagement() async {
+    final subKeys = _keyService.getSubKeys();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Haushalt verwalten'),
+        content: SizedBox(
+          width: 300,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Sub-Key erstellen Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _createSubKey,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Familienmitglied einladen'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Sub-Keys Liste
+              if (subKeys.isNotEmpty) ...[
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Aktive Familienmitglieder:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...subKeys.map(
+                  (subKey) => Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.person, color: Colors.green),
+                      title: Text(subKey.key),
+                      subtitle: Text(
+                        'Erstellt: ${subKey.createdAt.day}.${subKey.createdAt.month}.${subKey.createdAt.year}',
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _revokeSubKey(subKey.key),
+                      ),
+                    ),
+                  ),
+                ),
+              ] else
+                const Text(
+                  'Noch keine Familienmitglieder eingeladen.',
+                  style: TextStyle(color: Colors.grey),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Schließen'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _createSubKey() async {
+    try {
+      final subKey = _keyService.generateSubKey();
+      await _keyService.saveSubKey(subKey, ['read', 'write']);
+
+      if (!mounted) return;
+
+      // QR-Code für Sub-Key generieren
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Familienmitglied einladen'),
+          content: SizedBox(
+            width: 280,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: QrImageView(
+                      data: 'HOUSEHOLD_INVITE:$_masterKey:$subKey',
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      backgroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Sub-Key: $subKey',
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Familienmitglied kann diesen QR-Code scannen',
+                  style: TextStyle(fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Clipboard.setData(ClipboardData(text: subKey));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sub-Key kopiert')),
+                );
+              },
+              child: const Text('Kopieren'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Schließen'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Fehler: $e')));
+      }
+    }
+  }
+
+  Future<void> _revokeSubKey(String subKey) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zugang entziehen'),
+        content: Text('Möchten Sie den Zugang für $subKey wirklich entziehen?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Entziehen'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await _keyService.revokeSubKey(subKey);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success ? 'Zugang entzogen' : 'Fehler beim Entziehen',
+            ),
+          ),
+        );
+        // Dialog neu öffnen um aktualisierte Liste zu zeigen
+        Navigator.of(context).pop();
+        _showSubKeyManagement();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_masterKey == null) {
@@ -231,6 +415,21 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+
+            // Sub-Key Management Button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _showSubKeyManagement,
+                icon: const Icon(Icons.group_add, size: 18),
+                label: const Text('Haushalt verwalten'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.green,
+                  side: BorderSide(color: Colors.green.shade300),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
 
