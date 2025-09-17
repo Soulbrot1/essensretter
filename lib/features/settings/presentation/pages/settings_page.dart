@@ -1,11 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_event.dart';
+import '../widgets/master_key_card.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  PackageInfo? _packageInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackageInfo();
+  }
+
+  Future<void> _loadPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _packageInfo = info;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +139,15 @@ class SettingsPage extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Text(
+                    'Haushalt & Sicherheit',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const MasterKeyCard(),
+                const Divider(height: 32),
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
                     'Hilfe & Demo',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
@@ -136,6 +169,27 @@ class SettingsPage extends StatelessWidget {
                     );
                     Navigator.of(context).pop();
                   },
+                ),
+                const Divider(height: 32),
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'App-Information',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                if (_packageInfo != null)
+                  ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: const Text('Version'),
+                    subtitle: Text(
+                      '${_packageInfo!.version} (${_packageInfo!.buildNumber})',
+                    ),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.description),
+                  title: const Text('App-Name'),
+                  subtitle: Text(_packageInfo?.appName ?? 'Essensretter'),
                 ),
               ],
             );

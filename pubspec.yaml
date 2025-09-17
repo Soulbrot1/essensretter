@@ -55,6 +55,9 @@ dependencies:
   uuid: ^4.5.0
   dartz: ^0.10.1
 
+  # QR Code
+  qr_flutter: ^4.1.0
+
   # Speech to Text
   speech_to_text: ^7.2.0
   permission_handler: ^11.3.1
@@ -72,6 +75,9 @@ dependencies:
 
   # Native Splash Screen
   flutter_native_splash: ^2.3.10
+
+  # App Info
+  package_info_plus: ^8.0.2
 
 dev_dependencies:
   flutter_test:

@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/speech_service.dart';
+import 'core/services/local_key_service.dart';
 import 'features/food_tracking/data/datasources/food_local_data_source.dart';
 import 'features/food_tracking/data/datasources/text_parser_service.dart';
 import 'features/food_tracking/data/datasources/openai_text_parser_service.dart';
@@ -54,6 +55,7 @@ Future<void> init() async {
   // Services
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SpeechService());
+  sl.registerLazySingleton(() => LocalKeyService(sl<SharedPreferences>()));
   // BLoCs - Old monolithic FoodBloc (deprecated, will be removed)
   sl.registerFactory(
     () => FoodBloc(
