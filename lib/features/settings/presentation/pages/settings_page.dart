@@ -6,6 +6,7 @@ import '../../../food_tracking/presentation/bloc/food_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_event.dart';
 import '../widgets/master_key_card.dart';
 import 'join_household_page.dart';
+import 'household_management_page.dart';
 import '../../../../core/services/local_key_service.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -166,6 +167,26 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                   ),
                 ),
+
+                // Haushalt verwalten Button
+                Card(
+                  margin: const EdgeInsets.all(16),
+                  child: ListTile(
+                    leading: const Icon(Icons.swap_horiz, color: Colors.blue),
+                    title: const Text('Haushalte verwalten'),
+                    subtitle: const Text(
+                      'Zwischen Haushalten wechseln oder verlassen',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const HouseholdManagementPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
                 const Divider(height: 32),
                 const Padding(
                   padding: EdgeInsets.all(16.0),
@@ -241,11 +262,19 @@ class _SettingsPageState extends State<SettingsPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Master Key: ${debugInfo['masterKey'] ?? 'NONE'}',
+                                  'Eigener Master Key: ${debugInfo['ownMasterKey'] ?? 'NONE'}',
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   'Created At: ${debugInfo['createdAt'] ?? 'NONE'}',
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'In fremdem Haushalt: ${debugInfo['isInForeignHousehold']}',
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Aktiver Haushalt: ${debugInfo['activeHousehold'] ?? 'NONE'}',
                                 ),
                                 const SizedBox(height: 8),
                                 Text(

@@ -10,6 +10,7 @@ class LocalKeyService {
   static const String _masterKeyPref = 'master_key';
   static const String _createdAtPref = 'master_key_created_at';
   static const String _subKeysPref = 'sub_keys';
+  static const String _activeHouseholdPref = 'active_household';
 
   final SharedPreferences _prefs;
 
@@ -217,9 +218,19 @@ class LocalKeyService {
 
   /// Debug-Methode: Zeigt alle gespeicherten Daten
   Map<String, dynamic> debugInfo() {
+    final currentHousehold = getCurrentHousehold();
     return {
-      'masterKey': getMasterKey(),
+      'ownMasterKey': getMasterKey(),
       'createdAt': _prefs.getString(_createdAtPref),
+      'activeHousehold': getActiveHousehold(),
+      'isInForeignHousehold': isInForeignHousehold(),
+      'currentHousehold': currentHousehold != null
+          ? {
+              'masterKey': currentHousehold.masterKey,
+              'subKey': currentHousehold.subKey,
+              'isOwn': currentHousehold.isOwn,
+            }
+          : null,
       'subKeys': getSubKeys()
           .map(
             (sk) => {
@@ -231,6 +242,115 @@ class LocalKeyService {
           .toList(),
       'allPrefsKeys': _prefs.getKeys().toList(),
     };
+  }
+
+  /// Tritt einem fremden Haushalt bei (deaktiviert eigenen Haushalt)
+  Future<void> joinForeignHousehold(
+    String foreignMasterKey,
+    String subKey,
+  ) async {
+    // Setze den fremden Haushalt als aktiv
+    await _prefs.setString(_activeHouseholdPref, foreignMasterKey);
+
+    // Speichere den Sub-Key für den fremden Haushalt
+    await _prefs.setString('foreign_master_key', foreignMasterKey);
+    await _prefs.setString('foreign_sub_key', subKey);
+    await _prefs.setString(
+      'foreign_joined_at',
+      DateTime.now().toIso8601String(),
+    );
+
+    // Speichere Sub-Key Berechtigungen
+    await saveSubKey(subKey, ['read', 'write']);
+
+    debugPrint(
+      'Joined foreign household: ${_maskKey(foreignMasterKey)} with sub-key: ${_maskKey(subKey)}',
+    );
+  }
+
+  /// Setzt den aktiven Haushalt
+  Future<void> setActiveHousehold(String? masterKey) async {
+    if (masterKey != null) {
+      await _prefs.setString(_activeHouseholdPref, masterKey);
+      debugPrint('Active household set to: ${_maskKey(masterKey)}');
+    } else {
+      await _prefs.remove(_activeHouseholdPref);
+      debugPrint('Active household cleared');
+    }
+  }
+
+  /// Holt den aktiven Haushalt
+  String? getActiveHousehold() {
+    final foreignKey = _prefs.getString('foreign_master_key');
+    if (foreignKey != null) {
+      return foreignKey;
+    }
+    return getMasterKey();
+  }
+
+  /// Prüft ob man in einem fremden Haushalt ist
+  bool isInForeignHousehold() {
+    return _prefs.getString('foreign_master_key') != null;
+  }
+
+  /// Prüft ob der eigene Haushalt aktiv ist
+  bool isOwnHouseholdActive() {
+    return !isInForeignHousehold();
+  }
+
+  /// Holt Informationen über den aktuellen Haushalt
+  HouseholdInfo? getCurrentHousehold() {
+    final foreignMasterKey = _prefs.getString('foreign_master_key');
+
+    if (foreignMasterKey != null) {
+      // In fremdem Haushalt
+      final subKey = _prefs.getString('foreign_sub_key');
+      final joinedAt = _prefs.getString('foreign_joined_at');
+
+      return HouseholdInfo(
+        masterKey: foreignMasterKey,
+        subKey: subKey,
+        joinedAt: joinedAt != null ? DateTime.parse(joinedAt) : DateTime.now(),
+        isOwn: false,
+      );
+    }
+
+    // Eigener Haushalt
+    final ownMasterKey = getMasterKey();
+    if (ownMasterKey != null) {
+      return HouseholdInfo(
+        masterKey: ownMasterKey,
+        subKey: null,
+        joinedAt: DateTime.parse(
+          _prefs.getString(_createdAtPref) ?? DateTime.now().toIso8601String(),
+        ),
+        isOwn: true,
+      );
+    }
+
+    return null;
+  }
+
+  /// Verlässt den fremden Haushalt und kehrt zum eigenen zurück
+  Future<void> leaveForeignHousehold() async {
+    if (!isInForeignHousehold()) {
+      debugPrint('Not in a foreign household');
+      return;
+    }
+
+    // Lösche alle fremden Haushalt-Daten
+    await _prefs.remove('foreign_master_key');
+    await _prefs.remove('foreign_sub_key');
+    await _prefs.remove('foreign_joined_at');
+    await _prefs.remove(_activeHouseholdPref);
+
+    // Lösche Sub-Keys die zum fremden Haushalt gehören
+    final subKey = _prefs.getString('foreign_sub_key');
+    if (subKey != null) {
+      await revokeSubKey(subKey);
+    }
+
+    debugPrint('Left foreign household, returned to own household');
   }
 }
 
@@ -252,4 +372,22 @@ class SubKeyInfo {
   bool get canRead => permissions.contains('read');
   bool get canWrite => permissions.contains('write');
   bool get isReadOnly => canRead && !canWrite;
+}
+
+/// Datenklasse für Haushalt-Informationen
+class HouseholdInfo {
+  final String masterKey;
+  final String? subKey;
+  final DateTime joinedAt;
+  final bool isOwn;
+
+  const HouseholdInfo({
+    required this.masterKey,
+    required this.subKey,
+    required this.joinedAt,
+    required this.isOwn,
+  });
+
+  String get displayName =>
+      isOwn ? 'Mein Haushalt' : 'Haushalt ${masterKey.substring(0, 4)}****';
 }

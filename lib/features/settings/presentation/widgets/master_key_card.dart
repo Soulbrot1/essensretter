@@ -39,7 +39,12 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
         _masterKey = await service.initializeMasterKey();
       }
     } else {
-      _masterKey = _keyService.getMasterKey();
+      // Nur anzeigen wenn man im eigenen Haushalt ist
+      if (_keyService.isOwnHouseholdActive()) {
+        _masterKey = _keyService.getMasterKey();
+      } else {
+        _masterKey = null; // Verstecke Master Key wenn in fremdem Haushalt
+      }
     }
 
     if (mounted) {
@@ -436,20 +441,23 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
 
   @override
   Widget build(BuildContext context) {
-    // Prüfe ob Sub-Key User
+    // Wenn in fremdem Haushalt, zeige Sub-Key Info
+    if (_keyService.isInForeignHousehold()) {
+      final subKey = _keyService.getOwnSubKey();
+      if (subKey != null) {
+        return _buildSubKeyCard(subKey);
+      }
+    }
+
+    // Wenn im eigenen Haushalt und Sub-Key User
     if (_keyService.isSubKeyUser()) {
       final subKey = _keyService.getOwnSubKey();
       return _buildSubKeyCard(subKey!);
     }
 
-    if (_masterKey == null) {
-      return const Card(
-        margin: EdgeInsets.all(16),
-        child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Center(child: Text('Kein Master-Key gefunden')),
-        ),
-      );
+    // Nur Master Key anzeigen wenn im eigenen Haushalt
+    if (_masterKey == null || !_keyService.isOwnHouseholdActive()) {
+      return const SizedBox.shrink(); // Verstecke komplett wenn in fremdem Haushalt
     }
 
     return Card(

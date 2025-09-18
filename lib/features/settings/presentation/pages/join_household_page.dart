@@ -175,15 +175,18 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
 
   Future<void> _joinHousehold(String masterKey, String subKey) async {
     try {
-      // Prüfe ob bereits einem Haushalt beigetreten
-      final currentMasterKey = _keyService.getMasterKey();
-      if (currentMasterKey != null) {
-        await _showAlreadyMemberDialog();
+      // Prüfe ob man in einem fremden Haushalt ist
+      if (_keyService.isInForeignHousehold()) {
+        await _showAlreadyInForeignHouseholdDialog();
         return;
       }
 
-      // Speichere Sub-Key Informationen lokal
-      await _keyService.saveSubKey(subKey, ['read', 'write']);
+      // Warnung wenn man seinen eigenen Haushalt verlässt
+      final confirmed = await _showLeaveOwnHouseholdWarning();
+      if (!confirmed) return;
+
+      // Trete dem fremden Haushalt bei
+      await _keyService.joinForeignHousehold(masterKey, subKey);
 
       // Zeige Erfolg Dialog
       if (mounted) {
@@ -219,7 +222,7 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
                       ),
                       const SizedBox(height: 4),
                       Text('Sub-Key: $subKey'),
-                      Text('Haushalt: $masterKey'),
+                      const Text('Haushalt: ****-****'),
                       const Text('Berechtigung: Lesen & Schreiben'),
                     ],
                   ),
@@ -247,7 +250,7 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
     }
   }
 
-  Future<void> _showAlreadyMemberDialog() async {
+  Future<void> _showAlreadyInForeignHouseholdDialog() async {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -255,12 +258,12 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
           children: [
             Icon(Icons.warning, color: Colors.orange),
             SizedBox(width: 8),
-            Text('Bereits Mitglied'),
+            Text('Bereits in fremdem Haushalt'),
           ],
         ),
         content: const Text(
-          'Sie sind bereits Mitglied in einem Haushalt. '
-          'Sie können nur einem Haushalt gleichzeitig angehören.',
+          'Sie sind bereits in einem fremden Haushalt.\n\n'
+          'Um einem anderen Haushalt beizutreten, müssen Sie zuerst den aktuellen verlassen.',
         ),
         actions: [
           TextButton(
@@ -270,6 +273,40 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
         ],
       ),
     );
+  }
+
+  Future<bool> _showLeaveOwnHouseholdWarning() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.info, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Fremdem Haushalt beitreten'),
+          ],
+        ),
+        content: const Text(
+          'Wenn Sie diesem Haushalt beitreten:\n\n'
+          '• Ihr eigener Haushalt wird pausiert\n'
+          '• Sie sehen nur die Daten des fremden Haushalts\n'
+          '• Sie können jederzeit zurückkehren\n\n'
+          'Möchten Sie fortfahren?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Beitreten'),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
   }
 
   void _showError(String message) {
