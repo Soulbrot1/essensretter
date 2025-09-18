@@ -120,16 +120,22 @@ class LocalKeyService {
   }
 
   /// Speichert einen Sub-Key mit Berechtigungen
-  Future<void> saveSubKey(String subKey, List<String> permissions) async {
+  Future<void> saveSubKey(
+    String subKey,
+    List<String> permissions, {
+    String? name,
+  }) async {
     final subKeys = _prefs.getStringList(_subKeysPref) ?? [];
 
-    // Format: "KEY|permission1,permission2|timestamp"
+    // Format: "KEY|permission1,permission2|timestamp|name"
     final entry =
-        '$subKey|${permissions.join(',')}|${DateTime.now().toIso8601String()}';
+        '$subKey|${permissions.join(',')}|${DateTime.now().toIso8601String()}|${name ?? ''}';
     subKeys.add(entry);
 
     await _prefs.setStringList(_subKeysPref, subKeys);
-    debugPrint('Sub-key saved: ${_maskKey(subKey)}');
+    debugPrint(
+      'Sub-key saved: ${_maskKey(subKey)}${name != null ? ' ($name)' : ''}',
+    );
   }
 
   /// Lädt alle Sub-Keys
@@ -139,12 +145,18 @@ class LocalKeyService {
     return subKeys
         .map((entry) {
           final parts = entry.split('|');
-          if (parts.length != 3) return null;
+          if (parts.length < 3) return null;
+
+          // Backwards compatibility: parts[3] might be missing (name)
+          final name = parts.length >= 4 && parts[3].isNotEmpty
+              ? parts[3]
+              : null;
 
           return SubKeyInfo(
             key: parts[0],
             permissions: parts[1].split(','),
             createdAt: DateTime.parse(parts[2]),
+            name: name,
           );
         })
         .whereType<SubKeyInfo>()
@@ -362,16 +374,20 @@ class SubKeyInfo {
   final String key;
   final List<String> permissions;
   final DateTime createdAt;
+  final String? name;
 
   const SubKeyInfo({
     required this.key,
     required this.permissions,
     required this.createdAt,
+    this.name,
   });
 
   bool get canRead => permissions.contains('read');
   bool get canWrite => permissions.contains('write');
   bool get isReadOnly => canRead && !canWrite;
+
+  String get displayName => name ?? key;
 }
 
 /// Datenklasse für Haushalt-Informationen

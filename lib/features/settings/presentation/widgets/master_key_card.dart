@@ -117,12 +117,57 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
   Future<void> _showQRCode() async {
     if (_masterKey == null) return;
 
+    // Eingabe-Dialog für Namen des Einzuladenden
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('QR-Code für Einladung'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Für wen soll die Einladung erstellt werden?'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                hintText: 'z.B. Mama, Papa, Anna... (optional)',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final enteredName = nameController.text.trim();
+              Navigator.of(
+                context,
+              ).pop(enteredName.isNotEmpty ? enteredName : '');
+            },
+            child: const Text('QR-Code erstellen'),
+          ),
+        ],
+      ),
+    );
+
+    // Wenn Dialog mit null zurückkommt, wurde abgebrochen
+    if (name == null) return;
+
     // Generiere neuen Sub-Key für den Einzuladenden
     final newSubKey = _keyService.generateSubKey();
     final inviteCode = 'HOUSEHOLD_INVITE:$_masterKey:$newSubKey';
 
-    // Speichere den Sub-Key bereits für die Einladung
-    await _keyService.saveSubKey(newSubKey, ['read', 'write']);
+    // Speichere den Sub-Key bereits für die Einladung (name kann leer sein)
+    await _keyService.saveSubKey(newSubKey, [
+      'read',
+      'write',
+    ], name: name.isNotEmpty ? name : null);
 
     if (!mounted) return;
 
@@ -162,7 +207,7 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Dieser QR-Code lädt eine Person zu Ihrem Haushalt ein.\n\nSub-Key: $newSubKey',
+                'Dieser QR-Code lädt${name.isNotEmpty ? ' $name' : ' eine Person'} zu Ihrem Haushalt ein.\n\nSub-Key: $newSubKey',
                 style: const TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
               ),
@@ -220,10 +265,13 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
                   (subKey) => Card(
                     child: ListTile(
                       leading: const Icon(Icons.person, color: Colors.green),
-                      title: Text(subKey.key),
+                      title: Text(subKey.displayName),
                       subtitle: Text(
-                        'Erstellt: ${subKey.createdAt.day}.${subKey.createdAt.month}.${subKey.createdAt.year}',
+                        subKey.name != null
+                            ? 'Sub-Key: ${subKey.key}\nErstellt: ${subKey.createdAt.day}.${subKey.createdAt.month}.${subKey.createdAt.year}'
+                            : 'Erstellt: ${subKey.createdAt.day}.${subKey.createdAt.month}.${subKey.createdAt.year}',
                       ),
+                      isThreeLine: subKey.name != null,
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () => _revokeSubKey(subKey.key),
@@ -250,9 +298,50 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
   }
 
   Future<void> _createSubKey() async {
+    // Eingabe-Dialog für Namen
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Familienmitglied hinzufügen'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Wie soll das neue Familienmitglied heißen?'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                hintText: 'z.B. Mama, Papa, Anna...',
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Abbrechen'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final enteredName = nameController.text.trim();
+              Navigator.of(
+                context,
+              ).pop(enteredName.isNotEmpty ? enteredName : null);
+            },
+            child: const Text('Erstellen'),
+          ),
+        ],
+      ),
+    );
+
+    if (name == null) return; // Abgebrochen
+
     try {
       final subKey = _keyService.generateSubKey();
-      await _keyService.saveSubKey(subKey, ['read', 'write']);
+      await _keyService.saveSubKey(subKey, ['read', 'write'], name: name);
 
       if (!mounted) return;
 
