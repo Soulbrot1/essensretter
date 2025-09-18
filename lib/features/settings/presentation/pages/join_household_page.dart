@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:get_it/get_it.dart';
@@ -24,8 +25,9 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
   @override
   void reassemble() {
     super.reassemble();
-    if (controller != null) {
+    if (Platform.isAndroid && controller != null) {
       controller!.pauseCamera();
+    } else if (Platform.isIOS && controller != null) {
       controller!.resumeCamera();
     }
   }
@@ -136,6 +138,9 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
       _isProcessing = true;
     });
 
+    // Pausiere die Kamera während der Verarbeitung
+    await controller?.pauseCamera();
+
     try {
       // QR-Code Format: HOUSEHOLD_INVITE:MASTER_KEY:SUB_KEY
       if (qrData.startsWith('HOUSEHOLD_INVITE:')) {
@@ -147,12 +152,18 @@ class _JoinHouseholdPageState extends State<JoinHouseholdPage> {
           await _joinHousehold(masterKey, subKey);
         } else {
           _showError('Ungültiger QR-Code Format');
+          // Resume camera on error
+          await controller?.resumeCamera();
         }
       } else {
         _showError('Dies ist kein gültiger Haushalt-QR-Code');
+        // Resume camera on error
+        await controller?.resumeCamera();
       }
     } catch (e) {
       _showError('Fehler beim Verarbeiten: $e');
+      // Resume camera on error
+      await controller?.resumeCamera();
     } finally {
       if (mounted) {
         setState(() {

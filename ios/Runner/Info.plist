@@ -30,6 +30,8 @@
 	<string>Diese App benötigt Zugriff auf das Mikrofon, um Lebensmittel per Sprache hinzuzufügen.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Diese App nutzt Spracherkennung, um Lebensmittel und Datumsangaben aus gesprochenen Text zu extrahieren.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Diese App benötigt Zugriff auf die Kamera, um QR-Codes zu scannen und Haushalten beizutreten.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
