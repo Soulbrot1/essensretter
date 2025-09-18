@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/food_tracking/presentation/pages/food_tracking_page.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
@@ -21,6 +22,12 @@ void main() async {
 
   // Lade Environment Variablen
   await dotenv.load(fileName: ".env");
+
+  // Initialisiere Supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
 
   await di.init();
 

@@ -155,27 +155,50 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
                         : (state as FoodOperationInProgress).sortOption;
 
                     if (foods.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<FoodBloc>().add(LoadFoodsEvent());
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
+                          );
+                        },
+                        child: ListView(
                           children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Keine Lebensmittel vorhanden',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(color: Colors.grey[600]),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Fügen Sie Lebensmittel über das Eingabefeld hinzu',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: Colors.grey[500]),
-                              textAlign: TextAlign.center,
+                            SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.6,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Keine Lebensmittel vorhanden',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Fügen Sie Lebensmittel über das Eingabefeld hinzu',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: Colors.grey[500]),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 32),
+                                  Text(
+                                    'Nach unten ziehen zum Aktualisieren',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey[400]),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -213,21 +236,35 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
         groupedFoods.putIfAbsent(category, () => []).add(food);
       }
 
-      return ListView.builder(
-        padding: const EdgeInsets.only(bottom: 16),
-        itemCount: _calculateGroupedItemCount(groupedFoods),
-        itemBuilder: (context, index) {
-          return _buildGroupedItem(groupedFoods, index);
+      return RefreshIndicator(
+        onRefresh: () async {
+          context.read<FoodBloc>().add(LoadFoodsEvent());
+          // Warte bis der State sich ändert
+          await Future.delayed(const Duration(milliseconds: 500));
         },
+        child: ListView.builder(
+          padding: const EdgeInsets.only(bottom: 16),
+          itemCount: _calculateGroupedItemCount(groupedFoods),
+          itemBuilder: (context, index) {
+            return _buildGroupedItem(groupedFoods, index);
+          },
+        ),
       );
     } else {
       // Normale Liste
-      return ListView.builder(
-        padding: const EdgeInsets.only(bottom: 16),
-        itemCount: foods.length,
-        itemBuilder: (context, index) {
-          return FoodCard(food: foods[index]);
+      return RefreshIndicator(
+        onRefresh: () async {
+          context.read<FoodBloc>().add(LoadFoodsEvent());
+          // Warte bis der State sich ändert
+          await Future.delayed(const Duration(milliseconds: 500));
         },
+        child: ListView.builder(
+          padding: const EdgeInsets.only(bottom: 16),
+          itemCount: foods.length,
+          itemBuilder: (context, index) {
+            return FoodCard(food: foods[index]);
+          },
+        ),
       );
     }
   }

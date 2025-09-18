@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+import '../../features/food_tracking/data/datasources/supabase_data_source.dart';
 
 /// Service für lokale Key-Verwaltung (ohne Backend)
 ///
@@ -13,8 +14,13 @@ class LocalKeyService {
   static const String _activeHouseholdPref = 'active_household';
 
   final SharedPreferences _prefs;
+  SupabaseDataSource? _supabaseDataSource;
 
   LocalKeyService(this._prefs);
+
+  void setSupabaseDataSource(SupabaseDataSource supabaseDataSource) {
+    _supabaseDataSource = supabaseDataSource;
+  }
 
   // Coding-Prinzip: Dependency Injection
   // Wir erstellen SharedPreferences nicht selbst, sondern bekommen es
@@ -84,6 +90,16 @@ class LocalKeyService {
     await _prefs.setString(_masterKeyPref, newKey);
     await _prefs.setString(_createdAtPref, DateTime.now().toIso8601String());
 
+    // Erstelle Haushalt in Supabase
+    if (_supabaseDataSource != null) {
+      try {
+        await _supabaseDataSource!.createHousehold(newKey, null);
+        debugPrint('Household created in Supabase: ${_maskKey(newKey)}');
+      } catch (e) {
+        debugPrint('Failed to create household in Supabase: $e');
+      }
+    }
+
     debugPrint('New master key generated: ${_maskKey(newKey)}');
     debugPrint('Created at: ${DateTime.now().toIso8601String()}');
     return newKey;
@@ -133,6 +149,25 @@ class LocalKeyService {
     subKeys.add(entry);
 
     await _prefs.setStringList(_subKeysPref, subKeys);
+
+    // Speichere auch in Supabase
+    if (_supabaseDataSource != null) {
+      try {
+        final masterKey = getMasterKey();
+        if (masterKey != null) {
+          await _supabaseDataSource!.addSubKeyToHousehold(
+            masterKey,
+            subKey,
+            name,
+            permissions,
+          );
+          debugPrint('Sub-key also saved to Supabase');
+        }
+      } catch (e) {
+        debugPrint('Failed to save sub-key to Supabase: $e');
+      }
+    }
+
     debugPrint(
       'Sub-key saved: ${_maskKey(subKey)}${name != null ? ' ($name)' : ''}',
     );

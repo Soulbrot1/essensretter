@@ -48,4 +48,29 @@ class FoodModel extends Food {
       isConsumed: food.isConsumed,
     );
   }
+
+  factory FoodModel.fromSupabase(Map<String, dynamic> data) {
+    return FoodModel(
+      id: data['id'] as String,
+      name: data['name'] as String,
+      expiryDate: data['expiry_date'] != null
+          ? DateTime.parse(data['expiry_date'] as String)
+          : null,
+      addedDate: DateTime.parse(data['added_date'] as String),
+      category: data['category'] as String?,
+      notes: data['notes'] as String?,
+      isConsumed: false, // Wird später aus Supabase geholt
+    );
+  }
+
+  Map<String, dynamic> toSupabaseMap() {
+    return {
+      'id': id,
+      'name': name,
+      'expiry_date': expiryDate?.toIso8601String().split('T')[0], // Nur Datum
+      'added_date': addedDate.toIso8601String().split('T')[0], // Nur Datum
+      'category': category,
+      'notes': notes,
+    };
+  }
 }

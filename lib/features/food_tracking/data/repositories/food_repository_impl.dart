@@ -4,20 +4,34 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/food.dart';
 import '../../domain/repositories/food_repository.dart';
 import '../datasources/food_local_data_source.dart';
+import '../datasources/supabase_data_source.dart';
 import '../models/food_model.dart';
 
 class FoodRepositoryImpl implements FoodRepository {
   final FoodLocalDataSource localDataSource;
+  final SupabaseDataSource supabaseDataSource;
 
-  FoodRepositoryImpl({required this.localDataSource});
+  FoodRepositoryImpl({
+    required this.localDataSource,
+    required this.supabaseDataSource,
+  });
 
   @override
   Future<Either<Failure, List<Food>>> getAllFoods() async {
     try {
-      final localFoods = await localDataSource.getAllFoods();
-      return Right(localFoods);
+      // Versuche erst Supabase, dann lokale Datenbank als Fallback
+      try {
+        final supabaseFoods = await supabaseDataSource.getAllFoods();
+        return Right(supabaseFoods);
+      } catch (e) {
+        // Fallback zu lokaler Datenbank wenn Supabase nicht verfügbar
+        final localFoods = await localDataSource.getAllFoods();
+        return Right(localFoods);
+      }
     } on CacheException {
       return const Left(CacheFailure('Fehler beim Laden der Lebensmittel'));
+    } catch (e) {
+      return Left(CacheFailure('Netzwerkfehler: ${e.toString()}'));
     }
   }
 
@@ -48,22 +62,49 @@ class FoodRepositoryImpl implements FoodRepository {
   Future<Either<Failure, Food>> addFood(Food food) async {
     try {
       final foodModel = FoodModel.fromEntity(food);
-      final result = await localDataSource.addFood(foodModel);
-      return Right(result);
+
+      // Versuche zuerst in Supabase zu speichern
+      try {
+        final result = await supabaseDataSource.addFood(foodModel);
+
+        // Speichere auch lokal als Cache/Backup
+        try {
+          await localDataSource.addFood(foodModel);
+        } catch (e) {
+          // Lokales Speichern ist optional - ignoriere Fehler
+        }
+
+        return Right(result);
+      } catch (e) {
+        // Fallback: Nur lokal speichern wenn Supabase fehlschlägt
+        final result = await localDataSource.addFood(foodModel);
+        return Right(result);
+      }
     } on CacheException {
       return const Left(
         CacheFailure('Fehler beim Speichern des Lebensmittels'),
       );
+    } catch (e) {
+      return Left(CacheFailure('Netzwerkfehler: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, void>> deleteFood(String id) async {
     try {
+      // Lösche aus Supabase und lokal
+      try {
+        await supabaseDataSource.deleteFood(id);
+      } catch (e) {
+        // Wenn Supabase fehlschlägt, trotzdem lokal löschen
+      }
+
       await localDataSource.deleteFood(id);
       return const Right(null);
     } on CacheException {
       return const Left(CacheFailure('Fehler beim Löschen des Lebensmittels'));
+    } catch (e) {
+      return Left(CacheFailure('Netzwerkfehler: ${e.toString()}'));
     }
   }
 
@@ -71,12 +112,30 @@ class FoodRepositoryImpl implements FoodRepository {
   Future<Either<Failure, Food>> updateFood(Food food) async {
     try {
       final foodModel = FoodModel.fromEntity(food);
-      final result = await localDataSource.updateFood(foodModel);
-      return Right(result);
+
+      // Aktualisiere in Supabase und lokal
+      try {
+        final result = await supabaseDataSource.updateFood(foodModel);
+
+        // Aktualisiere auch lokal
+        try {
+          await localDataSource.updateFood(foodModel);
+        } catch (e) {
+          // Lokales Update ist optional
+        }
+
+        return Right(result);
+      } catch (e) {
+        // Fallback: Nur lokal aktualisieren
+        final result = await localDataSource.updateFood(foodModel);
+        return Right(result);
+      }
     } on CacheException {
       return const Left(
         CacheFailure('Fehler beim Aktualisieren des Lebensmittels'),
       );
+    } catch (e) {
+      return Left(CacheFailure('Netzwerkfehler: ${e.toString()}'));
     }
   }
 }

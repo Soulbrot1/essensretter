@@ -1,9 +1,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/speech_service.dart';
 import 'core/services/local_key_service.dart';
 import 'features/food_tracking/data/datasources/food_local_data_source.dart';
+import 'features/food_tracking/data/datasources/supabase_data_source.dart';
 import 'features/food_tracking/data/datasources/text_parser_service.dart';
 import 'features/food_tracking/data/datasources/openai_text_parser_service.dart';
 import 'features/food_tracking/data/datasources/food_tips_service.dart';
@@ -52,6 +54,9 @@ Future<void> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
 
+  // Supabase Client
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+
   // Services
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SpeechService());
@@ -59,6 +64,14 @@ Future<void> init() async {
   // LocalKeyService als async Singleton
   final localKeyService = await LocalKeyService.create();
   sl.registerSingleton<LocalKeyService>(localKeyService);
+
+  // SupabaseDataSource registrieren (wird später für LocalKeyService gebraucht)
+  sl.registerLazySingleton<SupabaseDataSource>(
+    () => SupabaseDataSourceImpl(sl<SupabaseClient>(), sl<LocalKeyService>()),
+  );
+
+  // Setze SupabaseDataSource im LocalKeyService
+  localKeyService.setSupabaseDataSource(sl<SupabaseDataSource>());
   // BLoCs - Old monolithic FoodBloc (deprecated, will be removed)
   sl.registerFactory(
     () => FoodBloc(
@@ -143,7 +156,7 @@ Future<void> init() async {
 
   // Repositories
   sl.registerLazySingleton<FoodRepository>(
-    () => FoodRepositoryImpl(localDataSource: sl()),
+    () => FoodRepositoryImpl(localDataSource: sl(), supabaseDataSource: sl()),
   );
 
   // Wähle zwischen OpenAI und einfachem Parser
