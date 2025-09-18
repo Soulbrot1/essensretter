@@ -117,10 +117,19 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
   Future<void> _showQRCode() async {
     if (_masterKey == null) return;
 
+    // Generiere neuen Sub-Key für den Einzuladenden
+    final newSubKey = _keyService.generateSubKey();
+    final inviteCode = 'HOUSEHOLD_INVITE:$_masterKey:$newSubKey';
+
+    // Speichere den Sub-Key bereits für die Einladung
+    await _keyService.saveSubKey(newSubKey, ['read', 'write']);
+
+    if (!mounted) return;
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Master-Key QR-Code'),
+        title: const Text('Haushalt-Einladung QR-Code'),
         content: SizedBox(
           width: 280,
           child: Column(
@@ -136,7 +145,7 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
                   width: 200,
                   height: 200,
                   child: QrImageView(
-                    data: _masterKey!,
+                    data: inviteCode,
                     version: QrVersions.auto,
                     size: 200.0,
                     backgroundColor: Colors.white,
@@ -145,16 +154,16 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
               ),
               const SizedBox(height: 16),
               const Text(
-                '⚠️ Nur für Backup/Gerätewechsel',
+                '👥 Haushalt-Einladung',
                 style: TextStyle(
-                  color: Colors.orange,
+                  color: Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Nicht zum Teilen mit anderen Personen!',
-                style: TextStyle(fontSize: 12),
+              Text(
+                'Dieser QR-Code lädt eine Person zu Ihrem Haushalt ein.\n\nSub-Key: $newSubKey',
+                style: const TextStyle(fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             ],
