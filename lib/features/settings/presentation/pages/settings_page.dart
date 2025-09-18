@@ -5,6 +5,8 @@ import '../bloc/settings_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_bloc.dart';
 import '../../../food_tracking/presentation/bloc/food_event.dart';
 import '../widgets/master_key_card.dart';
+import 'join_household_page.dart';
+import '../../../../core/services/local_key_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -144,6 +146,26 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 const MasterKeyCard(),
+
+                // Haushalt beitreten Button
+                Card(
+                  margin: const EdgeInsets.all(16),
+                  child: ListTile(
+                    leading: const Icon(Icons.group_add, color: Colors.green),
+                    title: const Text('Haushalt beitreten'),
+                    subtitle: const Text(
+                      'QR-Code scannen um einem Haushalt beizutreten',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const JoinHouseholdPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
                 const Divider(height: 32),
                 const Padding(
                   padding: EdgeInsets.all(16.0),
@@ -190,6 +212,82 @@ class _SettingsPageState extends State<SettingsPage> {
                   leading: const Icon(Icons.description),
                   title: const Text('App-Name'),
                   subtitle: Text(_packageInfo?.appName ?? 'Essensretter'),
+                ),
+                const Divider(height: 32),
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Debug',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.bug_report, color: Colors.red),
+                  title: const Text('Debug-Info anzeigen'),
+                  subtitle: const Text('Zeigt gespeicherte Keys und Daten'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () async {
+                    final keyService = await LocalKeyService.create();
+                    final debugInfo = keyService.debugInfo();
+
+                    if (context.mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Debug Info'),
+                          content: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Master Key: ${debugInfo['masterKey'] ?? 'NONE'}',
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Created At: ${debugInfo['createdAt'] ?? 'NONE'}',
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Sub Keys: ${(debugInfo['subKeys'] as List).length}',
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('All SharedPrefs Keys:'),
+                                ...(debugInfo['allPrefsKeys'] as List).map(
+                                  (key) => Text('  • $key'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('Schließen'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                await keyService.deleteMasterKeyPermanently();
+                                if (context.mounted) {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Master Key gelöscht! App neu starten.',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                'Key löschen',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  },
                 ),
               ],
             );

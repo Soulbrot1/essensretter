@@ -59,12 +59,20 @@ class LocalKeyService {
   ///
   /// Coding-Prinzip: Idempotenz
   /// Mehrfaches Aufrufen hat das gleiche Ergebnis
-  Future<String> initializeMasterKey() async {
+  Future<String> initializeMasterKey({bool forceNew = false}) async {
+    // Bei forceNew wird ein neuer Key erstellt, auch wenn einer existiert
+    if (forceNew) {
+      await deleteMasterKeyPermanently();
+      debugPrint('Force creating new master key...');
+    }
+
     // Prüfe ob bereits ein Key existiert
     final existingKey = _prefs.getString(_masterKeyPref);
 
     if (existingKey != null) {
+      final createdAt = _prefs.getString(_createdAtPref);
       debugPrint('Existing master key found: ${_maskKey(existingKey)}');
+      debugPrint('Created at: $createdAt');
       return existingKey;
     }
 
@@ -76,6 +84,7 @@ class LocalKeyService {
     await _prefs.setString(_createdAtPref, DateTime.now().toIso8601String());
 
     debugPrint('New master key generated: ${_maskKey(newKey)}');
+    debugPrint('Created at: ${DateTime.now().toIso8601String()}');
     return newKey;
   }
 
@@ -172,6 +181,23 @@ class LocalKeyService {
     return _prefs.getString(_masterKeyPref) == null;
   }
 
+  /// Prüft ob der aktuelle Nutzer ein Sub-Key Inhaber ist
+  bool isSubKeyUser() {
+    final masterKey = getMasterKey();
+    final subKeys = getSubKeys();
+
+    // Kein Master-Key aber Sub-Keys vorhanden = Sub-Key User
+    return masterKey == null && subKeys.isNotEmpty;
+  }
+
+  /// Holt den eigenen Sub-Key (falls vorhanden)
+  String? getOwnSubKey() {
+    if (!isSubKeyUser()) return null;
+
+    final subKeys = getSubKeys();
+    return subKeys.isNotEmpty ? subKeys.first.key : null;
+  }
+
   /// Gibt Statistiken zurück
   Map<String, dynamic> getStatistics() {
     final createdAt = _prefs.getString(_createdAtPref);
@@ -179,11 +205,31 @@ class LocalKeyService {
 
     return {
       'hasMasterKey': getMasterKey() != null,
+      'isSubKeyUser': isSubKeyUser(),
+      'ownSubKey': getOwnSubKey(),
       'masterKeyAge': createdAt != null
           ? DateTime.now().difference(DateTime.parse(createdAt)).inDays
           : null,
       'totalSubKeys': subKeys.length,
       'activeSubKeys': subKeys.length, // Später: Nur aktive zählen
+    };
+  }
+
+  /// Debug-Methode: Zeigt alle gespeicherten Daten
+  Map<String, dynamic> debugInfo() {
+    return {
+      'masterKey': getMasterKey(),
+      'createdAt': _prefs.getString(_createdAtPref),
+      'subKeys': getSubKeys()
+          .map(
+            (sk) => {
+              'key': sk.key,
+              'permissions': sk.permissions,
+              'createdAt': sk.createdAt.toIso8601String(),
+            },
+          )
+          .toList(),
+      'allPrefsKeys': _prefs.getKeys().toList(),
     };
   }
 }

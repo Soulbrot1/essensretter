@@ -55,7 +55,10 @@ Future<void> init() async {
   // Services
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SpeechService());
-  sl.registerLazySingleton(() => LocalKeyService(sl<SharedPreferences>()));
+
+  // LocalKeyService als async Singleton
+  final localKeyService = await LocalKeyService.create();
+  sl.registerSingleton<LocalKeyService>(localKeyService);
   // BLoCs - Old monolithic FoodBloc (deprecated, will be removed)
   sl.registerFactory(
     () => FoodBloc(

@@ -219,7 +219,7 @@ void main() {
         // This tests our _maskKey function indirectly
         // In real implementation, we'd capture debug output
         final key = 'APFEL-X7K9';
-        final masked = service.getMasterKey(); // Will be logged masked
+        service.getMasterKey(); // Will be logged masked
 
         // The actual key should still be complete
         expect(key.length, greaterThan(4));

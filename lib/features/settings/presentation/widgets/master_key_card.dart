@@ -26,8 +26,25 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
     _loadMasterKey();
   }
 
-  void _loadMasterKey() {
-    _masterKey = _keyService.getMasterKey();
+  void _loadMasterKey() async {
+    // Prüfe ob Service bereits registriert ist
+    if (!GetIt.instance.isRegistered<LocalKeyService>()) {
+      // Falls nicht, erstelle einen neuen Service
+      final service = await LocalKeyService.create();
+      GetIt.instance.registerSingleton<LocalKeyService>(service);
+      _masterKey = service.getMasterKey();
+
+      // Falls kein Key existiert, initialisiere einen
+      if (_masterKey == null) {
+        _masterKey = await service.initializeMasterKey();
+      }
+    } else {
+      _masterKey = _keyService.getMasterKey();
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _toggleKeyVisibility() {
@@ -332,8 +349,99 @@ class _MasterKeyCardState extends State<MasterKeyCard> {
     }
   }
 
+  Widget _buildSubKeyCard(String subKey) {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(Icons.group, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                const Text(
+                  'Haushaltsmitglied',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Sub-Key Display
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Ihr Sub-Key:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subKey,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Info Text
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: Colors.blue.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Sie sind Mitglied in einem Haushalt. Der Haushalt-Administrator '
+                      'kann Ihren Zugang verwalten.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Prüfe ob Sub-Key User
+    if (_keyService.isSubKeyUser()) {
+      final subKey = _keyService.getOwnSubKey();
+      return _buildSubKeyCard(subKey!);
+    }
+
     if (_masterKey == null) {
       return const Card(
         margin: EdgeInsets.all(16),
