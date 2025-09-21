@@ -4,6 +4,15 @@
 
 EssensRetter ist eine Flutter-App zur Reduzierung von Lebensmittelverschwendung durch intelligentes Tracking der Haltbarkeit von Lebensmitteln.
 
+## 🚧 Aktuelles Feature: Multi-User System
+
+**Spezifikation**: `/MULTI_USER_FEATURE_SPEC.md` - IMMER konsultieren vor Implementierung!
+
+**Status**: In Entwicklung - Anonymes Key-basiertes Multi-User System für Haushalte
+- ✅ Vollständige Spezifikation erstellt mit allen Entscheidungen
+- 🔄 Bereit für schrittweise Implementierung
+- 📋 Nächste Schritte: Backend-Setup mit Supabase beginnen
+
 ## Wichtige Befehle
 
 ```bash
