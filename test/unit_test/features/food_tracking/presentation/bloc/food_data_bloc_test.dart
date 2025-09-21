@@ -90,10 +90,8 @@ void main() {
       mockUpdateRecipesAfterFoodDeletion = MockUpdateRecipesAfterFoodDeletion();
       mockStatisticsRepository = MockStatisticsRepository();
 
-      // Setup SharedPreferences Mock - setze Demo Foods als bereits geladen
-      SharedPreferences.setMockInitialValues({
-        'demo_foods_loaded': true, // Verhindere automatisches Demo-Foods-Laden
-      });
+      // Setup SharedPreferences Mock
+      SharedPreferences.setMockInitialValues({});
 
       // FoodDataBloc erstellen
       foodDataBloc = FoodDataBloc(

@@ -184,8 +184,8 @@ void main() {
       blocTest<FoodBloc, FoodState>(
         'sollte leere FoodLoaded emittieren wenn keine Lebensmittel vorhanden',
         setUp: () {
-          // Setup SharedPreferences Mock - Demo-Foods wurden bereits geladen
-          SharedPreferences.setMockInitialValues({'demo_foods_loaded': true});
+          // Setup SharedPreferences Mock
+          SharedPreferences.setMockInitialValues({});
         },
         build: () {
           // Mock Setup: GetAllFoods gibt leere Liste zurück

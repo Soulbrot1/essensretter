@@ -98,7 +98,3 @@ class SortFoodsEvent extends FoodEvent {
 class ClearConsumedFoodsEvent extends FoodEvent {
   const ClearConsumedFoodsEvent();
 }
-
-class LoadDemoFoodsEvent extends FoodEvent {
-  const LoadDemoFoodsEvent();
-}

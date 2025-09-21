@@ -206,11 +206,6 @@ class _FoodTrackingPageV2State extends State<FoodTrackingPageV2> {
             'Füge deine ersten Lebensmittel hinzu!',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => _dataBloc.add(LoadDemoFoodsEvent()),
-            child: const Text('Demo-Lebensmittel laden'),
-          ),
         ],
       ),
     );

@@ -51,7 +51,3 @@ class ToggleConsumedEvent extends FoodDataEvent {
 class ClearConsumedFoodsEvent extends FoodDataEvent {
   const ClearConsumedFoodsEvent();
 }
-
-class LoadDemoFoodsEvent extends FoodDataEvent {
-  const LoadDemoFoodsEvent();
-}

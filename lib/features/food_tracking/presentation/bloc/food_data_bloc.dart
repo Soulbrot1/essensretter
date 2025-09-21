@@ -1,7 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/usecases/usecase.dart';
-import '../../../../core/utils/demo_foods.dart';
 import '../../domain/entities/food.dart';
 import '../../domain/usecases/add_foods.dart';
 import '../../domain/usecases/delete_food.dart';
@@ -34,7 +32,6 @@ class FoodDataBloc extends Bloc<FoodDataEvent, FoodDataState> {
     on<UpdateFoodEvent>(_onUpdateFood);
     on<ToggleConsumedEvent>(_onToggleConsumed);
     on<ClearConsumedFoodsEvent>(_onClearConsumedFoods);
-    on<LoadDemoFoodsEvent>(_onLoadDemoFoods);
   }
 
   Future<void> _onLoadFoods(
@@ -49,25 +46,6 @@ class FoodDataBloc extends Bloc<FoodDataEvent, FoodDataState> {
       foods,
     ) async {
       List<Food> finalFoods = foods;
-
-      // Lade Demo-Lebensmittel beim ersten App-Start
-      if (foods.isEmpty) {
-        final prefs = await SharedPreferences.getInstance();
-        final demoLoaded = prefs.getBool(DemoFoods.demoLoadedKey) ?? false;
-
-        if (!demoLoaded) {
-          final demoFoods = DemoFoods.createDemoFoods();
-          final addResult = await addFoods(AddFoodsParams(foods: demoFoods));
-
-          await addResult.fold(
-            (failure) => null, // Ignore failure, continue with empty state
-            (success) async {
-              finalFoods = demoFoods;
-              await prefs.setBool(DemoFoods.demoLoadedKey, true);
-            },
-          );
-        }
-      }
 
       emit(FoodDataLoaded(finalFoods));
     });
@@ -246,31 +224,6 @@ class FoodDataBloc extends Bloc<FoodDataEvent, FoodDataState> {
     } catch (e) {
       emit(FoodDataError('Fehler beim Löschen verbrauchter Lebensmittel: $e'));
       emit(currentState);
-    }
-  }
-
-  Future<void> _onLoadDemoFoods(
-    LoadDemoFoodsEvent event,
-    Emitter<FoodDataState> emit,
-  ) async {
-    try {
-      final demoFoods = DemoFoods.createDemoFoods();
-      final result = await addFoods(AddFoodsParams(foods: demoFoods));
-
-      result.fold(
-        (failure) => emit(
-          FoodDataError(
-            'Fehler beim Laden der Demo-Lebensmittel: ${failure.message}',
-          ),
-        ),
-        (_) async {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool(DemoFoods.demoLoadedKey, true);
-          add(LoadFoodsEvent()); // Reload foods list
-        },
-      );
-    } catch (e) {
-      emit(FoodDataError('Fehler beim Laden der Demo-Lebensmittel: $e'));
     }
   }
 }
