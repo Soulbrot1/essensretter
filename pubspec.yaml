@@ -65,6 +65,7 @@ dependencies:
 
   # Multi-User Backend
   supabase_flutter: ^2.5.6
+  flutter_secure_storage: ^9.2.2
 
   # Environment Variables
   flutter_dotenv: ^5.1.0
