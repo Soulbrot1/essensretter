@@ -57,7 +57,7 @@ Analysiere den Text Wort für Wort und erkenne Muster wie:
 - [Lebensmittel] ohne Datum: "Butter" → {"name": "Butter", "date_text": null}
 
 Datumsformate die erkannt werden müssen:
-- Relative: "heute", "morgen", "übermorgen", "X Tage", "X Wochen", "einen Monat"
+- Relative: "heute", "morgen", "übermorgen", "X Tage", "X Wochen", "einen Monat", "X Jahre"
 - Absolute: "DD.MM.YYYY", "DD.MM.YY", "DD.MM", "D.M"
 - Die Zahl und Zeiteinheit DIREKT nach/vor dem Lebensmittel gehören dazu!
 
@@ -73,6 +73,9 @@ BEISPIELE mit korrekter Zuordnung:
 
 "Honig 5 Tage salami 13.08.25" muss ergeben:
 [{"name": "Honig", "date_text": "5 Tage"}, {"name": "salami", "date_text": "13.08.25"}]
+
+"Salami 1 Jahr" muss ergeben:
+[{"name": "Salami", "date_text": "1 Jahr"}]
 
 Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "Getränke", null
 ''';
@@ -178,6 +181,11 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
         return now.add(Duration(days: months * 30));
       }
 
+      int? years = _extractYears(text);
+      if (years != null) {
+        return now.add(Duration(days: years * 365));
+      }
+
       // Vollständige Datumsangaben (dd.mm.yyyy, dd.mm.yy)
       final fullDateMatch = RegExp(
         r'(\d{1,2})\.(\d{1,2})\.(\d{2,4})',
@@ -273,6 +281,21 @@ Kategorien: "Obst", "Gemüse", "Milchprodukte", "Fleisch", "Brot & Backwaren", "
     if (text.contains('zwei monat')) return 2;
     if (text.contains('drei monat')) return 3;
     if (text.contains('in einem monat')) return 1;
+
+    return null;
+  }
+
+  int? _extractYears(String text) {
+    // Numerische Jahre: "1 Jahr", "2 jahre"
+    final numericYearMatch = RegExp(r'(\d+)\s*jahr[e]?').firstMatch(text);
+    if (numericYearMatch != null) {
+      return int.parse(numericYearMatch.group(1)!);
+    }
+
+    // Textuelle Jahre
+    if (text.contains('ein jahr') || text.contains('einem jahr')) return 1;
+    if (text.contains('zwei jahr')) return 2;
+    if (text.contains('drei jahr')) return 3;
 
     return null;
   }

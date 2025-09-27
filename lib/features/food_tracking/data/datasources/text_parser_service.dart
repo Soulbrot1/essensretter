@@ -71,6 +71,8 @@ class TextParserServiceImpl implements TextParserService {
       ),
       // "Brot 2 Monate"
       RegExp(r'^(.+?)\s+(\d+)\s*monat(?:e)?$'),
+      // "Salami 1 Jahr" oder "Honig 2 Jahre"
+      RegExp(r'^(.+?)\s+(\d+)\s*jahr(?:e)?$'),
     ];
 
     // Versuche Muster zu matchen
@@ -101,6 +103,10 @@ class TextParserServiceImpl implements TextParserService {
           // "2 Monate"
           final months = int.tryParse(match.group(2)!) ?? 1;
           days = months * 30;
+        } else if (pattern.pattern.contains('jahr')) {
+          // "1 Jahr" oder "2 Jahre"
+          final years = int.tryParse(match.group(2)!) ?? 1;
+          days = years * 365;
         } else if (pattern.pattern.contains('januar|jan|februar')) {
           // Datum mit Monatsnamen "4. August"
           final day = int.tryParse(match.group(2)!) ?? 1;
