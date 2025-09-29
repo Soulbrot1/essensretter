@@ -10,6 +10,7 @@ import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
+import 'features/sharing/presentation/services/simple_user_identity_service.dart';
 import 'injection_container.dart' as di;
 import 'modern_splash_screen.dart';
 import 'features/onboarding/presentation/pages/onboarding_screen.dart';
@@ -22,6 +23,15 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   await di.init();
+
+  // Initialisiere User Identity (Sharing Feature)
+  try {
+    final userId = await SimpleUserIdentityService.ensureUserIdentity();
+    print('App started with User-ID: $userId');
+  } catch (e) {
+    print('Warning: User Identity initialization failed: $e');
+    // App kann trotzdem starten, nur Sharing-Features sind nicht verfügbar
+  }
 
   // Initialisiere Notification Service
   final notificationService = di.sl<NotificationService>();
