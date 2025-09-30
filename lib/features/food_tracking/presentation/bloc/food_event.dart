@@ -98,3 +98,12 @@ class SortFoodsEvent extends FoodEvent {
 class ClearConsumedFoodsEvent extends FoodEvent {
   const ClearConsumedFoodsEvent();
 }
+
+class FilterSharedFoodsEvent extends FoodEvent {
+  final bool showOnlyShared;
+
+  const FilterSharedFoodsEvent(this.showOnlyShared);
+
+  @override
+  List<Object> get props => [showOnlyShared];
+}

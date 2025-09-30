@@ -4,6 +4,7 @@ import '../../domain/entities/food.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import 'food_tips_dialog.dart';
+import '../../../sharing/presentation/services/supabase_food_sync_service.dart';
 
 class FoodCard extends StatefulWidget {
   final Food food;
@@ -195,6 +196,35 @@ class _FoodCardState extends State<FoodCard> {
                     const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () {
+                        _toggleSharedStatus(context, widget.food);
+                      },
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: widget.food.isConsumed
+                              ? Colors.grey.withValues(alpha: 0.2)
+                              : widget.food.isShared
+                              ? Colors.green.withValues(alpha: 0.2)
+                              : Colors.grey.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          widget.food.isShared
+                              ? Icons.share
+                              : Icons.share_outlined,
+                          color: widget.food.isConsumed
+                              ? Colors.grey
+                              : widget.food.isShared
+                              ? Colors.green
+                              : Colors.grey,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
                         _showDeleteConfirmation(context, widget.food);
                       },
                       child: Container(
@@ -259,6 +289,52 @@ class _FoodCardState extends State<FoodCard> {
     if (pickedDate != null && context.mounted) {
       final updatedFood = food.copyWith(expiryDate: pickedDate);
       context.read<FoodBloc>().add(UpdateFoodEvent(updatedFood));
+    }
+  }
+
+  void _toggleSharedStatus(BuildContext context, Food food) async {
+    final wasShared = food.isShared;
+    final updatedFood = food.copyWith(isShared: !food.isShared);
+
+    context.read<FoodBloc>().add(UpdateFoodEvent(updatedFood));
+
+    // Sync with Supabase (but don't block UI)
+    try {
+      if (!wasShared) {
+        // Food is now being shared
+        await SupabaseFoodSyncService.shareFood(updatedFood);
+        print('DEBUG: Food shared to Supabase: ${food.name}');
+      } else {
+        // Food is no longer shared
+        await SupabaseFoodSyncService.unshareFood(food);
+        print('DEBUG: Food unshared from Supabase: ${food.name}');
+      }
+    } catch (e) {
+      print('WARNING: Supabase sync failed: $e');
+      // Show user feedback about sync failure
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync mit Server fehlgeschlagen: $e'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            wasShared
+                ? '${food.name} wird nicht mehr geteilt'
+                : '${food.name} wird jetzt geteilt',
+          ),
+          backgroundColor: wasShared ? Colors.orange : Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 

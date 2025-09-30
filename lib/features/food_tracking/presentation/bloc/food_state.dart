@@ -19,6 +19,7 @@ class FoodLoaded extends FoodState {
   final int? activeFilter;
   final SortOption sortOption;
   final String searchText;
+  final bool showOnlyShared;
 
   const FoodLoaded({
     required this.foods,
@@ -26,6 +27,7 @@ class FoodLoaded extends FoodState {
     this.activeFilter,
     this.sortOption = SortOption.date,
     this.searchText = '',
+    this.showOnlyShared = false,
   });
 
   @override
@@ -35,6 +37,7 @@ class FoodLoaded extends FoodState {
     activeFilter,
     sortOption,
     searchText,
+    showOnlyShared,
   ];
 
   FoodLoaded copyWith({
@@ -44,6 +47,7 @@ class FoodLoaded extends FoodState {
     bool clearActiveFilter = false,
     SortOption? sortOption,
     String? searchText,
+    bool? showOnlyShared,
   }) {
     return FoodLoaded(
       foods: foods ?? this.foods,
@@ -53,6 +57,7 @@ class FoodLoaded extends FoodState {
           : (activeFilter ?? this.activeFilter),
       sortOption: sortOption ?? this.sortOption,
       searchText: searchText ?? this.searchText,
+      showOnlyShared: showOnlyShared ?? this.showOnlyShared,
     );
   }
 }

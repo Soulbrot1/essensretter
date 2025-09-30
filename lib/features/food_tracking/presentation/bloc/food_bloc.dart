@@ -46,6 +46,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     on<UpdateFoodEvent>(_onUpdateFood);
     on<SortFoodsEvent>(_onSortFoods);
     on<ClearConsumedFoodsEvent>(_onClearConsumedFoods);
+    on<FilterSharedFoodsEvent>(_onFilterSharedFoods);
   }
 
   Future<void> _onLoadFoods(
@@ -200,6 +201,11 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
           .toList();
     }
 
+    // Apply shared filter if active
+    if (currentState.showOnlyShared) {
+      filtered = filtered.where((food) => food.isShared).toList();
+    }
+
     emit(
       currentState.copyWith(
         filteredFoods: filtered,
@@ -234,6 +240,11 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       filtered = filtered
           .where((food) => food.expiresInDays(currentState.activeFilter!))
           .toList();
+    }
+
+    // Apply shared filter if active
+    if (currentState.showOnlyShared) {
+      filtered = filtered.where((food) => food.isShared).toList();
     }
 
     emit(
@@ -484,5 +495,45 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       emit(FoodError('Fehler beim Löschen verbrauchter Lebensmittel: $e'));
       emit(currentState);
     }
+  }
+
+  Future<void> _onFilterSharedFoods(
+    FilterSharedFoodsEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! FoodLoaded) return;
+
+    List<Food> filtered = currentState.foods;
+
+    // Apply search filter first if active
+    if (currentState.searchText.isNotEmpty) {
+      filtered = filtered
+          .where(
+            (food) => food.name.toLowerCase().contains(
+              currentState.searchText.toLowerCase(),
+            ),
+          )
+          .toList();
+    }
+
+    // Apply expiry filter if active
+    if (currentState.activeFilter != null) {
+      filtered = filtered
+          .where((food) => food.expiresInDays(currentState.activeFilter!))
+          .toList();
+    }
+
+    // Apply shared filter
+    if (event.showOnlyShared) {
+      filtered = filtered.where((food) => food.isShared).toList();
+    }
+
+    emit(
+      currentState.copyWith(
+        filteredFoods: filtered,
+        showOnlyShared: event.showOnlyShared,
+      ),
+    );
   }
 }

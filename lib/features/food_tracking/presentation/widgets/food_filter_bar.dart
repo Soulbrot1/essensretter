@@ -399,6 +399,43 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                         ],
                       ),
 
+                      // Shared foods filter button
+                      BlocBuilder<FoodBloc, FoodState>(
+                        builder: (context, state) {
+                          final showOnlyShared = state is FoodLoaded
+                              ? state.showOnlyShared
+                              : false;
+                          final hasSharedFoods =
+                              state is FoodLoaded &&
+                              state.foods.any((food) => food.isShared);
+
+                          return IconButton(
+                            onPressed: () {
+                              context.read<FoodBloc>().add(
+                                FilterSharedFoodsEvent(!showOnlyShared),
+                              );
+                            },
+                            icon: Icon(
+                              showOnlyShared
+                                  ? Icons.share
+                                  : Icons.share_outlined,
+                              size: 24,
+                              color: showOnlyShared
+                                  ? Theme.of(context).colorScheme.primary
+                                  : hasSharedFoods
+                                  ? Colors.green[600]
+                                  : Colors.grey[600],
+                            ),
+                            style: IconButton.styleFrom(
+                              padding: const EdgeInsets.all(10),
+                            ),
+                            tooltip: showOnlyShared
+                                ? 'Alle Lebensmittel anzeigen'
+                                : 'Nur geteilte Lebensmittel anzeigen',
+                          );
+                        },
+                      ),
+
                       // Clear consumed foods button - permanently visible
                       BlocBuilder<FoodBloc, FoodState>(
                         builder: (context, state) {

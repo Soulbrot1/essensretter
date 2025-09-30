@@ -144,4 +144,13 @@ CREATE POLICY "Sessions are readable" ON shared_sessions
   FOR SELECT USING (true);
 
 -- Test function
- so sieht die
+CREATE OR REPLACE FUNCTION test_schema_ready() RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')
+    AND EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'shared_foods')
+    AND EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'access_keys')
+    AND EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'shared_sessions');
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON SCHEMA public IS 'EssensRetter Simple Schema v2.0.0';

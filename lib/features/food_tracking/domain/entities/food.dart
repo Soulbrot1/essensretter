@@ -8,6 +8,7 @@ class Food extends Equatable {
   final String? category;
   final String? notes;
   final bool isConsumed;
+  final bool isShared;
 
   const Food({
     required this.id,
@@ -17,6 +18,7 @@ class Food extends Equatable {
     this.category,
     this.notes,
     this.isConsumed = false,
+    this.isShared = false,
   });
 
   int get daysUntilExpiry {
@@ -62,6 +64,7 @@ class Food extends Equatable {
     String? category,
     String? notes,
     bool? isConsumed,
+    bool? isShared,
     bool? clearExpiryDate,
   }) {
     return Food(
@@ -74,6 +77,7 @@ class Food extends Equatable {
       category: category ?? this.category,
       notes: notes ?? this.notes,
       isConsumed: isConsumed ?? this.isConsumed,
+      isShared: isShared ?? this.isShared,
     );
   }
 
@@ -86,5 +90,6 @@ class Food extends Equatable {
     category,
     notes,
     isConsumed,
+    isShared,
   ];
 }
