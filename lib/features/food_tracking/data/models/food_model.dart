@@ -9,6 +9,7 @@ class FoodModel extends Food {
     super.category,
     super.notes,
     super.isConsumed = false,
+    super.isShared = false,
   });
 
   factory FoodModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +23,7 @@ class FoodModel extends Food {
       category: json['category'] as String?,
       notes: json['notes'] as String?,
       isConsumed: (json['isConsumed'] as int?) == 1,
+      isShared: (json['isShared'] as int?) == 1,
     );
   }
 
@@ -34,6 +36,7 @@ class FoodModel extends Food {
       'category': category,
       'notes': notes,
       'isConsumed': isConsumed ? 1 : 0,
+      'isShared': isShared ? 1 : 0,
     };
   }
 
@@ -46,6 +49,7 @@ class FoodModel extends Food {
       category: food.category,
       notes: food.notes,
       isConsumed: food.isConsumed,
+      isShared: food.isShared,
     );
   }
 }

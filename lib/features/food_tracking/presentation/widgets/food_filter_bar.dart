@@ -42,6 +42,9 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
     return BlocBuilder<FoodBloc, FoodState>(
       builder: (context, state) {
         final activeFilter = state is FoodLoaded ? state.activeFilter : null;
+        final showOnlyShared = state is FoodLoaded
+            ? state.showOnlyShared
+            : false;
         final currentSort = state is FoodLoaded
             ? state.sortOption
             : SortOption.date;
@@ -132,14 +135,25 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                       ),
 
                       // Filter-Button
-                      PopupMenuButton<int?>(
+                      PopupMenuButton<String>(
                         offset: const Offset(-12, 48),
                         onSelected: (value) {
-                          // Wenn "Alle" ausgewählt wird (-1), null an den BLoC senden
-                          final filterValue = value == -1 ? null : value;
-                          context.read<FoodBloc>().add(
-                            FilterFoodsByExpiryEvent(filterValue),
-                          );
+                          if (value == 'all') {
+                            context.read<FoodBloc>().add(
+                              FilterFoodsByExpiryEvent(
+                                null,
+                                showOnlyShared: false,
+                              ),
+                            );
+                          } else {
+                            final filterValue = int.tryParse(value);
+                            context.read<FoodBloc>().add(
+                              FilterFoodsByExpiryEvent(
+                                filterValue,
+                                showOnlyShared: false,
+                              ),
+                            );
+                          }
                         },
                         child: IconButton(
                           onPressed: null, // Will be handled by PopupMenuButton
@@ -156,8 +170,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           tooltip: 'Filter',
                         ),
                         itemBuilder: (context) => [
-                          PopupMenuItem<int?>(
-                            value: -1, // Eindeutiger Wert für "Alle"
+                          PopupMenuItem<String>(
+                            value: 'all',
                             child: Row(
                               children: [
                                 Icon(
@@ -174,8 +188,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 0,
+                          PopupMenuItem<String>(
+                            value: '0',
                             child: Row(
                               children: [
                                 Icon(
@@ -192,8 +206,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 1,
+                          PopupMenuItem<String>(
+                            value: '1',
                             child: Row(
                               children: [
                                 Icon(
@@ -210,8 +224,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 2,
+                          PopupMenuItem<String>(
+                            value: '2',
                             child: Row(
                               children: [
                                 Icon(
@@ -228,8 +242,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 3,
+                          PopupMenuItem<String>(
+                            value: '3',
                             child: Row(
                               children: [
                                 Icon(
@@ -246,8 +260,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 4,
+                          PopupMenuItem<String>(
+                            value: '4',
                             child: Row(
                               children: [
                                 Icon(
@@ -264,8 +278,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 5,
+                          PopupMenuItem<String>(
+                            value: '5',
                             child: Row(
                               children: [
                                 Icon(
@@ -282,8 +296,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 6,
+                          PopupMenuItem<String>(
+                            value: '6',
                             child: Row(
                               children: [
                                 Icon(
@@ -300,8 +314,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
-                          PopupMenuItem<int?>(
-                            value: 7,
+                          PopupMenuItem<String>(
+                            value: '7',
                             child: Row(
                               children: [
                                 Icon(
@@ -332,7 +346,8 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           icon: Icon(
                             Icons.sort,
                             size: 24,
-                            color: currentSort != SortOption.date
+                            color:
+                                currentSort != SortOption.date || showOnlyShared
                                 ? Theme.of(context).colorScheme.primary
                                 : Colors.grey[600],
                           ),
@@ -396,44 +411,31 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                               ],
                             ),
                           ),
+                          PopupMenuItem<SortOption>(
+                            value: SortOption.shared,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  currentSort == SortOption.shared
+                                      ? Icons.radio_button_checked
+                                      : Icons.radio_button_unchecked,
+                                  color: currentSort == SortOption.shared
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Colors.grey,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Geteilte'),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.share,
+                                  color: Colors.green,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
-                      ),
-
-                      // Shared foods filter button
-                      BlocBuilder<FoodBloc, FoodState>(
-                        builder: (context, state) {
-                          final showOnlyShared = state is FoodLoaded
-                              ? state.showOnlyShared
-                              : false;
-                          final hasSharedFoods =
-                              state is FoodLoaded &&
-                              state.foods.any((food) => food.isShared);
-
-                          return IconButton(
-                            onPressed: () {
-                              context.read<FoodBloc>().add(
-                                FilterSharedFoodsEvent(!showOnlyShared),
-                              );
-                            },
-                            icon: Icon(
-                              showOnlyShared
-                                  ? Icons.share
-                                  : Icons.share_outlined,
-                              size: 24,
-                              color: showOnlyShared
-                                  ? Theme.of(context).colorScheme.primary
-                                  : hasSharedFoods
-                                  ? Colors.green[600]
-                                  : Colors.grey[600],
-                            ),
-                            style: IconButton.styleFrom(
-                              padding: const EdgeInsets.all(10),
-                            ),
-                            tooltip: showOnlyShared
-                                ? 'Alle Lebensmittel anzeigen'
-                                : 'Nur geteilte Lebensmittel anzeigen',
-                          );
-                        },
                       ),
 
                       // Clear consumed foods button - permanently visible

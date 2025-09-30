@@ -14,7 +14,7 @@ abstract class FoodLocalDataSource {
 class FoodLocalDataSourceImpl implements FoodLocalDataSource {
   static const String _databaseName = 'essensretter.db';
   static const String _tableName = 'foods';
-  static const int _databaseVersion = 7;
+  static const int _databaseVersion = 8;
 
   Database? _database;
 
@@ -43,7 +43,8 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
         addedDate TEXT NOT NULL,
         category TEXT,
         notes TEXT,
-        isConsumed INTEGER NOT NULL DEFAULT 0
+        isConsumed INTEGER NOT NULL DEFAULT 0,
+        isShared INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
@@ -128,6 +129,12 @@ class FoodLocalDataSourceImpl implements FoodLocalDataSource {
           category TEXT,
           deleted_date INTEGER NOT NULL
         )
+      ''');
+    }
+    if (oldVersion < 8) {
+      // Migration von Version 7 zu 8: isShared Spalte hinzufügen
+      await db.execute('''
+        ALTER TABLE $_tableName ADD COLUMN isShared INTEGER NOT NULL DEFAULT 0
       ''');
     }
   }

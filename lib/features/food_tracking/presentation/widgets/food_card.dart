@@ -205,8 +205,8 @@ class _FoodCardState extends State<FoodCard> {
                           color: widget.food.isConsumed
                               ? Colors.grey.withValues(alpha: 0.2)
                               : widget.food.isShared
-                              ? Colors.green.withValues(alpha: 0.2)
-                              : Colors.grey.withValues(alpha: 0.2),
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : Colors.grey.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -216,8 +216,8 @@ class _FoodCardState extends State<FoodCard> {
                           color: widget.food.isConsumed
                               ? Colors.grey
                               : widget.food.isShared
-                              ? Colors.green
-                              : Colors.grey,
+                              ? Colors.green.shade700
+                              : Colors.grey.shade600,
                           size: 18,
                         ),
                       ),

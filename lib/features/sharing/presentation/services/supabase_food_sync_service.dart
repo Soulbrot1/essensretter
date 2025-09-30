@@ -21,6 +21,20 @@ class SupabaseFoodSyncService {
         throw Exception('User ID not found');
       }
 
+      // Prüfe erst, ob das Food bereits geteilt ist
+      final existingFood = await client
+          .from('shared_foods')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('metadata->>local_id', food.id)
+          .maybeSingle();
+
+      if (existingFood != null) {
+        print('DEBUG: Food already shared, updating instead: ${food.name}');
+        await updateSharedFood(food);
+        return;
+      }
+
       final Map<String, dynamic> foodData = {
         'user_id': userId,
         'name': food.name,
@@ -58,10 +72,10 @@ class SupabaseFoodSyncService {
         throw Exception('User ID not found');
       }
 
-      // Find the shared food by local_id in metadata
+      // Delete the shared food by local_id in metadata
       await client
           .from('shared_foods')
-          .update({'status': 'removed'})
+          .delete()
           .eq('user_id', userId)
           .eq('metadata->>local_id', food.id);
 

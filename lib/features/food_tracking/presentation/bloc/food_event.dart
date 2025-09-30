@@ -21,11 +21,12 @@ class AddFoodFromTextEvent extends FoodEvent {
 
 class FilterFoodsByExpiryEvent extends FoodEvent {
   final int? daysUntilExpiry;
+  final bool? showOnlyShared;
 
-  const FilterFoodsByExpiryEvent(this.daysUntilExpiry);
+  const FilterFoodsByExpiryEvent(this.daysUntilExpiry, {this.showOnlyShared});
 
   @override
-  List<Object?> get props => [daysUntilExpiry];
+  List<Object?> get props => [daysUntilExpiry, showOnlyShared];
 }
 
 class SearchFoodsByNameEvent extends FoodEvent {
@@ -84,7 +85,7 @@ class UpdateFoodEvent extends FoodEvent {
   List<Object> get props => [food];
 }
 
-enum SortOption { alphabetical, date, category }
+enum SortOption { alphabetical, date, category, shared }
 
 class SortFoodsEvent extends FoodEvent {
   final SortOption sortOption;

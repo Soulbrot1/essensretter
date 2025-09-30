@@ -72,6 +72,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
           foods: sortedFoods,
           filteredFoods: sortedFoods,
           sortOption: sortOption,
+          showOnlyShared: false,
         ),
       );
     });
@@ -201,8 +202,10 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
           .toList();
     }
 
-    // Apply shared filter if active
-    if (currentState.showOnlyShared) {
+    // Apply shared filter if specified in event, or keep current state
+    final shouldShowOnlyShared =
+        event.showOnlyShared ?? currentState.showOnlyShared;
+    if (shouldShowOnlyShared) {
       filtered = filtered.where((food) => food.isShared).toList();
     }
 
@@ -211,6 +214,12 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         filteredFoods: filtered,
         activeFilter: event.daysUntilExpiry,
         clearActiveFilter: event.daysUntilExpiry == null,
+        showOnlyShared: shouldShowOnlyShared,
+        sortOption: shouldShowOnlyShared
+            ? SortOption.shared
+            : (currentState.sortOption == SortOption.shared
+                  ? SortOption.date
+                  : currentState.sortOption),
       ),
     );
   }
@@ -366,6 +375,11 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
               .toList();
         }
 
+        // Apply shared filter if active
+        if (currentState.showOnlyShared) {
+          filtered = filtered.where((food) => food.isShared).toList();
+        }
+
         emit(
           currentState.copyWith(foods: sortedFoods, filteredFoods: filtered),
         );
@@ -378,25 +392,63 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     Emitter<FoodState> emit,
   ) async {
     final currentState = state;
-    if (currentState is FoodLoaded) {
-      emit(
-        FoodOperationInProgress(
-          foods: currentState.foods,
-          filteredFoods: currentState.filteredFoods,
-          activeFilter: currentState.activeFilter,
-          sortOption: currentState.sortOption,
-        ),
-      );
-    }
+    if (currentState is! FoodLoaded) return;
+
+    emit(
+      FoodOperationInProgress(
+        foods: currentState.foods,
+        filteredFoods: currentState.filteredFoods,
+        activeFilter: currentState.activeFilter,
+        sortOption: currentState.sortOption,
+      ),
+    );
 
     final result = await updateFood(event.food);
 
-    result.fold((failure) {
-      emit(FoodError(failure.message));
-      if (currentState is FoodLoaded) {
+    result.fold(
+      (failure) {
+        emit(FoodError(failure.message));
         emit(currentState);
-      }
-    }, (_) => add(LoadFoodsEvent()));
+      },
+      (_) {
+        // Update local state and maintain filters
+        final updatedFoods = currentState.foods.map((food) {
+          return food.id == event.food.id ? event.food : food;
+        }).toList();
+
+        final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
+
+        // Re-apply current filters
+        List<Food> filtered = sortedFoods;
+
+        // Apply search filter if active
+        if (currentState.searchText.isNotEmpty) {
+          filtered = filtered
+              .where(
+                (food) => food.name.toLowerCase().contains(
+                  currentState.searchText.toLowerCase(),
+                ),
+              )
+              .toList();
+        }
+
+        // Apply expiry filter if active
+        if (currentState.activeFilter != null) {
+          filtered = filtered
+              .where((food) => food.expiresInDays(currentState.activeFilter!))
+              .toList();
+        }
+
+        // Apply shared filter if active
+        if (currentState.showOnlyShared) {
+          filtered = filtered.where((food) => food.isShared).toList();
+        }
+
+        emit(
+          currentState.copyWith(foods: sortedFoods, filteredFoods: filtered),
+        );
+      },
+    );
   }
 
   Future<void> _onSortFoods(
@@ -406,15 +458,33 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
 
+    // Check if this is shared sort - if so, filter by shared foods only
+    final isSharedSort = event.sortOption == SortOption.shared;
     final sortedFoods = _sortFoods(currentState.foods, event.sortOption);
 
-    List<Food> filteredFoods;
+    List<Food> filteredFoods = sortedFoods;
+
+    // Apply search filter if active
+    if (currentState.searchText.isNotEmpty) {
+      filteredFoods = filteredFoods
+          .where(
+            (food) => food.name.toLowerCase().contains(
+              currentState.searchText.toLowerCase(),
+            ),
+          )
+          .toList();
+    }
+
+    // Apply expiry filter if active
     if (currentState.activeFilter != null) {
-      filteredFoods = sortedFoods
+      filteredFoods = filteredFoods
           .where((food) => food.expiresInDays(currentState.activeFilter!))
           .toList();
-    } else {
-      filteredFoods = sortedFoods;
+    }
+
+    // Apply shared filter only if this is shared sort
+    if (isSharedSort) {
+      filteredFoods = filteredFoods.where((food) => food.isShared).toList();
     }
 
     emit(
@@ -422,6 +492,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foods: sortedFoods,
         filteredFoods: filteredFoods,
         sortOption: event.sortOption,
+        showOnlyShared: isSharedSort,
       ),
     );
   }
@@ -452,6 +523,20 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
           if (categoryCompare != 0) return categoryCompare;
           // If same category, sort by name
           return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        });
+        break;
+      case SortOption.shared:
+        // For shared sort, sort by date by default (shared foods first, then by expiry)
+        sorted.sort((a, b) {
+          // Shared foods first
+          if (a.isShared && !b.isShared) return -1;
+          if (!a.isShared && b.isShared) return 1;
+
+          // If both shared or both not shared, sort by expiry date
+          if (a.expiryDate == null && b.expiryDate == null) return 0;
+          if (a.expiryDate == null) return 1;
+          if (b.expiryDate == null) return -1;
+          return a.expiryDate!.compareTo(b.expiryDate!);
         });
         break;
     }
