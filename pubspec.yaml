@@ -73,6 +73,9 @@ dependencies:
   # Native Splash Screen
   flutter_native_splash: ^2.3.10
 
+  # Backend / Sharing
+  supabase_flutter: ^2.8.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

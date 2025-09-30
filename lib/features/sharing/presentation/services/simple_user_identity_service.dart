@@ -2,7 +2,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 
 class SimpleUserIdentityService {
-  static const String _userIdentityKey = 'user_identity_v1';
+  static const String _userIdentityKey =
+      'user_identity_v2'; // Updated for ER- format
 
   static Future<String> ensureUserIdentity() async {
     try {
@@ -43,7 +44,14 @@ class SimpleUserIdentityService {
   }
 
   static String _generateUserId() {
-    const String prefix = 'U-';
+    // Production-ready User-ID Format für skalierbare App
+    // Format: ER-XXXXXXXX (10 Zeichen total)
+    // - ER = EssensRetter Präfix
+    // - 8 Base36 Zeichen (0-9, A-Z)
+    // - Kapazität: 36^8 = 2.8 Billionen User-IDs
+    // - Collision-resistent und human-readable
+
+    const String prefix = 'ER-';
     const String charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const int idLength = 8;
 

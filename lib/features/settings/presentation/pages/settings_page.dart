@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
+import '../../../sharing/presentation/services/simple_user_identity_service.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -109,6 +111,108 @@ class SettingsPage extends StatelessWidget {
                     ),
                   ),
                 ],
+                const Divider(height: 32),
+
+                // User-ID Sektion
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Benutzer-Identifikation',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Ihre Benutzer-ID',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          FutureBuilder<String?>(
+                            future:
+                                SimpleUserIdentityService.getCurrentUserId(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text('Lade User-ID...'),
+                                  ],
+                                );
+                              }
+
+                              final userId = snapshot.data ?? 'Nicht verfügbar';
+
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: SelectableText(
+                                      userId,
+                                      style: const TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.copy, size: 20),
+                                    onPressed: userId != 'Nicht verfügbar'
+                                        ? () {
+                                            Clipboard.setData(
+                                              ClipboardData(text: userId),
+                                            );
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'User-ID kopiert!',
+                                                ),
+                                                duration: Duration(seconds: 2),
+                                              ),
+                                            );
+                                          }
+                                        : null,
+                                    tooltip: 'Kopieren',
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Diese ID wird für das Teilen von Lebensmitteln verwendet.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
                 const Divider(height: 32),
                 const Padding(
                   padding: EdgeInsets.all(16.0),

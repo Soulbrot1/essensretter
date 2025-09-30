@@ -11,6 +11,7 @@ import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
 import 'features/sharing/presentation/services/simple_user_identity_service.dart';
+import 'features/sharing/presentation/services/supabase_user_service.dart';
 import 'injection_container.dart' as di;
 import 'modern_splash_screen.dart';
 import 'features/onboarding/presentation/pages/onboarding_screen.dart';
@@ -28,6 +29,15 @@ void main() async {
   try {
     final userId = await SimpleUserIdentityService.ensureUserIdentity();
     print('App started with User-ID: $userId');
+
+    // Registriere User bei Supabase (wenn möglich)
+    try {
+      await SupabaseUserService.registerUser(userId);
+      print('User successfully registered/updated in Supabase');
+    } catch (e) {
+      print('Warning: Supabase registration failed: $e');
+      // Nicht kritisch - App funktioniert auch offline
+    }
   } catch (e) {
     print('Warning: User Identity initialization failed: $e');
     // App kann trotzdem starten, nur Sharing-Features sind nicht verfügbar

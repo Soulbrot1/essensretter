@@ -15,16 +15,16 @@ void main() {
 
       // assert
       expect(userId1, isNotEmpty);
-      expect(userId1, startsWith('U-'));
-      expect(userId1.length, equals(10)); // U- + 8 characters
+      expect(userId1, startsWith('ER-'));
+      expect(userId1.length, equals(11)); // ER- + 8 characters
       expect(userId1, equals(userId2)); // Should return same ID on second call
     });
 
     test('should return existing User-ID if already stored', () async {
       // arrange - Simulate existing User-ID
-      const existingUserId = 'U-TEST1234';
+      const existingUserId = 'ER-TEST1234';
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_identity_v1', existingUserId);
+      await prefs.setString('user_identity_v2', existingUserId);
 
       // act
       final userId = await SimpleUserIdentityService.ensureUserIdentity();
@@ -38,11 +38,11 @@ void main() {
       final userId = await SimpleUserIdentityService.ensureUserIdentity();
 
       // assert
-      expect(userId, startsWith('U-'));
-      expect(userId.length, equals(10));
+      expect(userId, startsWith('ER-'));
+      expect(userId.length, equals(11));
 
-      // Check if characters after U- are valid (0-9, A-Z)
-      final idPart = userId.substring(2);
+      // Check if characters after ER- are valid (0-9, A-Z)
+      final idPart = userId.substring(3);
       final validCharacters = RegExp(r'^[0-9A-Z]+$');
       expect(validCharacters.hasMatch(idPart), isTrue);
     });
@@ -56,7 +56,7 @@ void main() {
 
       // assert
       expect(userId, isNotNull);
-      expect(userId, startsWith('U-'));
+      expect(userId, startsWith('ER-'));
     });
 
     test('getCurrentUserId should return null if no User-ID stored', () async {
