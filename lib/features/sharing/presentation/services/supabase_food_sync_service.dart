@@ -21,6 +21,9 @@ class SupabaseFoodSyncService {
         throw Exception('User ID not found');
       }
 
+      // Update user's last activity
+      await _updateUserActivity(userId);
+
       // Prüfe erst, ob das Food bereits geteilt ist
       final existingFood = await client
           .from('shared_foods')
@@ -146,6 +149,29 @@ class SupabaseFoodSyncService {
     } catch (e) {
       print('ERROR: Supabase food sync connection test failed: $e');
       return false;
+    }
+  }
+
+  static Future<void> _updateUserActivity(String userId) async {
+    try {
+      await client.from('user_activity').upsert({
+        'user_id': userId,
+        'last_seen': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('WARNING: Failed to update user activity: $e');
+      // Non-critical error, don't rethrow
+    }
+  }
+
+  /// Lösche alle Daten für inaktive User (>90 Tage keine Aktivität)
+  static Future<void> cleanupInactiveUsers() async {
+    try {
+      // Diese Funktion sollte als Supabase Edge Function implementiert werden
+      // oder als Cron Job auf dem Server laufen
+      await client.rpc('cleanup_inactive_users');
+    } catch (e) {
+      print('WARNING: Cleanup of inactive users failed: $e');
     }
   }
 }
