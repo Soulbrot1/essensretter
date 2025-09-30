@@ -40,6 +40,7 @@ class SupabaseUserService {
         'upsert_user',
         params: {
           'p_user_id': userId,
+          'p_display_name': null,
           'p_app_version': appVersion,
           'p_platform': platform,
           'p_device_info': deviceInfo,
