@@ -10,6 +10,8 @@ import '../../domain/usecases/parse_foods_from_text.dart';
 import '../../domain/usecases/update_food.dart';
 import '../../../recipes/domain/usecases/update_recipes_after_food_deletion.dart';
 import '../../../statistics/domain/repositories/statistics_repository.dart';
+import '../../../sharing/presentation/services/shared_foods_loader_service.dart';
+import '../../../sharing/presentation/services/supabase_food_sync_service.dart';
 import 'food_event.dart';
 import 'food_state.dart';
 
@@ -36,6 +38,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     required this.statisticsRepository,
   }) : super(FoodInitial()) {
     on<LoadFoodsEvent>(_onLoadFoods);
+    on<LoadFoodsWithSharedEvent>(_onLoadFoodsWithShared);
     on<AddFoodFromTextEvent>(_onAddFoodFromText);
     on<ShowFoodPreviewEvent>(_onShowFoodPreview);
     on<ConfirmFoodsEvent>(_onConfirmFoods);
@@ -109,7 +112,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         }
       },
       (addedFoods) async {
-        add(LoadFoodsEvent());
+        add(const LoadFoodsWithSharedEvent());
       },
     );
   }
@@ -270,6 +273,16 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   ) async {
     final currentState = state;
     if (currentState is FoodLoaded) {
+      // Check if this is a shared food (from a friend) - cannot be deleted
+      if (SharedFoodsLoaderService.isSharedFoodId(event.id)) {
+        emit(
+          FoodError(
+            'Geteilte Lebensmittel von Friends können nicht gelöscht werden',
+          ),
+        );
+        emit(currentState);
+        return;
+      }
       emit(
         FoodOperationInProgress(
           foods: currentState.foods,
@@ -336,6 +349,36 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foodToToggle.name,
         foodToToggle.category,
       );
+
+      // If this is a shared food from a friend, delete it from Supabase
+      if (SharedFoodsLoaderService.isSharedFoodId(foodToToggle.id)) {
+        try {
+          // Extract the original Supabase ID and friend ID
+          final originalSupabaseId =
+              SharedFoodsLoaderService.getOriginalSupabaseId(foodToToggle.id);
+          final friendId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
+            foodToToggle.id,
+          );
+
+          if (originalSupabaseId != null && friendId != null) {
+            // Delete from Supabase so it doesn't appear for other users
+            await SupabaseFoodSyncService.client
+                .from('shared_foods')
+                .delete()
+                .eq('id', originalSupabaseId)
+                .eq('user_id', friendId);
+
+            print(
+              'DEBUG: Deleted consumed shared food from Supabase: $originalSupabaseId',
+            );
+          }
+        } catch (e) {
+          print(
+            'WARNING: Failed to delete consumed shared food from Supabase: $e',
+          );
+          // Non-critical error - don't fail the whole operation
+        }
+      }
     }
 
     // Update the food in the database
@@ -393,6 +436,17 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   ) async {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
+
+    // Check if this is a shared food (from a friend) - cannot be updated
+    if (SharedFoodsLoaderService.isSharedFoodId(event.food.id)) {
+      emit(
+        FoodError(
+          'Geteilte Lebensmittel von Friends können nicht bearbeitet werden',
+        ),
+      );
+      emit(currentState);
+      return;
+    }
 
     emit(
       FoodOperationInProgress(
@@ -575,7 +629,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       }
 
       // Reload the foods list
-      add(LoadFoodsEvent());
+      add(const LoadFoodsWithSharedEvent());
     } catch (e) {
       emit(FoodError('Fehler beim Löschen verbrauchter Lebensmittel: $e'));
       emit(currentState);
@@ -620,5 +674,53 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         showOnlyShared: event.showOnlyShared,
       ),
     );
+  }
+
+  Future<void> _onLoadFoodsWithShared(
+    LoadFoodsWithSharedEvent event,
+    Emitter<FoodState> emit,
+  ) async {
+    emit(FoodLoading());
+
+    try {
+      // 1. Load local foods
+      final localFoodsResult = await getAllFoods(NoParams());
+      List<Food> localFoods = [];
+
+      localFoodsResult.fold(
+        (failure) {
+          emit(FoodError(failure.message));
+          return;
+        },
+        (foods) {
+          localFoods = foods;
+        },
+      );
+
+      // 2. Load shared foods from friends
+      final sharedFoods =
+          await SharedFoodsLoaderService.loadSharedFoodsFromFriends();
+
+      // 3. Combine local and shared foods
+      final allFoods = [...localFoods, ...sharedFoods];
+
+      // 4. Apply sorting
+      final currentState = state;
+      final sortOption = currentState is FoodLoaded
+          ? currentState.sortOption
+          : SortOption.date;
+      final sortedFoods = _sortFoods(allFoods, sortOption);
+
+      emit(
+        FoodLoaded(
+          foods: sortedFoods,
+          filteredFoods: sortedFoods,
+          sortOption: sortOption,
+          showOnlyShared: false,
+        ),
+      );
+    } catch (e) {
+      emit(FoodError('Fehler beim Laden der Lebensmittel: $e'));
+    }
   }
 }

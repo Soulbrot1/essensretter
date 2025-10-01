@@ -22,7 +22,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
   @override
   void initState() {
     super.initState();
-    context.read<FoodBloc>().add(LoadFoodsEvent());
+    context.read<FoodBloc>().add(const LoadFoodsWithSharedEvent());
   }
 
   @override

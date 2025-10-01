@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../sharing/presentation/services/simple_user_identity_service.dart';
+import '../../../sharing/presentation/pages/friends_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -209,6 +210,39 @@ class SettingsPage extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                ),
+
+                const Divider(height: 32),
+
+                // Friends Sektion
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'Friends & Sharing',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Card(
+                    child: ListTile(
+                      leading: const Icon(
+                        Icons.people,
+                        color: Color(0xFF2E7D32),
+                      ),
+                      title: const Text('Friends verwalten'),
+                      subtitle: const Text('Friends hinzufügen und verwalten'),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FriendsPage(),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),

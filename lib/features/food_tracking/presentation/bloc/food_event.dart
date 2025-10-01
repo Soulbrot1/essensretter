@@ -108,3 +108,7 @@ class FilterSharedFoodsEvent extends FoodEvent {
   @override
   List<Object> get props => [showOnlyShared];
 }
+
+class LoadFoodsWithSharedEvent extends FoodEvent {
+  const LoadFoodsWithSharedEvent();
+}
