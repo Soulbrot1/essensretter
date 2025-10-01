@@ -25,7 +25,6 @@ void main() {
       final data = {
         'user_id': 'ER-USER1234',
         'friend_id': 'ER-FRND5678',
-        'friend_name': 'Anna',
         'status': 'connected',
         'created_at': '2025-01-01T10:00:00.000Z',
       };
@@ -34,7 +33,10 @@ void main() {
 
       expect(connection.userId, 'ER-USER1234');
       expect(connection.friendId, 'ER-FRND5678');
-      expect(connection.friendName, 'Anna');
+      expect(
+        connection.friendName,
+        null,
+      ); // Namen werden jetzt nur lokal gespeichert
       expect(connection.status, 'connected');
       expect(connection.createdAt.year, 2025);
     });

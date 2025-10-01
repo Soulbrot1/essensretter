@@ -1,11 +1,12 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'simple_user_identity_service.dart';
+import 'local_friend_names_service.dart';
 
 class FriendConnection {
   final String userId;
   final String friendId;
-  final String? friendName;
+  final String? friendName; // Wird lokal geladen, nicht aus Supabase
   final String status;
   final DateTime createdAt;
 
@@ -21,9 +22,20 @@ class FriendConnection {
     return FriendConnection(
       userId: data['user_id'],
       friendId: data['friend_id'],
-      friendName: data['friend_name'],
+      friendName: null, // Name wird separat lokal geladen
       status: data['status'],
       createdAt: DateTime.parse(data['created_at']),
+    );
+  }
+
+  /// Erstellt eine Kopie mit lokalem Namen
+  FriendConnection copyWithLocalName(String? localName) {
+    return FriendConnection(
+      userId: userId,
+      friendId: friendId,
+      friendName: localName,
+      status: status,
+      createdAt: createdAt,
     );
   }
 }
@@ -79,22 +91,26 @@ class FriendService {
         throw Exception('Already connected with this user');
       }
 
-      // Erstelle bidirektionale Verbindung
+      // Erstelle bidirektionale Verbindung (ohne Namen in Supabase)
+      print('DEBUG: Creating connection 1: $currentUserId -> $friendId');
       // 1. Verbindung: Current User -> Friend
       await client.from('user_connections').insert({
         'user_id': currentUserId,
         'friend_id': friendId,
-        'friend_name': friendName,
         'status': 'connected',
       });
 
-      // 2. Verbindung: Friend -> Current User (ohne Namen, wird später hinzugefügt)
+      print('DEBUG: Creating connection 2: $friendId -> $currentUserId');
+      // 2. Verbindung: Friend -> Current User
       await client.from('user_connections').insert({
         'user_id': friendId,
         'friend_id': currentUserId,
-        'friend_name': null, // Friend muss später einen Namen vergeben
         'status': 'connected',
       });
+
+      // Speichere Namen lokal
+      await LocalFriendNamesService.setFriendName(friendId, friendName);
+      print('DEBUG: Local name saved: $friendId -> $friendName');
 
       print('DEBUG: Friend added successfully: $friendId');
       return true;
@@ -112,6 +128,8 @@ class FriendService {
         throw Exception('Current user ID not found');
       }
 
+      print('DEBUG: Loading friends for user: $currentUserId');
+
       final response = await client
           .from('user_connections')
           .select()
@@ -119,30 +137,36 @@ class FriendService {
           .eq('status', 'connected')
           .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((data) => FriendConnection.fromSupabase(data))
-          .toList();
+      print('DEBUG: Raw Supabase response: $response');
+
+      // Lade lokale Namen für alle Friends
+      final friendConnections = <FriendConnection>[];
+      for (final data in (response as List)) {
+        final connection = FriendConnection.fromSupabase(data);
+        final localName = await LocalFriendNamesService.getFriendName(
+          connection.friendId,
+        );
+        print(
+          'DEBUG: Friend ${connection.friendId} has local name: $localName',
+        );
+        friendConnections.add(connection.copyWithLocalName(localName));
+      }
+
+      print('DEBUG: Loaded ${friendConnections.length} friends');
+      return friendConnections;
     } catch (e) {
       print('ERROR: Failed to get friends: $e');
       return [];
     }
   }
 
-  /// Aktualisiert den Namen eines Friends
+  /// Aktualisiert den Namen eines Friends (nur lokal)
   static Future<bool> updateFriendName(String friendId, String newName) async {
     try {
-      final currentUserId = await SimpleUserIdentityService.getCurrentUserId();
-      if (currentUserId == null) {
-        throw Exception('Current user ID not found');
-      }
+      // Speichere Namen nur lokal
+      await LocalFriendNamesService.setFriendName(friendId, newName);
 
-      await client
-          .from('user_connections')
-          .update({'friend_name': newName})
-          .eq('user_id', currentUserId)
-          .eq('friend_id', friendId);
-
-      print('DEBUG: Friend name updated: $friendId -> $newName');
+      print('DEBUG: Friend name updated locally: $friendId -> $newName');
       return true;
     } catch (e) {
       print('ERROR: Failed to update friend name: $e');
@@ -170,6 +194,9 @@ class FriendService {
           .delete()
           .eq('user_id', friendId)
           .eq('friend_id', currentUserId);
+
+      // Entferne lokalen Namen
+      await LocalFriendNamesService.removeFriendName(friendId);
 
       print('DEBUG: Friend removed: $friendId');
       return true;
