@@ -160,4 +160,45 @@ class SharedFoodsLoaderService {
     }
     return null;
   }
+
+  /// Extrahiert den Friend-Namen aus einem geteilten Food (aus den notes)
+  static String? getFriendNameFromFood(Food sharedFood) {
+    if (!isSharedFoodId(sharedFood.id)) return null;
+
+    final notes = sharedFood.notes;
+    if (notes?.contains('Geteilt von: ') == true) {
+      final startIndex =
+          notes!.indexOf('Geteilt von: ') + 'Geteilt von: '.length;
+      final endIndex = notes.indexOf('\n', startIndex);
+      return notes.substring(
+        startIndex,
+        endIndex == -1 ? notes.length : endIndex,
+      );
+    }
+    return null;
+  }
+
+  /// Gruppiert geteilte Lebensmittel nach Friend-Namen
+  static Map<String, List<Food>> groupSharedFoodsByProvider(
+    List<Food> sharedFoods,
+  ) {
+    final grouped = <String, List<Food>>{};
+
+    for (final food in sharedFoods) {
+      final friendName = getFriendNameFromFood(food) ?? 'Unbekannt';
+      grouped.putIfAbsent(friendName, () => []).add(food);
+    }
+
+    // Sortiere Foods innerhalb jeder Gruppe nach Ablaufdatum
+    for (final foods in grouped.values) {
+      foods.sort((a, b) {
+        if (a.expiryDate == null && b.expiryDate == null) return 0;
+        if (a.expiryDate == null) return 1;
+        if (b.expiryDate == null) return -1;
+        return a.expiryDate!.compareTo(b.expiryDate!);
+      });
+    }
+
+    return grouped;
+  }
 }

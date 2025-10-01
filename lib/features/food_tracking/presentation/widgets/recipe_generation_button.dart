@@ -5,6 +5,7 @@ import '../../../recipes/presentation/bloc/recipe_event.dart';
 import '../../../recipes/presentation/pages/recipes_page.dart';
 import '../../../recipes/presentation/pages/bookmarked_recipes_page.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
+import '../../../sharing/presentation/widgets/offered_foods_bottom_sheet.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_state.dart';
 import '../bloc/food_event.dart';
@@ -80,6 +81,16 @@ class RecipeGenerationButton extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                   ),
                   tooltip: 'Statistiken',
+                ),
+                // Angebotene Lebensmittel Button
+                IconButton(
+                  onPressed: () => _showOfferedFoods(context),
+                  icon: const Icon(Icons.handshake, size: 28),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(8),
+                  ),
+                  tooltip: 'Angebotene Lebensmittel',
                 ),
               ],
             ),
@@ -192,6 +203,15 @@ class RecipeGenerationButton extends StatelessWidget {
           child: const StatisticsPage(),
         ),
       ),
+    );
+  }
+
+  void _showOfferedFoods(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const OfferedFoodsBottomSheet(),
     );
   }
 }
