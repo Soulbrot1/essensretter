@@ -30,6 +30,26 @@ class _FriendsPageState extends State<FriendsPage> {
       });
 
       final friends = await FriendService.getFriends();
+
+      // Check for new friends without names
+      final newFriendsCount = friends.where((f) => f.friendName == null).length;
+      if (newFriendsCount > 0 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$newFriendsCount neue${newFriendsCount > 1 ? ' Friends haben' : 'r Friend hat'} dich hinzugefügt! Bitte Namen vergeben.',
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+
       setState(() {
         _friends = friends;
         _isLoading = false;
@@ -337,9 +357,56 @@ class _FriendsPageState extends State<FriendsPage> {
                     onRefresh: _loadFriends,
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _friends.length,
+                      itemCount:
+                          _friends.length +
+                          (_friends.any((f) => f.friendName == null) ? 1 : 0),
                       itemBuilder: (context, index) {
-                        final friend = _friends[index];
+                        // Show banner at top if there are unnamed friends
+                        if (index == 0 &&
+                            _friends.any((f) => f.friendName == null)) {
+                          final unnamedCount = _friends
+                              .where((f) => f.friendName == null)
+                              .length;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline,
+                                  color: Colors.orange,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '$unnamedCount neue${unnamedCount > 1 ? ' Friends' : 'r Friend'} ohne Namen! Tippe auf "Namen ändern" im Menü.',
+                                    style: const TextStyle(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        // Adjust index for actual friends list
+                        final friendIndex =
+                            _friends.any((f) => f.friendName == null) &&
+                                index > 0
+                            ? index - 1
+                            : index;
+
+                        if (friendIndex >= _friends.length)
+                          return const SizedBox.shrink();
+
+                        final friend = _friends[friendIndex];
                         return Card(
                           margin: const EdgeInsets.only(bottom: 8),
                           child: ListTile(
@@ -356,11 +423,36 @@ class _FriendsPageState extends State<FriendsPage> {
                                 ),
                               ),
                             ),
-                            title: Text(
-                              friend.friendName ?? 'Unbenannt',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                              ),
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    friend.friendName ?? 'Unbenannt',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                if (friend.friendName == null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Text(
+                                      'NEU',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             subtitle: Text(
                               friend.friendId,
