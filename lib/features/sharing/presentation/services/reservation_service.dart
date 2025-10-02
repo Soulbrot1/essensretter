@@ -38,6 +38,7 @@ class ReservationService {
   static SupabaseClient get client => SupabaseFoodSyncService.client;
 
   /// Create a new reservation for a shared food
+  /// Returns true if successful, false if food is already reserved by someone else
   static Future<bool> createReservation({
     required String sharedFoodId,
     required String providerId,
@@ -48,16 +49,21 @@ class ReservationService {
         return false;
       }
 
-      // Check if already reserved by this user
-      final existing = await client
+      // Check if food is already reserved (by ANYONE)
+      final existingReservation = await client
           .from('food_reservations')
           .select()
           .eq('shared_food_id', sharedFoodId)
-          .eq('reserved_by', currentUserId)
           .maybeSingle();
 
-      if (existing != null) {
-        return true;
+      if (existingReservation != null) {
+        // Food is already reserved
+        // If it's by current user, that's fine (already reserved)
+        if (existingReservation['reserved_by'] == currentUserId) {
+          return true;
+        }
+        // Reserved by someone else - cannot reserve
+        return false;
       }
 
       // For now, use user ID as display name until user sets their own name

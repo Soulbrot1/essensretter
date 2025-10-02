@@ -1,6 +1,8 @@
 import '../../../food_tracking/domain/entities/food.dart';
 import 'friend_service.dart';
 import 'supabase_food_sync_service.dart';
+import 'reservation_service.dart';
+import 'simple_user_identity_service.dart';
 
 class SharedFoodsLoaderService {
   /// Lädt alle geteilten Lebensmittel von Friends und wandelt sie in Food-Entities um
@@ -161,6 +163,59 @@ class SharedFoodsLoaderService {
       );
     }
     return null;
+  }
+
+  /// Filtert Lebensmittel nach Reservierungsstatus
+  /// - available: Nur nicht-reservierte (für alle sichtbar)
+  /// - reserved: Nur vom aktuellen User reservierte
+  /// - all: Alle Lebensmittel (ohne Filter)
+  static Future<List<Food>> filterByReservationStatus(
+    List<Food> foods,
+    String filterMode,
+  ) async {
+    if (filterMode == 'all') {
+      return foods;
+    }
+
+    final currentUserId = await SimpleUserIdentityService.getCurrentUserId();
+    if (currentUserId == null) {
+      return foods;
+    }
+
+    final List<Food> filteredFoods = [];
+
+    for (final food in foods) {
+      final supabaseId = getOriginalSupabaseId(food.id);
+      if (supabaseId == null) {
+        // Kein gültiges shared food - überspringen
+        continue;
+      }
+
+      // Prüfe ob reserviert
+      final reservation = await ReservationService.client
+          .from('food_reservations')
+          .select()
+          .eq('shared_food_id', supabaseId)
+          .maybeSingle();
+
+      final isReserved = reservation != null;
+      final isReservedByMe =
+          isReserved && reservation['reserved_by'] == currentUserId;
+
+      if (filterMode == 'available') {
+        // Zeige nur nicht-reservierte
+        if (!isReserved) {
+          filteredFoods.add(food);
+        }
+      } else if (filterMode == 'reserved') {
+        // Zeige nur vom aktuellen User reservierte
+        if (isReservedByMe) {
+          filteredFoods.add(food);
+        }
+      }
+    }
+
+    return filteredFoods;
   }
 
   /// Gruppiert geteilte Lebensmittel nach Friend-Namen

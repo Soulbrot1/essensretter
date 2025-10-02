@@ -14,9 +14,12 @@ class OfferedFoodsBottomSheet extends StatefulWidget {
 class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   bool _isLoading = true;
   List<Food> _offeredFoods = [];
+  List<Food> _filteredFoods = [];
   Map<String, List<Food>> _groupedFoods = {};
   String? _error;
   String _groupingMode = 'provider'; // 'provider' oder 'all'
+  String _reservationFilter = 'available'; // 'available', 'reserved'
+  int _reservedCount = 0;
 
   @override
   void initState() {
@@ -34,10 +37,24 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       final sharedFoods =
           await SharedFoodsLoaderService.loadSharedFoodsFromFriends();
 
+      // Apply reservation filter
+      final filtered = await SharedFoodsLoaderService.filterByReservationStatus(
+        sharedFoods,
+        _reservationFilter,
+      );
+
+      // Count reserved foods
+      final reserved = await SharedFoodsLoaderService.filterByReservationStatus(
+        sharedFoods,
+        'reserved',
+      );
+
       setState(() {
         _offeredFoods = sharedFoods;
+        _filteredFoods = filtered;
+        _reservedCount = reserved.length;
         _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
-          sharedFoods,
+          filtered,
         );
         _isLoading = false;
       });
@@ -47,6 +64,33 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _applyReservationFilter(String filter) async {
+    setState(() {
+      _reservationFilter = filter;
+      _isLoading = true;
+    });
+
+    final filtered = await SharedFoodsLoaderService.filterByReservationStatus(
+      _offeredFoods,
+      filter,
+    );
+
+    // Update reserved count
+    final reserved = await SharedFoodsLoaderService.filterByReservationStatus(
+      _offeredFoods,
+      'reserved',
+    );
+
+    setState(() {
+      _filteredFoods = filtered;
+      _reservedCount = reserved.length;
+      _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
+        filtered,
+      );
+      _isLoading = false;
+    });
   }
 
   @override
@@ -120,53 +164,118 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gruppierungs-Dropdown
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: DropdownButton<String>(
-              value: _groupingMode,
-              isDense: true,
-              underline: Container(),
-              icon: const Icon(Icons.arrow_drop_down, size: 20),
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-              items: const [
-                DropdownMenuItem(
-                  value: 'provider',
-                  child: Text('Nach Anbieter'),
+          // Erste Zeile: Gruppierung
+          Row(
+            children: [
+              // Gruppierungs-Dropdown
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
                 ),
-                DropdownMenuItem(value: 'all', child: Text('Alle')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _groupingMode = value ?? 'provider';
-                });
-              },
-            ),
-          ),
-          const Spacer(),
-          // Counter
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${_offeredFoods.length} ${_offeredFoods.length == 1 ? 'Lebensmittel' : 'Lebensmittel'}',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.blue.shade700,
-                fontWeight: FontWeight.w500,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: DropdownButton<String>(
+                  value: _groupingMode,
+                  isDense: true,
+                  underline: Container(),
+                  icon: const Icon(Icons.arrow_drop_down, size: 20),
+                  style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'provider',
+                      child: Text('Nach Anbieter'),
+                    ),
+                    DropdownMenuItem(value: 'all', child: Text('Alle')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _groupingMode = value ?? 'provider';
+                    });
+                  },
+                ),
               ),
-            ),
+              const Spacer(),
+              // Counter
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_filteredFoods.length} ${_filteredFoods.length == 1 ? 'Lebensmittel' : 'Lebensmittel'}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Zweite Zeile: Reservierungs-Filter Buttons
+          Row(
+            children: [
+              _buildFilterChip('Verfügbar', 'available', null),
+              const SizedBox(width: 8),
+              _buildFilterChip('Reserviert', 'reserved', _reservedCount),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, int? badgeCount) {
+    final isSelected = _reservationFilter == value;
+    return FilterChip(
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label),
+          if (badgeCount != null && badgeCount > 0) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.green.shade700
+                    : Colors.grey.shade400,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                badgeCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      selected: isSelected,
+      onSelected: (selected) {
+        if (selected) {
+          _applyReservationFilter(value);
+        }
+      },
+      selectedColor: Colors.green.shade100,
+      checkmarkColor: Colors.green.shade700,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.green.shade700 : Colors.grey.shade700,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
     );
   }

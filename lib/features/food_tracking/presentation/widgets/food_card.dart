@@ -6,7 +6,6 @@ import '../bloc/food_bloc.dart';
 import '../bloc/food_event.dart';
 import 'food_tips_dialog.dart';
 import '../../../sharing/presentation/services/supabase_food_sync_service.dart';
-import '../../../sharing/presentation/services/reservation_service.dart';
 import '../../../sharing/presentation/services/simple_user_identity_service.dart';
 import '../../../sharing/presentation/widgets/reservation_popup_dialog.dart';
 
@@ -19,14 +18,14 @@ class FoodCard extends StatefulWidget {
 }
 
 class _FoodCardState extends State<FoodCard> {
-  int _reservationCount = 0;
+  bool _hasReservation = false;
   Timer? _reservationUpdateTimer;
 
   @override
   void initState() {
     super.initState();
     if (widget.food.isShared) {
-      _loadReservationCount();
+      _checkReservationStatus();
       // Check for reservation updates every 5 seconds when food is shared
       _startReservationTimer();
     }
@@ -43,7 +42,7 @@ class _FoodCardState extends State<FoodCard> {
       timer,
     ) {
       if (widget.food.isShared && mounted) {
-        _loadReservationCount();
+        _checkReservationStatus();
       } else {
         timer.cancel();
       }
@@ -60,17 +59,17 @@ class _FoodCardState extends State<FoodCard> {
       _reservationUpdateTimer?.cancel();
 
       if (widget.food.isShared) {
-        _loadReservationCount();
+        _checkReservationStatus();
         _startReservationTimer();
       } else {
         setState(() {
-          _reservationCount = 0;
+          _hasReservation = false;
         });
       }
     }
   }
 
-  Future<void> _loadReservationCount() async {
+  Future<void> _checkReservationStatus() async {
     if (widget.food.isShared) {
       final foodId = widget.food.id;
 
@@ -99,18 +98,21 @@ class _FoodCardState extends State<FoodCard> {
         if (sharedFoodData != null) {
           final sharedFoodId = sharedFoodData['id'] as String;
 
-          final count = await ReservationService.getReservationCount(
-            sharedFoodId,
-          );
+          // Check if there's any reservation (we only need to know if it exists)
+          final reservation = await SupabaseFoodSyncService.client
+              .from('food_reservations')
+              .select()
+              .eq('shared_food_id', sharedFoodId)
+              .maybeSingle();
 
           if (mounted) {
             setState(() {
-              _reservationCount = count;
+              _hasReservation = reservation != null;
             });
           }
         }
       } catch (e) {
-        // Failed to load reservation count - non-critical
+        // Failed to check reservation status - non-critical
       }
     }
   }
@@ -296,7 +298,7 @@ class _FoodCardState extends State<FoodCard> {
                     const SizedBox(width: 8),
                     GestureDetector(
                       onTap: () {
-                        if (widget.food.isShared && _reservationCount > 0) {
+                        if (widget.food.isShared && _hasReservation) {
                           // Show reservations popup
                           showDialog(
                             context: context,
@@ -314,12 +316,12 @@ class _FoodCardState extends State<FoodCard> {
                                 // Cancel the timer as food is no longer shared
                                 _reservationUpdateTimer?.cancel();
                                 setState(() {
-                                  _reservationCount = 0;
+                                  _hasReservation = false;
                                 });
                               },
                               onReservationChanged: () {
-                                // Reload reservation count
-                                _loadReservationCount();
+                                // Reload reservation status
+                                _checkReservationStatus();
                               },
                             ),
                           );
@@ -352,29 +354,17 @@ class _FoodCardState extends State<FoodCard> {
                               size: 18,
                             ),
                           ),
-                          // Reservation Badge
-                          if (widget.food.isShared && _reservationCount > 0)
+                          // Reservation Badge - shows a dot if reserved
+                          if (widget.food.isShared && _hasReservation)
                             Positioned(
                               right: 0,
                               top: 0,
                               child: Container(
-                                padding: const EdgeInsets.all(2),
+                                width: 12,
+                                height: 12,
                                 decoration: const BoxDecoration(
                                   color: Colors.red,
                                   shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 16,
-                                  minHeight: 16,
-                                ),
-                                child: Text(
-                                  _reservationCount.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
