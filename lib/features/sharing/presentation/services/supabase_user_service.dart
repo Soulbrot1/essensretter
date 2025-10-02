@@ -36,7 +36,7 @@ class SupabaseUserService {
       };
 
       // Upsert user using the SQL function we created
-      final response = await client.rpc(
+      await client.rpc(
         'upsert_user',
         params: {
           'p_user_id': userId,
@@ -47,18 +47,9 @@ class SupabaseUserService {
         },
       );
 
-      print('DEBUG: Supabase user registration response: $response');
-
       // Optional: Verify the user was created/updated
-      final verifyResponse = await client
-          .from('users')
-          .select()
-          .eq('user_id', userId)
-          .single();
-
-      print('DEBUG: User verified in Supabase: $verifyResponse');
+      await client.from('users').select().eq('user_id', userId).single();
     } catch (e) {
-      print('ERROR: Failed to register user in Supabase: $e');
       rethrow;
     }
   }
@@ -73,7 +64,6 @@ class SupabaseUserService {
 
       return response;
     } catch (e) {
-      print('ERROR: Failed to get user from Supabase: $e');
       return null;
     }
   }
@@ -82,10 +72,8 @@ class SupabaseUserService {
     try {
       // Test if we can reach Supabase
       final response = await client.rpc('test_schema_ready');
-      print('DEBUG: Supabase connection test: $response');
       return response == true;
     } catch (e) {
-      print('ERROR: Supabase connection test failed: $e');
       return false;
     }
   }

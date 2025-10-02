@@ -92,7 +92,6 @@ class FriendService {
       }
 
       // Erstelle bidirektionale Verbindung (ohne Namen in Supabase)
-      print('DEBUG: Creating connection 1: $currentUserId -> $friendId');
       // 1. Verbindung: Current User -> Friend
       await client.from('user_connections').insert({
         'user_id': currentUserId,
@@ -100,7 +99,6 @@ class FriendService {
         'status': 'connected',
       });
 
-      print('DEBUG: Creating connection 2: $friendId -> $currentUserId');
       // 2. Verbindung: Friend -> Current User
       await client.from('user_connections').insert({
         'user_id': friendId,
@@ -110,12 +108,9 @@ class FriendService {
 
       // Speichere Namen lokal
       await LocalFriendNamesService.setFriendName(friendId, friendName);
-      print('DEBUG: Local name saved: $friendId -> $friendName');
 
-      print('DEBUG: Friend added successfully: $friendId');
       return true;
     } catch (e) {
-      print('ERROR: Failed to add friend: $e');
       rethrow;
     }
   }
@@ -128,16 +123,12 @@ class FriendService {
         throw Exception('Current user ID not found');
       }
 
-      print('DEBUG: Loading friends for user: $currentUserId');
-
       final response = await client
           .from('user_connections')
           .select()
           .eq('user_id', currentUserId)
           .eq('status', 'connected')
           .order('created_at', ascending: false);
-
-      print('DEBUG: Raw Supabase response: $response');
 
       // Lade lokale Namen für alle Friends
       final friendConnections = <FriendConnection>[];
@@ -146,16 +137,11 @@ class FriendService {
         final localName = await LocalFriendNamesService.getFriendName(
           connection.friendId,
         );
-        print(
-          'DEBUG: Friend ${connection.friendId} has local name: $localName',
-        );
         friendConnections.add(connection.copyWithLocalName(localName));
       }
 
-      print('DEBUG: Loaded ${friendConnections.length} friends');
       return friendConnections;
     } catch (e) {
-      print('ERROR: Failed to get friends: $e');
       return [];
     }
   }
@@ -166,10 +152,8 @@ class FriendService {
       // Speichere Namen nur lokal
       await LocalFriendNamesService.setFriendName(friendId, newName);
 
-      print('DEBUG: Friend name updated locally: $friendId -> $newName');
       return true;
     } catch (e) {
-      print('ERROR: Failed to update friend name: $e');
       return false;
     }
   }
@@ -198,10 +182,8 @@ class FriendService {
       // Entferne lokalen Namen
       await LocalFriendNamesService.removeFriendName(friendId);
 
-      print('DEBUG: Friend removed: $friendId');
       return true;
     } catch (e) {
-      print('ERROR: Failed to remove friend: $e');
       return false;
     }
   }
@@ -228,10 +210,8 @@ class FriendService {
           .eq('user_id', friendId)
           .eq('friend_id', currentUserId);
 
-      print('DEBUG: Friend blocked: $friendId');
       return true;
     } catch (e) {
-      print('ERROR: Failed to block friend: $e');
       return false;
     }
   }
@@ -249,7 +229,6 @@ class FriendService {
 
       return response != null;
     } catch (e) {
-      print('ERROR: Failed to check user existence: $e');
       return false;
     }
   }
@@ -260,7 +239,6 @@ class FriendService {
       await client.from('user_connections').select('count').limit(1);
       return true;
     } catch (e) {
-      print('ERROR: Friend service connection test failed: $e');
       return false;
     }
   }

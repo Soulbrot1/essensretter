@@ -403,8 +403,9 @@ class _FriendsPageState extends State<FriendsPage> {
                             ? index - 1
                             : index;
 
-                        if (friendIndex >= _friends.length)
+                        if (friendIndex >= _friends.length) {
                           return const SizedBox.shrink();
+                        }
 
                         final friend = _friends[friendIndex];
                         return Card(

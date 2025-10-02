@@ -28,18 +28,14 @@ void main() async {
   // Initialisiere User Identity (Sharing Feature)
   try {
     final userId = await SimpleUserIdentityService.ensureUserIdentity();
-    print('App started with User-ID: $userId');
 
     // Registriere User bei Supabase (wenn möglich)
     try {
       await SupabaseUserService.registerUser(userId);
-      print('User successfully registered/updated in Supabase');
     } catch (e) {
-      print('Warning: Supabase registration failed: $e');
       // Nicht kritisch - App funktioniert auch offline
     }
   } catch (e) {
-    print('Warning: User Identity initialization failed: $e');
     // App kann trotzdem starten, nur Sharing-Features sind nicht verfügbar
   }
 

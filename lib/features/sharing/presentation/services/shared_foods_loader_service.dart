@@ -30,20 +30,13 @@ class SharedFoodsLoaderService {
             }
           }
         } catch (e) {
-          print(
-            'WARNING: Failed to load shared foods from ${friend.friendId}: $e',
-          );
           // Fehler bei einem Friend soll nicht alle anderen blockieren
           continue;
         }
       }
 
-      print(
-        'DEBUG: Loaded ${allSharedFoods.length} shared foods from ${friends.length} friends',
-      );
       return allSharedFoods;
     } catch (e) {
-      print('ERROR: Failed to load shared foods from friends: $e');
       return [];
     }
   }
@@ -63,9 +56,7 @@ class SharedFoodsLoaderService {
         try {
           expiryDate = DateTime.parse(foodData['expiry_date']);
         } catch (e) {
-          print(
-            'WARNING: Failed to parse expiry date for shared food: ${foodData['expiry_date']}',
-          );
+          // Invalid expiry date format
         }
       }
 
@@ -81,9 +72,7 @@ class SharedFoodsLoaderService {
             try {
               addedDate = DateTime.parse(foodData['created_at']);
             } catch (e2) {
-              print(
-                'WARNING: Failed to parse dates for shared food, using current time',
-              );
+              // Invalid date format, use default
             }
           }
         }
@@ -115,8 +104,6 @@ class SharedFoodsLoaderService {
         isShared: true, // Wichtig: als geteilt markieren
       );
     } catch (e) {
-      print('ERROR: Failed to convert shared food data to entity: $e');
-      print('Food data: $foodData');
       return null;
     }
   }
@@ -137,9 +124,7 @@ class SharedFoodsLoaderService {
         return parts[1]; // supabase_id ist der zweite Teil
       }
     } catch (e) {
-      print(
-        'ERROR: Failed to extract original Supabase ID from: $sharedFoodId',
-      );
+      // Invalid format
     }
     return null;
   }
@@ -156,7 +141,7 @@ class SharedFoodsLoaderService {
         return parts.sublist(2).join('_');
       }
     } catch (e) {
-      print('ERROR: Failed to extract friend ID from: $sharedFoodId');
+      // Invalid format
     }
     return null;
   }

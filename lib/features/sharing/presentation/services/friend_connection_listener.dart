@@ -13,15 +13,11 @@ class FriendConnectionListener {
     try {
       _currentUserId = await SimpleUserIdentityService.getCurrentUserId();
       if (_currentUserId == null) {
-        print('ERROR: Cannot start friend listener - no user ID');
         return;
       }
 
       // Wenn bereits ein Listener läuft, stoppe ihn nicht neu
       if (_channel != null) {
-        print(
-          'DEBUG: Friend listener already running for user $_currentUserId',
-        );
         return;
       }
 
@@ -42,18 +38,12 @@ class FriendConnectionListener {
               value: _currentUserId,
             ),
             callback: (payload) {
-              print('DEBUG: Realtime event received for user $_currentUserId');
-              print('DEBUG: Payload: ${payload.newRecord}');
               _handleNewConnection(payload.newRecord);
             },
           )
           .subscribe();
-
-      print(
-        'DEBUG: Friend connection listener started for user $_currentUserId',
-      );
     } catch (e) {
-      print('ERROR: Failed to start friend connection listener: $e');
+      // Subscription failed - non-critical
     }
   }
 
@@ -63,12 +53,10 @@ class FriendConnectionListener {
       // Jede neue Verbindung benötigt einen lokalen Namen
       final connection = FriendConnection.fromSupabase(record);
 
-      print('DEBUG: New friend connection detected: ${connection.friendId}');
-
       // Benachrichtige alle Listener
       _newConnectionController?.add(connection);
     } catch (e) {
-      print('ERROR: Failed to handle new connection: $e');
+      // Failed to parse connection - skip
     }
   }
 
@@ -82,7 +70,6 @@ class FriendConnectionListener {
   static Future<void> stopListening() async {
     await _channel?.unsubscribe();
     _channel = null;
-    print('DEBUG: Friend connection listener stopped');
   }
 
   /// Dispose resources

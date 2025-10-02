@@ -33,7 +33,6 @@ class SupabaseFoodSyncService {
           .maybeSingle();
 
       if (existingFood != null) {
-        print('DEBUG: Food already shared, updating instead: ${food.name}');
         await updateSharedFood(food);
         return;
       }
@@ -55,15 +54,8 @@ class SupabaseFoodSyncService {
         },
       };
 
-      final response = await client
-          .from('shared_foods')
-          .insert(foodData)
-          .select('id')
-          .single();
-
-      print('DEBUG: Food shared to Supabase: ${response['id']}');
+      await client.from('shared_foods').insert(foodData).select('id').single();
     } catch (e) {
-      print('ERROR: Failed to share food to Supabase: $e');
       rethrow;
     }
   }
@@ -81,10 +73,7 @@ class SupabaseFoodSyncService {
           .delete()
           .eq('user_id', userId)
           .eq('metadata->>local_id', food.id);
-
-      print('DEBUG: Food unshared from Supabase: ${food.id}');
     } catch (e) {
-      print('ERROR: Failed to unshare food from Supabase: $e');
       rethrow;
     }
   }
@@ -116,10 +105,7 @@ class SupabaseFoodSyncService {
           .update(updates)
           .eq('user_id', userId)
           .eq('metadata->>local_id', food.id);
-
-      print('DEBUG: Shared food updated in Supabase: ${food.id}');
     } catch (e) {
-      print('ERROR: Failed to update shared food in Supabase: $e');
       rethrow;
     }
   }
@@ -137,7 +123,6 @@ class SupabaseFoodSyncService {
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('ERROR: Failed to get shared foods from Supabase: $e');
       return [];
     }
   }
@@ -147,7 +132,6 @@ class SupabaseFoodSyncService {
       await client.from('shared_foods').select('count').limit(1);
       return true;
     } catch (e) {
-      print('ERROR: Supabase food sync connection test failed: $e');
       return false;
     }
   }
@@ -159,7 +143,6 @@ class SupabaseFoodSyncService {
         'last_seen': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      print('WARNING: Failed to update user activity: $e');
       // Non-critical error, don't rethrow
     }
   }
@@ -171,7 +154,7 @@ class SupabaseFoodSyncService {
       // oder als Cron Job auf dem Server laufen
       await client.rpc('cleanup_inactive_users');
     } catch (e) {
-      print('WARNING: Cleanup of inactive users failed: $e');
+      // Cleanup failed - non-critical
     }
   }
 }

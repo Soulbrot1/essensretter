@@ -367,15 +367,8 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
                 .delete()
                 .eq('id', originalSupabaseId)
                 .eq('user_id', friendId);
-
-            print(
-              'DEBUG: Deleted consumed shared food from Supabase: $originalSupabaseId',
-            );
           }
         } catch (e) {
-          print(
-            'WARNING: Failed to delete consumed shared food from Supabase: $e',
-          );
           // Non-critical error - don't fail the whole operation
         }
       }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../services/shared_foods_loader_service.dart';
+import '../services/shared_foods_loader_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
-import '../../../food_tracking/presentation/widgets/food_card.dart';
 
 class OfferedFoodsPage extends StatefulWidget {
   const OfferedFoodsPage({super.key});

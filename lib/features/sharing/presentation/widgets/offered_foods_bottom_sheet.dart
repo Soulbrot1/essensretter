@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
+import '../services/reservation_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
 
 class OfferedFoodsBottomSheet extends StatefulWidget {
@@ -331,6 +332,125 @@ class _OfferedFoodCard extends StatefulWidget {
 
 class _OfferedFoodCardState extends State<_OfferedFoodCard> {
   bool _isReserved = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkReservationStatus();
+  }
+
+  Future<void> _checkReservationStatus() async {
+    final sharedFoodId = _getSharedFoodId();
+
+    if (sharedFoodId != null) {
+      try {
+        final isReserved = await ReservationService.isReservedByCurrentUser(
+          sharedFoodId,
+        );
+
+        if (mounted) {
+          setState(() {
+            _isReserved = isReserved;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isReserved = false;
+            _isLoading = false;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isReserved = false;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String? _getSharedFoodId() {
+    final foodId = widget.food.id;
+    if (foodId.startsWith('shared_')) {
+      final parts = foodId.split('_');
+      if (parts.length >= 3) {
+        return parts[1]; // The original supabase ID
+      }
+    }
+    return null;
+  }
+
+  Future<void> _toggleReservation() async {
+    if (_isLoading) {
+      return;
+    }
+
+    final sharedFoodId = _getSharedFoodId();
+
+    if (sharedFoodId == null) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      bool success;
+      if (_isReserved) {
+        success = await ReservationService.removeReservation(sharedFoodId);
+      } else {
+        final providerId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
+          widget.food.id,
+        );
+
+        if (providerId == null) {
+          throw Exception('Provider ID nicht gefunden');
+        }
+        success = await ReservationService.createReservation(
+          sharedFoodId: sharedFoodId,
+          providerId: providerId,
+        );
+      }
+
+      if (success && mounted) {
+        setState(() {
+          _isReserved = !_isReserved;
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isReserved
+                  ? '${widget.food.name} reserviert'
+                  : 'Reservierung aufgehoben',
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: _isReserved ? Colors.green : Colors.orange,
+          ),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -362,35 +482,36 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
           children: [
             // Reservation Checkbox
             GestureDetector(
-              onTap: () {
-                setState(() {
-                  _isReserved = !_isReserved;
-                });
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      _isReserved
-                          ? '${widget.food.name} reserviert'
-                          : 'Reservierung aufgehoben',
-                    ),
-                    duration: const Duration(seconds: 2),
-                    backgroundColor: _isReserved ? Colors.green : Colors.orange,
-                  ),
-                );
-              },
+              onTap: _isLoading ? null : _toggleReservation,
               child: Container(
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: _isReserved ? Colors.green : Colors.grey.shade400,
+                    color: _isLoading
+                        ? Colors.grey.shade300
+                        : _isReserved
+                        ? Colors.green
+                        : Colors.grey.shade400,
                     width: 1.5,
                   ),
-                  color: _isReserved ? Colors.green : Colors.transparent,
+                  color: _isLoading
+                      ? Colors.grey.shade100
+                      : _isReserved
+                      ? Colors.green
+                      : Colors.transparent,
                 ),
-                child: _isReserved
+                child: _isLoading
+                    ? SizedBox(
+                        width: 12,
+                        height: 12,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: Colors.grey.shade600,
+                        ),
+                      )
+                    : _isReserved
                     ? const Icon(Icons.check, color: Colors.white, size: 14)
                     : null,
               ),

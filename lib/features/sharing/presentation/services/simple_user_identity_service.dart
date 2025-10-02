@@ -14,7 +14,6 @@ class SimpleUserIdentityService {
       final existingUserId = prefs.getString(_userIdentityKey);
 
       if (existingUserId != null) {
-        print('DEBUG: Existing User-ID found: $existingUserId');
         return existingUserId;
       }
 
@@ -24,11 +23,8 @@ class SimpleUserIdentityService {
       // Speichern
       await prefs.setString(_userIdentityKey, userId);
 
-      print('DEBUG: New User-ID generated and saved: $userId');
-
       return userId;
     } catch (e) {
-      print('ERROR: Failed to ensure user identity: $e');
       rethrow;
     }
   }
@@ -38,7 +34,6 @@ class SimpleUserIdentityService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString(_userIdentityKey);
     } catch (e) {
-      print('ERROR: Failed to get current user ID: $e');
       return null;
     }
   }
