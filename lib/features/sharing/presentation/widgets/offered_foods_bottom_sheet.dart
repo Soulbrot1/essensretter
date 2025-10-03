@@ -12,6 +12,8 @@ class OfferedFoodsBottomSheet extends StatefulWidget {
       _OfferedFoodsBottomSheetState();
 }
 
+enum SortOption { provider, alphabetical }
+
 class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   bool _isLoading = true;
   List<Food> _offeredFoods = [];
@@ -20,6 +22,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   String _reservationFilter = 'available'; // 'available', 'reserved'
   int _reservedCount = 0;
   int _availableCount = 0;
+  SortOption _sortOption = SortOption.provider;
 
   @override
   void initState() {
@@ -57,7 +60,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
 
       setState(() {
         _offeredFoods = sharedFoods;
-        _filteredFoods = filtered;
+        _filteredFoods = _sortFoods(filtered);
         _reservedCount = reserved.length;
         _availableCount = available.length;
         _isLoading = false;
@@ -93,11 +96,45 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
     );
 
     setState(() {
-      _filteredFoods = filtered;
+      _filteredFoods = _sortFoods(filtered);
       _reservedCount = reserved.length;
       _availableCount = available.length;
       _isLoading = false;
     });
+  }
+
+  List<Food> _sortFoods(List<Food> foods) {
+    final sorted = List<Food>.from(foods);
+
+    switch (_sortOption) {
+      case SortOption.provider:
+        // Sort by provider name (extracted from notes)
+        sorted.sort((a, b) {
+          final providerA = _extractProviderName(a);
+          final providerB = _extractProviderName(b);
+          return providerA.compareTo(providerB);
+        });
+        break;
+      case SortOption.alphabetical:
+        // Sort alphabetically by food name
+        sorted.sort((a, b) => a.name.compareTo(b.name));
+        break;
+    }
+
+    return sorted;
+  }
+
+  String _extractProviderName(Food food) {
+    if (food.notes != null && food.notes!.contains('Geteilt von: ')) {
+      final startIndex =
+          food.notes!.indexOf('Geteilt von: ') + 'Geteilt von: '.length;
+      final endIndex = food.notes!.indexOf('\n', startIndex);
+      return food.notes!.substring(
+        startIndex,
+        endIndex == -1 ? food.notes!.length : endIndex,
+      );
+    }
+    return '';
   }
 
   /// Reapply current filter without showing loading indicator
@@ -120,7 +157,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
 
     if (mounted) {
       setState(() {
-        _filteredFoods = filtered;
+        _filteredFoods = _sortFoods(filtered);
         _reservedCount = reserved.length;
         _availableCount = available.length;
       });
@@ -209,6 +246,56 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
           _buildFilterChip('Verfügbar', 'available', _availableCount),
           const SizedBox(width: 8),
           _buildFilterChip('Reserviert', 'reserved', _reservedCount),
+          const Spacer(),
+          // Sort menu
+          PopupMenuButton<SortOption>(
+            icon: Icon(Icons.sort, color: Colors.grey.shade600),
+            tooltip: 'Sortieren',
+            onSelected: (option) {
+              setState(() {
+                _sortOption = option;
+                _filteredFoods = _sortFoods(_filteredFoods);
+              });
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<SortOption>(
+                value: SortOption.provider,
+                child: Row(
+                  children: [
+                    Icon(
+                      _sortOption == SortOption.provider
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: _sortOption == SortOption.provider
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Nach Anbieter'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<SortOption>(
+                value: SortOption.alphabetical,
+                child: Row(
+                  children: [
+                    Icon(
+                      _sortOption == SortOption.alphabetical
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      color: _sortOption == SortOption.alphabetical
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text('Alphabetisch'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -475,7 +562,6 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
   Widget build(BuildContext context) {
     final daysUntilExpiry = widget.food.daysUntilExpiry;
     final isExpired = widget.food.isExpired;
-    final urgencyColor = _getUrgencyColor(daysUntilExpiry, isExpired);
 
     // Extract provider name from notes
     String? providerName;
@@ -564,22 +650,26 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
               ),
             ),
 
-            // Expiry date
+            // Expiry date as circle
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
-                color: urgencyColor.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: urgencyColor.withValues(alpha: 0.5),
-                  width: 1,
-                ),
+                color: isExpired
+                    ? Colors.red.withValues(alpha: 0.2)
+                    : Colors.green.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
               ),
-              child: Text(
-                widget.food.expiryStatus,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+              child: Center(
+                child: Text(
+                  isExpired ? '-${daysUntilExpiry.abs()}' : '$daysUntilExpiry',
+                  style: TextStyle(
+                    color: isExpired
+                        ? Colors.red.shade700
+                        : Colors.green.shade700,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ),
@@ -587,13 +677,5 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
         ),
       ),
     );
-  }
-
-  Color _getUrgencyColor(int days, bool isExpired) {
-    if (days == 999) return Colors.grey;
-    if (isExpired || days <= 0) return Colors.red.shade700;
-    if (days <= 1) return Colors.orange;
-    if (days <= 3) return Colors.amber;
-    return Colors.green;
   }
 }
