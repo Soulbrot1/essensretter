@@ -20,6 +20,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   String? _error;
   String _reservationFilter = 'available'; // 'available', 'reserved'
   int _reservedCount = 0;
+  int _availableCount = 0;
 
   @override
   void initState() {
@@ -43,16 +44,23 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
         _reservationFilter,
       );
 
-      // Count reserved foods
+      // Count reserved and available foods
       final reserved = await SharedFoodsLoaderService.filterByReservationStatus(
         sharedFoods,
         'reserved',
       );
 
+      final available =
+          await SharedFoodsLoaderService.filterByReservationStatus(
+            sharedFoods,
+            'available',
+          );
+
       setState(() {
         _offeredFoods = sharedFoods;
         _filteredFoods = filtered;
         _reservedCount = reserved.length;
+        _availableCount = available.length;
         _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
           filtered,
         );
@@ -77,15 +85,21 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       filter,
     );
 
-    // Update reserved count
+    // Update reserved and available count
     final reserved = await SharedFoodsLoaderService.filterByReservationStatus(
       _offeredFoods,
       'reserved',
     );
 
+    final available = await SharedFoodsLoaderService.filterByReservationStatus(
+      _offeredFoods,
+      'available',
+    );
+
     setState(() {
       _filteredFoods = filtered;
       _reservedCount = reserved.length;
+      _availableCount = available.length;
       _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
         filtered,
       );
@@ -100,16 +114,22 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       _reservationFilter,
     );
 
-    // Update reserved count
+    // Update reserved and available count
     final reserved = await SharedFoodsLoaderService.filterByReservationStatus(
       _offeredFoods,
       'reserved',
+    );
+
+    final available = await SharedFoodsLoaderService.filterByReservationStatus(
+      _offeredFoods,
+      'available',
     );
 
     if (mounted) {
       setState(() {
         _filteredFoods = filtered;
         _reservedCount = reserved.length;
+        _availableCount = available.length;
         _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
           filtered,
         );
@@ -196,11 +216,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       ),
       child: Row(
         children: [
-          _buildFilterChip(
-            'Verfügbar',
-            'available',
-            _filteredFoods.length - _reservedCount,
-          ),
+          _buildFilterChip('Verfügbar', 'available', _availableCount),
           const SizedBox(width: 8),
           _buildFilterChip('Reserviert', 'reserved', _reservedCount),
         ],
