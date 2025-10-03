@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/friend_service.dart';
 import '../widgets/add_friend_dialog.dart';
+import '../widgets/qr_code_display_dialog.dart';
+import '../widgets/qr_scanner_dialog.dart';
 import '../services/simple_user_identity_service.dart';
 
 class FriendsPage extends StatefulWidget {
@@ -211,6 +213,41 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
+  Future<void> _showQrCode(String userId) async {
+    await showDialog(
+      context: context,
+      builder: (context) => QrCodeDisplayDialog(userId: userId),
+    );
+  }
+
+  Future<void> _showQrScanner() async {
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (context) => const QrScannerDialog(),
+    );
+
+    if (result != null && mounted) {
+      try {
+        await FriendService.addFriend(result['userId']!, result['name']!);
+        _loadFriends();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${result['name']} wurde hinzugefügt'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _copyUserId() async {
     try {
       final userId = await SimpleUserIdentityService.getCurrentUserId();
@@ -242,10 +279,38 @@ class _FriendsPageState extends State<FriendsPage> {
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            onPressed: _showAddFriendDialog,
+          PopupMenuButton<String>(
             icon: const Icon(Icons.person_add),
             tooltip: 'Friend hinzufügen',
+            onSelected: (value) {
+              if (value == 'qr') {
+                _showQrScanner();
+              } else if (value == 'manual') {
+                _showAddFriendDialog();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem<String>(
+                value: 'qr',
+                child: Row(
+                  children: [
+                    Icon(Icons.qr_code_scanner, size: 20),
+                    SizedBox(width: 12),
+                    Text('QR-Code scannen'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'manual',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 20),
+                    SizedBox(width: 12),
+                    Text('ID eingeben'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -308,6 +373,13 @@ class _FriendsPageState extends State<FriendsPage> {
                               color: Colors.black87,
                             ),
                           ),
+                        ),
+                        IconButton(
+                          onPressed: userId != 'Nicht verfügbar'
+                              ? () => _showQrCode(userId)
+                              : null,
+                          icon: const Icon(Icons.qr_code_2),
+                          tooltip: 'QR-Code anzeigen',
                         ),
                         IconButton(
                           onPressed: userId != 'Nicht verfügbar'

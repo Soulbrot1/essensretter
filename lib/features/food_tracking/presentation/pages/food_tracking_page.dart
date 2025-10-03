@@ -9,6 +9,7 @@ import '../widgets/recipe_generation_button.dart';
 import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
+import '../../../sharing/presentation/pages/friends_page.dart';
 import '../../domain/entities/food.dart';
 
 class FoodTrackingPage extends StatefulWidget {
@@ -69,6 +70,16 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.people),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FriendsPage()),
+              );
+            },
+            tooltip: 'Friends',
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
