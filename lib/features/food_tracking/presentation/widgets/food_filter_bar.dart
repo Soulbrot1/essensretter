@@ -50,7 +50,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
             : SortOption.date;
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
           decoration: BoxDecoration(
             color: const Color(0xFFE0F2E0),
             border: Border(
@@ -68,7 +68,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                     children: [
                       Expanded(
                         child: SizedBox(
-                          height: 40,
+                          height: 36,
                           child: TextField(
                             controller: _searchController,
                             autofocus: true,
@@ -129,7 +129,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                           color: Colors.grey[600],
                         ),
                         style: IconButton.styleFrom(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
                         ),
                         tooltip: 'Suchen',
                       ),
@@ -165,7 +165,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                 : Colors.grey[600],
                           ),
                           style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(6),
                           ),
                           tooltip: 'Filter',
                         ),
@@ -352,7 +352,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                 : Colors.grey[600],
                           ),
                           style: IconButton.styleFrom(
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(6),
                           ),
                           tooltip: 'Sortieren',
                         ),
@@ -461,7 +461,7 @@ class _FoodFilterBarState extends State<FoodFilterBar> {
                                   : Colors.grey[600],
                             ),
                             style: IconButton.styleFrom(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.all(6),
                             ),
                             tooltip: 'Verbrauchte Lebensmittel aufräumen',
                           );

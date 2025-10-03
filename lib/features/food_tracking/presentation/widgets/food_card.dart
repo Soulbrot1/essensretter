@@ -124,9 +124,9 @@ class _FoodCardState extends State<FoodCard> {
 
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Row(
           children: [
             // Erweiterter Touch-Bereich für die Checkbox
@@ -144,7 +144,7 @@ class _FoodCardState extends State<FoodCard> {
                 ), // Erweitert den Touch-Bereich
                 child: Container(
                   width: 32, // Größerer Touch-Bereich
-                  height: 40, // Erweitert auf die volle Kartenhöhe
+                  height: 32, // Angepasst an flachere Karte
                   alignment: Alignment.centerLeft,
                   child: Container(
                     width: 22, // Checkbox um 10% vergrößert (20 * 1.1)
