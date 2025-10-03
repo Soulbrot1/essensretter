@@ -22,7 +22,8 @@ class ReservationPopupDialog extends StatefulWidget {
 }
 
 class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
-  List<FoodReservation> _reservations = [];
+  FoodReservation? _currentReservation;
+  List<FoodReservation> _otherReservations = [];
   bool _isLoading = true;
   String? _error;
 
@@ -53,8 +54,39 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
         sharedFoodId,
       );
 
+      if (reservations.isEmpty) {
+        setState(() {
+          _currentReservation = null;
+          _otherReservations = [];
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Get the first reservation for this food
+      final reservation = reservations.first;
+      print('DEBUG Dialog: Current reservation by ${reservation.reservedBy}');
+
+      // Load all other reservations by the same user
+      final allUserReservations =
+          await ReservationService.getReservationsByUser(
+            reservation.reservedBy,
+          );
+      print(
+        'DEBUG Dialog: Found ${allUserReservations.length} total reservations for user',
+      );
+
+      // Filter out the current food
+      final otherReservations = allUserReservations
+          .where((r) => r.sharedFoodId != sharedFoodId)
+          .toList();
+      print(
+        'DEBUG Dialog: Filtered to ${otherReservations.length} other reservations',
+      );
+
       setState(() {
-        _reservations = reservations;
+        _currentReservation = reservation.copyWith(foodName: widget.food.name);
+        _otherReservations = otherReservations;
         _isLoading = false;
       });
     } catch (e) {
@@ -213,21 +245,76 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
   }
 
   Widget _buildFoodInfo() {
+    if (_currentReservation == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.1),
+        color: Colors.blue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.fastfood, color: Colors.orange),
+          const Icon(Icons.fastfood, color: Colors.orange, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               widget.food.name,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.green.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 12,
+                  backgroundColor: Colors.green,
+                  child: Text(
+                    (_currentReservation!.reservedByName ??
+                            _currentReservation!.reservedBy)[0]
+                        .toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _currentReservation!.reservedByName ??
+                      _currentReservation!.reservedBy,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(
+              Icons.cancel_outlined,
+              color: Colors.red,
+              size: 20,
+            ),
+            onPressed: () => _releaseReservation(_currentReservation!),
+            tooltip: 'Stornieren',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
@@ -252,7 +339,7 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
       );
     }
 
-    if (_reservations.isEmpty) {
+    if (_currentReservation == null) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -274,60 +361,62 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
       );
     }
 
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: _reservations.length,
-      itemBuilder: (context, index) {
-        final reservation = _reservations[index];
-        return _buildReservationItem(reservation);
-      },
+    // Show other reservations by the same user
+    if (_otherReservations.isEmpty) {
+      return const Center(
+        child: Text(
+          'Keine weiteren Reservierungen von diesem Nutzer',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Text(
+            'Weitere Reservierungen von ${_currentReservation!.reservedByName ?? _currentReservation!.reservedBy}:',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _otherReservations.length,
+            itemBuilder: (context, index) {
+              final reservation = _otherReservations[index];
+              return _buildOtherReservationItem(reservation);
+            },
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildReservationItem(FoodReservation reservation) {
-    final timeAgo = _getTimeAgo(reservation.reservedAt);
-
+  Widget _buildOtherReservationItem(FoodReservation reservation) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
+        color: Colors.grey.withValues(alpha: 0.05),
         border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.green,
-            child: Text(
-              (reservation.reservedByName ?? reservation.reservedBy)[0]
-                  .toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
+          const Icon(Icons.fastfood, color: Colors.grey, size: 16),
+          const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  reservation.reservedByName ?? reservation.reservedBy,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  timeAgo,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ],
+            child: Text(
+              reservation.foodName ?? 'Unbekannt',
+              style: const TextStyle(fontSize: 14),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-            onPressed: () => _releaseReservation(reservation),
-            tooltip: 'Reservierung freigeben',
           ),
         ],
       ),
@@ -352,20 +441,5 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
         ),
       ],
     );
-  }
-
-  String _getTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 1) {
-      return 'gerade eben';
-    } else if (difference.inMinutes < 60) {
-      return 'vor ${difference.inMinutes} Min';
-    } else if (difference.inHours < 24) {
-      return 'vor ${difference.inHours} Std';
-    } else {
-      return 'vor ${difference.inDays} Tag${difference.inDays == 1 ? '' : 'en'}';
-    }
   }
 }

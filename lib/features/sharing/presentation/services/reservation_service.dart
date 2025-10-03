@@ -10,6 +10,7 @@ class FoodReservation {
   final String? reservedByName;
   final DateTime reservedAt;
   final String providerId;
+  final String? foodName; // Optional: name of the food
 
   FoodReservation({
     required this.id,
@@ -18,6 +19,7 @@ class FoodReservation {
     this.reservedByName,
     required this.reservedAt,
     required this.providerId,
+    this.foodName,
   });
 
   factory FoodReservation.fromSupabase(Map<String, dynamic> data) {
@@ -30,6 +32,27 @@ class FoodReservation {
         data['reserved_at'] ?? DateTime.now().toIso8601String(),
       ),
       providerId: data['provider_id'] ?? '',
+      foodName: data['food_name'],
+    );
+  }
+
+  FoodReservation copyWith({
+    String? id,
+    String? sharedFoodId,
+    String? reservedBy,
+    String? reservedByName,
+    DateTime? reservedAt,
+    String? providerId,
+    String? foodName,
+  }) {
+    return FoodReservation(
+      id: id ?? this.id,
+      sharedFoodId: sharedFoodId ?? this.sharedFoodId,
+      reservedBy: reservedBy ?? this.reservedBy,
+      reservedByName: reservedByName ?? this.reservedByName,
+      reservedAt: reservedAt ?? this.reservedAt,
+      providerId: providerId ?? this.providerId,
+      foodName: foodName ?? this.foodName,
     );
   }
 }
@@ -218,6 +241,80 @@ class ReservationService {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  /// Get all reservations by a specific user (reserved_by) with food names
+  static Future<List<FoodReservation>> getReservationsByUser(
+    String userId,
+  ) async {
+    try {
+      final currentUserId = await SimpleUserIdentityService.getCurrentUserId();
+      if (currentUserId == null) {
+        print('DEBUG: currentUserId is null');
+        return [];
+      }
+
+      print(
+        'DEBUG: Getting reservations for user $userId, provider $currentUserId',
+      );
+
+      // Get all reservations by this user for foods provided by current user
+      final data = await client
+          .from('food_reservations')
+          .select()
+          .eq('reserved_by', userId)
+          .eq('provider_id', currentUserId)
+          .order('reserved_at', ascending: false);
+
+      print('DEBUG: Raw data from query: $data');
+
+      if ((data as List).isEmpty) {
+        print('DEBUG: No data returned from query');
+        return [];
+      }
+
+      final reservations = <FoodReservation>[];
+
+      for (final item in (data as List)) {
+        print('DEBUG: Processing item: $item');
+        final sharedFoodId = item['shared_food_id'] as String;
+
+        // Get the food name from shared_foods table
+        final foodData = await client
+            .from('shared_foods')
+            .select('name')
+            .eq('id', sharedFoodId)
+            .maybeSingle();
+
+        final foodName = foodData?['name'] as String?;
+        print('DEBUG: Extracted food name: $foodName for food $sharedFoodId');
+
+        // Only add if food still exists (has a name)
+        if (foodName != null) {
+          reservations.add(
+            FoodReservation.fromSupabase(item).copyWith(foodName: foodName),
+          );
+        } else {
+          print('DEBUG: Skipping reservation for deleted food $sharedFoodId');
+        }
+      }
+
+      print('DEBUG: Created ${reservations.length} reservations');
+
+      // Load local name for the user
+      final localName = await LocalFriendNamesService.getFriendName(userId);
+      if (localName != null) {
+        return reservations
+            .map((r) => r.copyWith(reservedByName: localName))
+            .toList();
+      }
+
+      return reservations;
+    } catch (e, stackTrace) {
+      print('DEBUG: Error in getReservationsByUser: $e');
+      print('DEBUG: Stack trace: $stackTrace');
+      return [];
     }
   }
 
