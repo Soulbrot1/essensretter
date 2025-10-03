@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/friend_service.dart';
@@ -15,11 +16,64 @@ class _FriendsPageState extends State<FriendsPage> {
   List<FriendConnection> _friends = [];
   bool _isLoading = true;
   String? _error;
+  Timer? _pollTimer;
+  int _lastFriendCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadFriends();
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Startet automatisches Polling alle 3 Sekunden
+  void _startPolling() {
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted) {
+        _checkForNewFriends();
+      }
+    });
+  }
+
+  /// Prüft ob neue Friends hinzugekommen sind (ohne UI zu blockieren)
+  Future<void> _checkForNewFriends() async {
+    try {
+      final friends = await FriendService.getFriends();
+
+      // Nur updaten wenn sich die Anzahl geändert hat
+      if (friends.length != _lastFriendCount && mounted) {
+        _lastFriendCount = friends.length;
+
+        // Aktualisiere Liste
+        setState(() {
+          _friends = friends;
+        });
+
+        // Zeige Snackbar wenn neue Friends da sind
+        final newFriendsCount = friends
+            .where((f) => f.friendName == null)
+            .length;
+        if (newFriendsCount > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '$newFriendsCount neue${newFriendsCount > 1 ? ' Friends haben' : 'r Friend hat'} dich hinzugefügt!',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Fehler beim Polling - nicht kritisch
+    }
   }
 
   Future<void> _loadFriends() async {
@@ -31,27 +85,9 @@ class _FriendsPageState extends State<FriendsPage> {
 
       final friends = await FriendService.getFriends();
 
-      // Check for new friends without names
-      final newFriendsCount = friends.where((f) => f.friendName == null).length;
-      if (newFriendsCount > 0 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '$newFriendsCount neue${newFriendsCount > 1 ? ' Friends haben' : 'r Friend hat'} dich hinzugefügt! Bitte Namen vergeben.',
-            ),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
-
       setState(() {
         _friends = friends;
+        _lastFriendCount = friends.length;
         _isLoading = false;
       });
     } catch (e) {
@@ -512,10 +548,5 @@ class _FriendsPageState extends State<FriendsPage> {
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../sharing/presentation/services/simple_user_identity_service.dart';
-import '../../../sharing/presentation/mixins/friend_connection_mixin.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -12,16 +11,9 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage>
-    with FriendConnectionMixin {
+class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsExpanded = false;
   bool _userIdExpanded = false;
-
-  @override
-  void onConnectionAccepted() {
-    // No specific action needed in settings page
-    // The popup will show and handle the friend connection
-  }
 
   @override
   Widget build(BuildContext context) {

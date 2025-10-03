@@ -9,7 +9,6 @@ import '../widgets/recipe_generation_button.dart';
 import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
-import '../../../sharing/presentation/mixins/friend_connection_mixin.dart';
 import '../../domain/entities/food.dart';
 
 class FoodTrackingPage extends StatefulWidget {
@@ -19,17 +18,10 @@ class FoodTrackingPage extends StatefulWidget {
   State<FoodTrackingPage> createState() => _FoodTrackingPageState();
 }
 
-class _FoodTrackingPageState extends State<FoodTrackingPage>
-    with FriendConnectionMixin {
+class _FoodTrackingPageState extends State<FoodTrackingPage> {
   @override
   void initState() {
     super.initState();
-    context.read<FoodBloc>().add(const LoadFoodsWithSharedEvent());
-  }
-
-  @override
-  void onConnectionAccepted() {
-    // Reload foods when a new friend is accepted
     context.read<FoodBloc>().add(const LoadFoodsWithSharedEvent());
   }
 
