@@ -292,19 +292,29 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         ),
       );
 
+      // Get the food before deleting
+      final foodToDelete = currentState.foods.firstWhere(
+        (food) => food.id == event.id,
+        orElse: () => throw Exception('Food not found'),
+      );
+
       // Wenn es weggeworfen wurde, in Statistik erfassen
       if (event.wasDisposed) {
-        final foodToDelete = currentState.foods.firstWhere(
-          (food) => food.id == event.id,
-          orElse: () => throw Exception('Food not found'),
-        );
-
         // In Statistik als weggeworfen erfassen
         await statisticsRepository.recordWastedFood(
           foodToDelete.id,
           foodToDelete.name,
           foodToDelete.category,
         );
+      }
+
+      // If this food is shared, unshare it from Supabase
+      if (foodToDelete.isShared) {
+        try {
+          await SupabaseFoodSyncService.unshareFood(foodToDelete);
+        } catch (e) {
+          // Non-critical - continue with deletion even if unshare fails
+        }
       }
     }
 
@@ -350,8 +360,17 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         foodToToggle.category,
       );
 
-      // If this is a shared food from a friend, delete it from Supabase
-      if (SharedFoodsLoaderService.isSharedFoodId(foodToToggle.id)) {
+      // Update status in Supabase
+      if (foodToToggle.isShared) {
+        // This is OUR shared food - update status to 'consumed'
+        // updateSharedFood will also delete all reservations if consumed
+        try {
+          await SupabaseFoodSyncService.updateSharedFood(updatedFood);
+        } catch (e) {
+          // Non-critical - continue with local update
+        }
+      } else if (SharedFoodsLoaderService.isSharedFoodId(foodToToggle.id)) {
+        // This is a shared food from a friend - delete it from their list
         try {
           // Extract the original Supabase ID and friend ID
           final originalSupabaseId =

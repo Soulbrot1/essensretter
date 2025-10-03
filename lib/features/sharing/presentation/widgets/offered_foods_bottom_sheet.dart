@@ -93,6 +93,30 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
     });
   }
 
+  /// Reapply current filter without showing loading indicator
+  Future<void> _refreshFilterSilently() async {
+    final filtered = await SharedFoodsLoaderService.filterByReservationStatus(
+      _offeredFoods,
+      _reservationFilter,
+    );
+
+    // Update reserved count
+    final reserved = await SharedFoodsLoaderService.filterByReservationStatus(
+      _offeredFoods,
+      'reserved',
+    );
+
+    if (mounted) {
+      setState(() {
+        _filteredFoods = filtered;
+        _reservedCount = reserved.length;
+        _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
+          filtered,
+        );
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -350,7 +374,12 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
               ...foods.map(
                 (food) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: _OfferedFoodCard(food: food, showProvider: false),
+                  child: _OfferedFoodCard(
+                    key: ValueKey(food.id),
+                    food: food,
+                    showProvider: false,
+                    onReservationChanged: _refreshFilterSilently,
+                  ),
                 ),
               ),
             ],
@@ -378,8 +407,10 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: _OfferedFoodCard(
+              key: ValueKey(sortedFoods[index].id),
               food: sortedFoods[index],
               showProvider: true,
+              onReservationChanged: _refreshFilterSilently,
             ),
           );
         },
@@ -432,8 +463,14 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
 class _OfferedFoodCard extends StatefulWidget {
   final Food food;
   final bool showProvider;
+  final VoidCallback? onReservationChanged;
 
-  const _OfferedFoodCard({required this.food, this.showProvider = true});
+  const _OfferedFoodCard({
+    super.key,
+    required this.food,
+    this.showProvider = true,
+    this.onReservationChanged,
+  });
 
   @override
   State<_OfferedFoodCard> createState() => _OfferedFoodCardState();
@@ -531,6 +568,9 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
           _isReserved = !_isReserved;
           _isLoading = false;
         });
+
+        // Notify parent to reload the list
+        widget.onReservationChanged?.call();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

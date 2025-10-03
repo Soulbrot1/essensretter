@@ -105,6 +105,26 @@ class SupabaseFoodSyncService {
           .update(updates)
           .eq('user_id', userId)
           .eq('metadata->>local_id', food.id);
+
+      // If food is being marked as consumed, delete all reservations
+      if (food.isConsumed) {
+        // Get the supabase ID first
+        final sharedFood = await client
+            .from('shared_foods')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('metadata->>local_id', food.id)
+            .maybeSingle();
+
+        if (sharedFood != null) {
+          final sharedFoodId = sharedFood['id'] as String;
+          // Delete all reservations for this food
+          await client
+              .from('food_reservations')
+              .delete()
+              .eq('shared_food_id', sharedFoodId);
+        }
+      }
     } catch (e) {
       rethrow;
     }
@@ -118,7 +138,7 @@ class SupabaseFoodSyncService {
           .from('shared_foods')
           .select()
           .eq('user_id', userId)
-          .eq('status', 'active')
+          .neq('status', 'consumed') // Exclude consumed foods
           .order('added_date', ascending: false);
 
       return List<Map<String, dynamic>>.from(response);
