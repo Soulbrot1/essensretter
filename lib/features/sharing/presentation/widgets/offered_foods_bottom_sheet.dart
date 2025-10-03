@@ -16,7 +16,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   bool _isLoading = true;
   List<Food> _offeredFoods = [];
   List<Food> _filteredFoods = [];
-  Map<String, List<Food>> _groupedFoods = {};
   String? _error;
   String _reservationFilter = 'available'; // 'available', 'reserved'
   int _reservedCount = 0;
@@ -61,9 +60,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
         _filteredFoods = filtered;
         _reservedCount = reserved.length;
         _availableCount = available.length;
-        _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
-          filtered,
-        );
         _isLoading = false;
       });
     } catch (e) {
@@ -100,9 +96,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       _filteredFoods = filtered;
       _reservedCount = reserved.length;
       _availableCount = available.length;
-      _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
-        filtered,
-      );
       _isLoading = false;
     });
   }
@@ -130,9 +123,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
         _filteredFoods = filtered;
         _reservedCount = reserved.length;
         _availableCount = available.length;
-        _groupedFoods = SharedFoodsLoaderService.groupSharedFoodsByProvider(
-          filtered,
-        );
       });
     }
   }
@@ -312,80 +302,28 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       );
     }
 
-    // Always group by provider (no toggle anymore)
-    return _buildGroupedList();
+    // Show all foods in a flat list (no grouping)
+    return _buildFlatList();
   }
 
-  Widget _buildGroupedList() {
+  Widget _buildFlatList() {
     return RefreshIndicator(
       onRefresh: _loadOfferedFoods,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _groupedFoods.keys.length,
+        itemCount: _filteredFoods.length,
         itemBuilder: (context, index) {
-          final friendName = _groupedFoods.keys.elementAt(index);
-          final foods = _groupedFoods[friendName]!;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (index > 0) const SizedBox(height: 24),
-              _buildProviderHeader(friendName, foods.length),
-              const SizedBox(height: 12),
-              ...foods.map(
-                (food) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _OfferedFoodCard(
-                    key: ValueKey(food.id),
-                    food: food,
-                    showProvider: false,
-                    onReservationChanged: _refreshFilterSilently,
-                  ),
-                ),
-              ),
-            ],
+          final food = _filteredFoods[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _OfferedFoodCard(
+              key: ValueKey(food.id),
+              food: food,
+              showProvider: true, // Now show provider on each card
+              onReservationChanged: _refreshFilterSilently,
+            ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildProviderHeader(String friendName, int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.blue,
-            child: Text(
-              friendName.isNotEmpty ? friendName[0].toUpperCase() : '?',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              friendName,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.blue.shade700,
-              ),
-            ),
-          ),
-          Text(
-            '$count ${count == 1 ? 'Artikel' : 'Artikel'}',
-            style: TextStyle(fontSize: 14, color: Colors.blue.shade600),
-          ),
-        ],
       ),
     );
   }
@@ -599,39 +537,32 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
             ),
             const SizedBox(width: 12),
 
-            // Food name
+            // Food name with provider in parentheses
             Expanded(
-              child: Text(
-                widget.food.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+              child: RichText(
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                  children: [
+                    TextSpan(text: widget.food.name),
+                    if (widget.showProvider && providerName != null)
+                      TextSpan(
+                        text: ' ($providerName)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-
-            // Provider Badge (wenn showProvider true)
-            if (providerName != null) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Text(
-                  providerName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blue.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
 
             // Expiry date
             Container(
