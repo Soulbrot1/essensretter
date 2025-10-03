@@ -2,11 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'simple_user_identity_service.dart';
 import 'local_friend_names_service.dart';
+import 'local_friend_messenger_service.dart';
+import 'messenger_type.dart';
 
 class FriendConnection {
   final String userId;
   final String friendId;
   final String? friendName; // Wird lokal geladen, nicht aus Supabase
+  final MessengerType? preferredMessenger; // Wird lokal geladen
   final String status;
   final DateTime createdAt;
 
@@ -14,6 +17,7 @@ class FriendConnection {
     required this.userId,
     required this.friendId,
     this.friendName,
+    this.preferredMessenger,
     required this.status,
     required this.createdAt,
   });
@@ -23,20 +27,30 @@ class FriendConnection {
       userId: data['user_id'],
       friendId: data['friend_id'],
       friendName: null, // Name wird separat lokal geladen
+      preferredMessenger: null, // Messenger wird separat lokal geladen
       status: data['status'],
       createdAt: DateTime.parse(data['created_at']),
     );
   }
 
-  /// Erstellt eine Kopie mit lokalem Namen
-  FriendConnection copyWithLocalName(String? localName) {
+  /// Erstellt eine Kopie mit lokalem Namen und Messenger
+  FriendConnection copyWith({
+    String? friendName,
+    MessengerType? preferredMessenger,
+  }) {
     return FriendConnection(
       userId: userId,
       friendId: friendId,
-      friendName: localName,
+      friendName: friendName ?? this.friendName,
+      preferredMessenger: preferredMessenger ?? this.preferredMessenger,
       status: status,
       createdAt: createdAt,
     );
+  }
+
+  /// Erstellt eine Kopie mit lokalem Namen (deprecated - use copyWith)
+  FriendConnection copyWithLocalName(String? localName) {
+    return copyWith(friendName: localName);
   }
 }
 
@@ -59,7 +73,11 @@ class FriendService {
   }
 
   /// Fügt einen Friend hinzu (bidirektionale Verbindung)
-  static Future<bool> addFriend(String friendId, String friendName) async {
+  static Future<bool> addFriend(
+    String friendId,
+    String friendName, [
+    MessengerType? messenger,
+  ]) async {
     try {
       final currentUserId = await SimpleUserIdentityService.getCurrentUserId();
       if (currentUserId == null) {
@@ -109,6 +127,14 @@ class FriendService {
       // Speichere Namen lokal
       await LocalFriendNamesService.setFriendName(friendId, friendName);
 
+      // Speichere Messenger lokal (falls angegeben)
+      if (messenger != null && messenger != MessengerType.none) {
+        await LocalFriendMessengerService.setFriendMessenger(
+          friendId,
+          messenger,
+        );
+      }
+
       return true;
     } catch (e) {
       rethrow;
@@ -130,14 +156,22 @@ class FriendService {
           .eq('status', 'connected')
           .order('created_at', ascending: false);
 
-      // Lade lokale Namen für alle Friends
+      // Lade lokale Namen und Messenger für alle Friends
       final friendConnections = <FriendConnection>[];
       for (final data in (response as List)) {
         final connection = FriendConnection.fromSupabase(data);
         final localName = await LocalFriendNamesService.getFriendName(
           connection.friendId,
         );
-        friendConnections.add(connection.copyWithLocalName(localName));
+        final messenger = await LocalFriendMessengerService.getFriendMessenger(
+          connection.friendId,
+        );
+        friendConnections.add(
+          connection.copyWith(
+            friendName: localName,
+            preferredMessenger: messenger,
+          ),
+        );
       }
 
       return friendConnections;

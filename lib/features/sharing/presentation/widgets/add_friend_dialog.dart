@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/friend_service.dart';
+import '../services/messenger_type.dart';
 
 class AddFriendDialog extends StatefulWidget {
   const AddFriendDialog({super.key});
@@ -17,6 +18,9 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
   String? _errorMessage;
   bool _codeValidated = false;
   String? _validatedCode;
+  bool _nameEntered = false;
+  String? _enteredName;
+  MessengerType _selectedMessenger = MessengerType.whatsapp;
 
   @override
   void dispose() {
@@ -55,13 +59,26 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
         return;
       }
 
-      // Schritt 2: Friend mit Namen hinzufügen
-      final friendName = _nameController.text.trim();
-      if (friendName.isEmpty) {
-        throw Exception('Bitte gib einen Namen ein');
+      // Schritt 2: Name validieren und zur Messenger-Auswahl gehen
+      if (!_nameEntered) {
+        final friendName = _nameController.text.trim();
+        if (friendName.isEmpty) {
+          throw Exception('Bitte gib einen Namen ein');
+        }
+
+        setState(() {
+          _nameEntered = true;
+          _enteredName = friendName;
+        });
+        return;
       }
 
-      await FriendService.addFriend(_validatedCode!, friendName);
+      // Schritt 3: Friend mit Namen und Messenger hinzufügen
+      await FriendService.addFriend(
+        _validatedCode!,
+        _enteredName!,
+        _selectedMessenger,
+      );
 
       if (!mounted) return;
 
@@ -70,7 +87,7 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$friendName wurde erfolgreich hinzugefügt'),
+          content: Text('$_enteredName wurde erfolgreich hinzugefügt'),
           backgroundColor: Colors.green,
         ),
       );
@@ -89,8 +106,19 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
     setState(() {
       _codeValidated = false;
       _validatedCode = null;
+      _nameEntered = false;
+      _enteredName = null;
       _codeController.clear();
       _nameController.clear();
+      _errorMessage = null;
+      _selectedMessenger = MessengerType.whatsapp;
+    });
+  }
+
+  void _backToNameInput() {
+    setState(() {
+      _nameEntered = false;
+      _enteredName = null;
       _errorMessage = null;
     });
   }
@@ -185,39 +213,100 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Gib diesem Friend einen Namen:',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  hintText: 'z.B. Anna, Max, Mama...',
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.withValues(alpha: 0.05),
+              if (!_nameEntered) ...[
+                const Text(
+                  'Gib diesem Friend einen Namen:',
+                  style: TextStyle(fontSize: 14),
                 ),
-                textCapitalization: TextCapitalization.words,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Bitte Namen eingeben';
-                  }
-                  if (value.trim().length < 2) {
-                    return 'Name zu kurz';
-                  }
-                  if (value.trim().length > 30) {
-                    return 'Name zu lang (max. 30 Zeichen)';
-                  }
-                  return null;
-                },
-                onFieldSubmitted: (_) => _validateAndAddFriend(),
-              ),
+                const SizedBox(height: 8),
+              ],
+              if (!_nameEntered)
+                TextFormField(
+                  controller: _nameController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    hintText: 'z.B. Anna, Max, Mama...',
+                    prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.withValues(alpha: 0.05),
+                  ),
+                  textCapitalization: TextCapitalization.words,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Bitte Namen eingeben';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'Name zu kurz';
+                    }
+                    if (value.trim().length > 30) {
+                      return 'Name zu lang (max. 30 Zeichen)';
+                    }
+                    return null;
+                  },
+                  onFieldSubmitted: (_) => _validateAndAddFriend(),
+                ),
+              if (_nameEntered) ...[
+                // Name wurde eingegeben, jetzt Messenger auswählen
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person, color: Colors.green),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _enteredName!,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 20),
+                        onPressed: _backToNameInput,
+                        tooltip: 'Namen ändern',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Bevorzugter Messenger:',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 12),
+                ...MessengerType.values
+                    .where((m) => m != MessengerType.none)
+                    .map(
+                      (messenger) => RadioListTile<MessengerType>(
+                        value: messenger,
+                        groupValue: _selectedMessenger,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMessenger = value!;
+                          });
+                        },
+                        title: Row(
+                          children: [
+                            Icon(messenger.icon, size: 20),
+                            const SizedBox(width: 12),
+                            Text(messenger.displayName),
+                          ],
+                        ),
+                        dense: true,
+                      ),
+                    ),
+              ],
             ],
             if (_errorMessage != null) ...[
               const SizedBox(height: 16),
@@ -261,7 +350,11 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 )
-              : Text(_codeValidated ? 'Hinzufügen' : 'Weiter'),
+              : Text(
+                  _codeValidated
+                      ? (_nameEntered ? 'Hinzufügen' : 'Weiter')
+                      : 'Weiter',
+                ),
         ),
       ],
     );
