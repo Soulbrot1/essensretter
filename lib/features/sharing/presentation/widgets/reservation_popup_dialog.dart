@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../food_tracking/domain/entities/food.dart';
 import '../services/reservation_service.dart';
 import '../services/supabase_food_sync_service.dart';
+import '../services/shared_foods_loader_service.dart';
+import '../services/simple_user_identity_service.dart';
 
 class ReservationPopupDialog extends StatefulWidget {
   final Food food;
@@ -38,7 +40,7 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
 
     try {
       // Extract shared food ID from the Food entity
-      final sharedFoodId = _getSharedFoodId();
+      final sharedFoodId = await _getSharedFoodId();
       if (sharedFoodId == null) {
         setState(() {
           _error = 'Ungültige Lebensmittel-ID';
@@ -63,15 +65,35 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
     }
   }
 
-  String? _getSharedFoodId() {
-    // Extract original supabase ID from shared food
-    final foodId = widget.food.id;
-    if (foodId.startsWith('shared_')) {
-      final parts = foodId.split('_');
-      if (parts.length >= 3) {
-        return parts[1]; // The original supabase ID
-      }
+  Future<String?> _getSharedFoodId() async {
+    // Check if this is a shared food from a friend (format: shared_SUPABASE_ID_FRIEND_ID)
+    final extractedId = SharedFoodsLoaderService.getOriginalSupabaseId(
+      widget.food.id,
+    );
+    if (extractedId != null) {
+      return extractedId;
     }
+
+    // Otherwise, this is OUR OWN food that we shared
+    // We need to look it up in the shared_foods table by local_id
+    try {
+      final userId = await SimpleUserIdentityService.getCurrentUserId();
+      if (userId == null) return null;
+
+      final response = await SupabaseFoodSyncService.client
+          .from('shared_foods')
+          .select('id')
+          .eq('user_id', userId)
+          .eq("metadata->>local_id", widget.food.id) // JSON query for local_id
+          .maybeSingle();
+
+      if (response != null) {
+        return response['id'] as String;
+      }
+    } catch (e) {
+      // Failed to lookup
+    }
+
     return null;
   }
 
@@ -105,7 +127,7 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
       await SupabaseFoodSyncService.unshareFood(widget.food);
 
       // Also delete all associated reservations
-      final sharedFoodId = _getSharedFoodId();
+      final sharedFoodId = await _getSharedFoodId();
       if (sharedFoodId != null) {
         // Delete all reservations for this food
         await SupabaseFoodSyncService.client
