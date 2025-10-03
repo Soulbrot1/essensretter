@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
 import '../services/reservation_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
+import '../pages/friends_page.dart';
 
 class OfferedFoodsBottomSheet extends StatefulWidget {
   const OfferedFoodsBottomSheet({super.key});
@@ -17,7 +18,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   List<Food> _filteredFoods = [];
   Map<String, List<Food>> _groupedFoods = {};
   String? _error;
-  String _groupingMode = 'provider'; // 'provider' oder 'all'
   String _reservationFilter = 'available'; // 'available', 'reserved'
   int _reservedCount = 0;
 
@@ -162,13 +162,19 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
                 onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.handshake, color: Colors.blue),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Angebotene Lebensmittel',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
+              const Icon(Icons.handshake, color: Colors.blue, size: 28),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.people),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FriendsPage(),
+                    ),
+                  );
+                },
+                tooltip: 'Friends verwalten',
               ),
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -183,78 +189,20 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
 
   Widget _buildFilterBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Erste Zeile: Gruppierung
-          Row(
-            children: [
-              // Gruppierungs-Dropdown
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: DropdownButton<String>(
-                  value: _groupingMode,
-                  isDense: true,
-                  underline: Container(),
-                  icon: const Icon(Icons.arrow_drop_down, size: 20),
-                  style: const TextStyle(fontSize: 14, color: Colors.black87),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'provider',
-                      child: Text('Nach Anbieter'),
-                    ),
-                    DropdownMenuItem(value: 'all', child: Text('Alle')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _groupingMode = value ?? 'provider';
-                    });
-                  },
-                ),
-              ),
-              const Spacer(),
-              // Counter
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${_filteredFoods.length} ${_filteredFoods.length == 1 ? 'Lebensmittel' : 'Lebensmittel'}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          _buildFilterChip(
+            'Verfügbar',
+            'available',
+            _filteredFoods.length - _reservedCount,
           ),
-          const SizedBox(height: 8),
-          // Zweite Zeile: Reservierungs-Filter Buttons
-          Row(
-            children: [
-              _buildFilterChip('Verfügbar', 'available', null),
-              const SizedBox(width: 8),
-              _buildFilterChip('Reserviert', 'reserved', _reservedCount),
-            ],
-          ),
+          const SizedBox(width: 8),
+          _buildFilterChip('Reserviert', 'reserved', _reservedCount),
         ],
       ),
     );
@@ -348,11 +296,8 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       );
     }
 
-    if (_groupingMode == 'provider') {
-      return _buildGroupedList();
-    } else {
-      return _buildFlatList();
-    }
+    // Always group by provider (no toggle anymore)
+    return _buildGroupedList();
   }
 
   Widget _buildGroupedList() {
@@ -383,35 +328,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
                 ),
               ),
             ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildFlatList() {
-    final sortedFoods = List<Food>.from(_offeredFoods)
-      ..sort((a, b) {
-        if (a.expiryDate == null && b.expiryDate == null) return 0;
-        if (a.expiryDate == null) return 1;
-        if (b.expiryDate == null) return -1;
-        return a.expiryDate!.compareTo(b.expiryDate!);
-      });
-
-    return RefreshIndicator(
-      onRefresh: _loadOfferedFoods,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: sortedFoods.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: _OfferedFoodCard(
-              key: ValueKey(sortedFoods[index].id),
-              food: sortedFoods[index],
-              showProvider: true,
-              onReservationChanged: _refreshFilterSilently,
-            ),
           );
         },
       ),
