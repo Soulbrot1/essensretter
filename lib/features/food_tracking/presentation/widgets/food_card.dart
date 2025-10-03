@@ -121,7 +121,6 @@ class _FoodCardState extends State<FoodCard> {
   Widget build(BuildContext context) {
     final daysUntilExpiry = widget.food.daysUntilExpiry;
     final isExpired = widget.food.isExpired;
-    final urgencyColor = _getUrgencyColor(daysUntilExpiry, isExpired);
 
     return Card(
       elevation: 2,
@@ -231,40 +230,31 @@ class _FoodCardState extends State<FoodCard> {
                     GestureDetector(
                       onTap: () => _showExpiryDatePicker(context, widget.food),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
-                          color: urgencyColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: urgencyColor.withValues(alpha: 0.5),
-                            width: 1,
-                          ),
+                          color: widget.food.isConsumed
+                              ? Colors.grey.withValues(alpha: 0.2)
+                              : isExpired
+                              ? Colors.red.withValues(alpha: 0.2)
+                              : Colors.green.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              widget.food.expiryStatus,
-                              style: TextStyle(
-                                color: widget.food.isConsumed
-                                    ? Colors.grey
-                                    : Colors.black,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.edit,
+                        child: Center(
+                          child: Text(
+                            isExpired
+                                ? '-${daysUntilExpiry.abs()}'
+                                : '$daysUntilExpiry',
+                            style: TextStyle(
                               color: widget.food.isConsumed
                                   ? Colors.grey
-                                  : urgencyColor,
-                              size: 12,
+                                  : isExpired
+                                  ? Colors.red.shade700
+                                  : Colors.green.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -408,16 +398,6 @@ class _FoodCardState extends State<FoodCard> {
         ),
       ),
     );
-  }
-
-  Color _getUrgencyColor(int days, bool isExpired) {
-    // Handle foods without expiry date
-    if (days == 999) return Colors.grey;
-    if (isExpired) return Colors.red.shade700;
-    if (days <= 0) return Colors.red.shade700;
-    if (days <= 1) return Colors.orange;
-    if (days <= 3) return Colors.amber;
-    return Colors.green;
   }
 
   void _showExpiryDatePicker(BuildContext context, Food food) async {

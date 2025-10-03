@@ -149,21 +149,21 @@ void main() {
 
       when(() => mockFoodBloc.state).thenReturn(FoodInitial());
 
-      // Test expired - should have red color
+      // Test expired - should have red color with negative number
       await tester.pumpWidget(makeTestableWidget(FoodCard(food: expiredFood)));
-      expect(find.text('vor 1 Tag'), findsOneWidget);
+      expect(find.text('-1'), findsOneWidget);
 
-      // Test today - should have red color
+      // Test today - should have green color with 0
       await tester.pumpWidget(makeTestableWidget(FoodCard(food: todayFood)));
-      expect(find.text('heute'), findsOneWidget);
+      expect(find.text('0'), findsOneWidget);
 
-      // Test soon - should have amber/orange color
+      // Test soon - should have green color with 2
       await tester.pumpWidget(makeTestableWidget(FoodCard(food: soonFood)));
-      expect(find.text('Übermorgen'), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
 
-      // Test later - should have green color
+      // Test later - should have green color with 5
       await tester.pumpWidget(makeTestableWidget(FoodCard(food: laterFood)));
-      expect(find.text('5 Tage'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
     });
   });
 
