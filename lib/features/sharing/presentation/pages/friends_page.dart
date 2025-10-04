@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/friend_service.dart';
+import '../services/messenger_type.dart';
+import '../services/local_friend_messenger_service.dart';
 import '../widgets/add_friend_dialog.dart';
 import '../widgets/qr_code_display_dialog.dart';
 import '../widgets/qr_scanner_dialog.dart';
@@ -213,6 +215,92 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
+  Future<void> _updateFriendMessenger(FriendConnection friend) async {
+    MessengerType selectedMessenger =
+        friend.preferredMessenger ?? MessengerType.whatsapp;
+
+    final newMessenger = await showDialog<MessengerType>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Messenger ändern'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bevorzugter Messenger für ${friend.friendName ?? friend.friendId}:',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              ...MessengerType.values
+                  .where((m) => m != MessengerType.none)
+                  .map(
+                    (messenger) => RadioListTile<MessengerType>(
+                      value: messenger,
+                      groupValue: selectedMessenger,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedMessenger = value!;
+                        });
+                      },
+                      title: Row(
+                        children: [
+                          Icon(messenger.icon, size: 20),
+                          const SizedBox(width: 12),
+                          Text(messenger.displayName),
+                        ],
+                      ),
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Abbrechen'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(selectedMessenger),
+              child: const Text('Speichern'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (newMessenger != null && newMessenger != friend.preferredMessenger) {
+      try {
+        await LocalFriendMessengerService.setFriendMessenger(
+          friend.friendId,
+          newMessenger,
+        );
+        _loadFriends();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Messenger zu "${newMessenger.displayName}" geändert',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Fehler beim Ändern: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _showQrCode(String userId) async {
     await showDialog(
       context: context,
@@ -221,14 +309,18 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _showQrScanner() async {
-    final result = await showDialog<Map<String, String>>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => const QrScannerDialog(),
     );
 
     if (result != null && mounted) {
       try {
-        await FriendService.addFriend(result['userId']!, result['name']!);
+        await FriendService.addFriend(
+          result['userId']!,
+          result['name']!,
+          result['messenger'],
+        );
         _loadFriends();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -576,6 +668,9 @@ class _FriendsPageState extends State<FriendsPage> {
                                   case 'rename':
                                     _updateFriendName(friend);
                                     break;
+                                  case 'messenger':
+                                    _updateFriendMessenger(friend);
+                                    break;
                                   case 'remove':
                                     _removeFriend(friend);
                                     break;
@@ -589,6 +684,16 @@ class _FriendsPageState extends State<FriendsPage> {
                                       Icon(Icons.edit, size: 20),
                                       SizedBox(width: 8),
                                       Text('Namen ändern'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem<String>(
+                                  value: 'messenger',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.chat, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Messenger ändern'),
                                     ],
                                   ),
                                 ),

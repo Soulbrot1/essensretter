@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
+import '../services/friend_service.dart';
+import '../services/messenger_service.dart';
+import '../services/messenger_type.dart';
 import '../../../food_tracking/domain/entities/food.dart';
 
 class OfferedFoodsPage extends StatefulWidget {
@@ -215,15 +218,83 @@ class _OfferedFoodsPageState extends State<OfferedFoodsPage> {
 }
 
 /// Spezielle FoodCard für angebotene Lebensmittel (read-only)
-class OfferedFoodCard extends StatelessWidget {
+class OfferedFoodCard extends StatefulWidget {
   final Food food;
 
   const OfferedFoodCard({super.key, required this.food});
 
   @override
+  State<OfferedFoodCard> createState() => _OfferedFoodCardState();
+}
+
+class _OfferedFoodCardState extends State<OfferedFoodCard> {
+  Future<void> _contactProvider() async {
+    try {
+      // Extrahiere Provider-ID aus der Food-ID
+      // Format: shared_SUPABASE_ID_PROVIDER_ID
+      final providerId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
+        widget.food.id,
+      );
+
+      if (providerId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Provider-ID konnte nicht ermittelt werden'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Hole Friend-Informationen
+      final friends = await FriendService.getFriends();
+      final friend = friends.where((f) => f.friendId == providerId).firstOrNull;
+
+      if (friend == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend nicht gefunden'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      final messenger = friend.preferredMessenger ?? MessengerType.whatsapp;
+
+      // Öffne Messenger
+      final success = await MessengerService.openMessenger(messenger);
+
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${messenger.displayName} konnte nicht geöffnet werden. Ist die App installiert?',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fehler beim Öffnen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final daysUntilExpiry = food.daysUntilExpiry;
-    final isExpired = food.isExpired;
+    final daysUntilExpiry = widget.food.daysUntilExpiry;
+    final isExpired = widget.food.isExpired;
     final urgencyColor = _getUrgencyColor(daysUntilExpiry, isExpired);
 
     return Card(
@@ -252,7 +323,7 @@ class OfferedFoodCard extends StatelessWidget {
             // Lebensmittel Name
             Expanded(
               child: Text(
-                food.name,
+                widget.food.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -261,6 +332,20 @@ class OfferedFoodCard extends StatelessWidget {
                 ),
               ),
             ),
+
+            // Kontakt-Button
+            IconButton(
+              icon: const Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.blue,
+                size: 20,
+              ),
+              onPressed: _contactProvider,
+              tooltip: 'Kontaktieren',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: 8),
 
             // Haltbarkeitsdatum
             Container(
@@ -274,8 +359,8 @@ class OfferedFoodCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                food.expiryStatus,
-                style: TextStyle(
+                widget.food.expiryStatus,
+                style: const TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
                   fontSize: 12,

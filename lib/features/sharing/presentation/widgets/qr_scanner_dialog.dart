@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../services/friend_service.dart';
+import '../services/messenger_type.dart';
 
 class QrScannerDialog extends StatefulWidget {
   const QrScannerDialog({super.key});
@@ -76,11 +77,15 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
       return;
     }
 
-    // Zeige Name-Eingabe Dialog
+    // Zeige Name-Eingabe und Messenger-Auswahl Dialog
     if (mounted) {
-      final friendName = await _showNameInputDialog(code);
-      if (friendName != null && mounted) {
-        Navigator.of(context).pop({'userId': code, 'name': friendName});
+      final result = await _showNameInputDialog(code);
+      if (result != null && mounted) {
+        Navigator.of(context).pop({
+          'userId': code,
+          'name': result['name'],
+          'messenger': result['messenger'],
+        });
       } else {
         setState(() {
           _isProcessing = false;
@@ -89,52 +94,134 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
     }
   }
 
-  Future<String?> _showNameInputDialog(String userId) async {
+  Future<Map<String, dynamic>?> _showNameInputDialog(String userId) async {
     final controller = TextEditingController();
-    return showDialog<String>(
+    MessengerType selectedMessenger = MessengerType.whatsapp;
+    bool nameEntered = false;
+    String? enteredName;
+
+    return showDialog<Map<String, dynamic>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Friend benennen'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'User-ID: $userId',
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 12,
-                color: Colors.grey,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Friend benennen'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'User-ID: $userId',
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
               ),
+              const SizedBox(height: 16),
+              if (!nameEntered) ...[
+                TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    hintText: 'Wie soll dieser Friend heißen?',
+                    border: OutlineInputBorder(),
+                  ),
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  onSubmitted: (value) {
+                    if (value.trim().isNotEmpty) {
+                      setState(() {
+                        nameEntered = true;
+                        enteredName = value.trim();
+                      });
+                    }
+                  },
+                ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person, color: Colors.green, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          enteredName!,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        onPressed: () {
+                          setState(() {
+                            nameEntered = false;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Bevorzugter Messenger:',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 8),
+                ...MessengerType.values
+                    .where((m) => m != MessengerType.none)
+                    .map(
+                      (messenger) => RadioListTile<MessengerType>(
+                        value: messenger,
+                        groupValue: selectedMessenger,
+                        onChanged: (value) {
+                          setState(() {
+                            selectedMessenger = value!;
+                          });
+                        },
+                        title: Row(
+                          children: [
+                            Icon(messenger.icon, size: 18),
+                            const SizedBox(width: 8),
+                            Text(messenger.displayName),
+                          ],
+                        ),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Abbrechen'),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                hintText: 'Wie soll dieser Friend heißen?',
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
+            FilledButton(
+              onPressed: () {
+                if (!nameEntered) {
+                  final name = controller.text.trim();
+                  if (name.isNotEmpty) {
+                    setState(() {
+                      nameEntered = true;
+                      enteredName = name;
+                    });
+                  }
+                } else {
+                  Navigator.of(
+                    context,
+                  ).pop({'name': enteredName, 'messenger': selectedMessenger});
+                }
+              },
+              child: Text(nameEntered ? 'Hinzufügen' : 'Weiter'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                Navigator.of(context).pop(name);
-              }
-            },
-            child: const Text('Hinzufügen'),
-          ),
-        ],
       ),
     );
   }

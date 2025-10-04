@@ -4,6 +4,9 @@ import '../services/reservation_service.dart';
 import '../services/supabase_food_sync_service.dart';
 import '../services/shared_foods_loader_service.dart';
 import '../services/simple_user_identity_service.dart';
+import '../services/friend_service.dart';
+import '../services/messenger_service.dart';
+import '../services/messenger_type.dart';
 
 class ReservationPopupDialog extends StatefulWidget {
   final Food food;
@@ -194,6 +197,51 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
     }
   }
 
+  Future<void> _contactUser(String userId) async {
+    try {
+      // Hole Friend-Informationen
+      final friends = await FriendService.getFriends();
+      final friend = friends.where((f) => f.friendId == userId).firstOrNull;
+
+      if (friend == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Friend nicht gefunden'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      final messenger = friend.preferredMessenger ?? MessengerType.whatsapp;
+
+      // Öffne Messenger
+      final success = await MessengerService.openMessenger(messenger);
+
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${messenger.displayName} konnte nicht geöffnet werden. Ist die App installiert?',
+            ),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Fehler beim Öffnen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -256,65 +304,78 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.fastfood, color: Colors.orange, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              widget.food.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 12,
-                  backgroundColor: Colors.green,
-                  child: Text(
-                    (_currentReservation!.reservedByName ??
-                            _currentReservation!.reservedBy)[0]
-                        .toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                    ),
+          // Erste Zeile: Lebensmittelname
+          Row(
+            children: [
+              const Icon(Icons.fastfood, color: Colors.orange, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.food.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Zweite Zeile: Reservierender Nutzer + Buttons
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: Colors.green,
+                child: Text(
+                  (_currentReservation!.reservedByName ??
+                          _currentReservation!.reservedBy)[0]
+                      .toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
                   _currentReservation!.reservedByName ??
                       _currentReservation!.reservedBy,
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Colors.green.shade700,
-                    fontSize: 14,
+                    fontSize: 15,
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(
-              Icons.cancel_outlined,
-              color: Colors.red,
-              size: 20,
-            ),
-            onPressed: () => _releaseReservation(_currentReservation!),
-            tooltip: 'Stornieren',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.chat_bubble_outline,
+                  color: Colors.blue,
+                  size: 22,
+                ),
+                onPressed: () => _contactUser(_currentReservation!.reservedBy),
+                tooltip: 'Kontaktieren',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.cancel_outlined,
+                  color: Colors.red,
+                  size: 22,
+                ),
+                onPressed: () => _releaseReservation(_currentReservation!),
+                tooltip: 'Stornieren',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              ),
+            ],
           ),
         ],
       ),
