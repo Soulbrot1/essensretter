@@ -2,11 +2,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/friend_service.dart';
-import '../services/messenger_type.dart';
 import '../services/local_friend_messenger_service.dart';
 import '../widgets/add_friend_dialog.dart';
 import '../widgets/qr_code_display_dialog.dart';
 import '../widgets/qr_scanner_dialog.dart';
+import '../widgets/friend_card_widget.dart';
+import '../widgets/user_id_section_widget.dart';
+import '../widgets/friends_empty_state_widget.dart';
+import '../widgets/friends_error_widget.dart';
+import '../widgets/unnamed_friends_banner_widget.dart';
+import '../helpers/friends_dialog_helpers.dart';
 import '../services/simple_user_identity_service.dart';
 
 class FriendsPage extends StatefulWidget {
@@ -114,28 +119,12 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _removeFriend(FriendConnection friend) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Friend entfernen'),
-        content: Text(
-          'Möchtest du ${friend.friendName ?? friend.friendId} wirklich als Friend entfernen?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Entfernen'),
-          ),
-        ],
-      ),
+    final confirmed = await FriendsDialogHelpers.showRemoveFriendDialog(
+      context,
+      friend,
     );
 
-    if (confirmed == true) {
+    if (confirmed) {
       try {
         await FriendService.removeFriend(friend.friendId);
         _loadFriends();
@@ -163,34 +152,12 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _updateFriendName(FriendConnection friend) async {
-    final controller = TextEditingController(text: friend.friendName ?? '');
-
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Namen ändern'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Name',
-            hintText: 'Neuer Name für diesen Friend',
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: const Text('Speichern'),
-          ),
-        ],
-      ),
+    final newName = await FriendsDialogHelpers.showUpdateNameDialog(
+      context,
+      friend,
     );
 
-    if (newName != null && newName.isNotEmpty && newName != friend.friendName) {
+    if (newName != null) {
       try {
         await FriendService.updateFriendName(friend.friendId, newName);
         _loadFriends();
@@ -216,62 +183,12 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _updateFriendMessenger(FriendConnection friend) async {
-    MessengerType selectedMessenger =
-        friend.preferredMessenger ?? MessengerType.whatsapp;
-
-    final newMessenger = await showDialog<MessengerType>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Messenger ändern'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Bevorzugter Messenger für ${friend.friendName ?? friend.friendId}:',
-                style: const TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              ...MessengerType.values
-                  .where((m) => m != MessengerType.none)
-                  .map(
-                    (messenger) => RadioListTile<MessengerType>(
-                      value: messenger,
-                      groupValue: selectedMessenger,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedMessenger = value!;
-                        });
-                      },
-                      title: Row(
-                        children: [
-                          Icon(messenger.icon, size: 20),
-                          const SizedBox(width: 12),
-                          Text(messenger.displayName),
-                        ],
-                      ),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(selectedMessenger),
-              child: const Text('Speichern'),
-            ),
-          ],
-        ),
-      ),
+    final newMessenger = await FriendsDialogHelpers.showUpdateMessengerDialog(
+      context,
+      friend,
     );
 
-    if (newMessenger != null && newMessenger != friend.preferredMessenger) {
+    if (newMessenger != null) {
       try {
         await LocalFriendMessengerService.setFriendMessenger(
           friend.friendId,
@@ -409,88 +326,9 @@ class _FriendsPageState extends State<FriendsPage> {
       body: Column(
         children: [
           // Your User-ID Section
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.qr_code, color: Colors.green[700]),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Deine User-ID',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green[700],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                FutureBuilder<String?>(
-                  future: SimpleUserIdentityService.getCurrentUserId(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Row(
-                        children: [
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                          SizedBox(width: 8),
-                          Text('Lade User-ID...'),
-                        ],
-                      );
-                    }
-
-                    final userId = snapshot.data ?? 'Nicht verfügbar';
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: SelectableText(
-                            userId,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: userId != 'Nicht verfügbar'
-                              ? () => _showQrCode(userId)
-                              : null,
-                          icon: const Icon(Icons.qr_code_2),
-                          tooltip: 'QR-Code anzeigen',
-                        ),
-                        IconButton(
-                          onPressed: userId != 'Nicht verfügbar'
-                              ? _copyUserId
-                              : null,
-                          icon: const Icon(Icons.copy),
-                          tooltip: 'Kopieren',
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Teile diese ID mit anderen, damit sie dich als Friend hinzufügen können.',
-                  style: TextStyle(fontSize: 12, color: Colors.green[600]),
-                ),
-              ],
-            ),
+          UserIdSectionWidget(
+            onShowQrCode: _showQrCode,
+            onCopyUserId: _copyUserId,
           ),
 
           // Friends List Section
@@ -498,61 +336,9 @@ class _FriendsPageState extends State<FriendsPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: Colors.red[300],
-                        ),
-                        const SizedBox(height: 16),
-                        Text('Fehler: $_error'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadFriends,
-                          child: const Text('Erneut versuchen'),
-                        ),
-                      ],
-                    ),
-                  )
+                ? FriendsErrorWidget(error: _error!, onRetry: _loadFriends)
                 : _friends.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Noch keine Friends',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Füge Friends hinzu, um ihre Lebensmittel zu sehen',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: _showAddFriendDialog,
-                          icon: const Icon(Icons.person_add),
-                          label: const Text('Ersten Friend hinzufügen'),
-                        ),
-                      ],
-                    ),
-                  )
+                ? FriendsEmptyStateWidget(onAddFriend: _showAddFriendDialog)
                 : RefreshIndicator(
                     onRefresh: _loadFriends,
                     child: ListView.builder(
@@ -567,32 +353,8 @@ class _FriendsPageState extends State<FriendsPage> {
                           final unnamedCount = _friends
                               .where((f) => f.friendName == null)
                               .length;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.orange),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.info_outline,
-                                  color: Colors.orange,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    '$unnamedCount neue${unnamedCount > 1 ? ' Friends' : 'r Friend'} ohne Namen! Tippe auf "Namen ändern" im Menü.',
-                                    style: const TextStyle(
-                                      color: Colors.orange,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          return UnnamedFriendsBannerWidget(
+                            unnamedCount: unnamedCount,
                           );
                         }
 
@@ -608,115 +370,12 @@ class _FriendsPageState extends State<FriendsPage> {
                         }
 
                         final friend = _friends[friendIndex];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.green[100],
-                              child: Text(
-                                (friend.friendName?.isNotEmpty == true
-                                        ? friend.friendName!.substring(0, 1)
-                                        : friend.friendId.substring(3, 4))
-                                    .toUpperCase(),
-                                style: TextStyle(
-                                  color: Colors.green[700],
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            title: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    friend.friendName ?? 'Unbenannt',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                if (friend.friendName == null)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Text(
-                                      'NEU',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            subtitle: Text(
-                              friend.friendId,
-                              style: const TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 12,
-                              ),
-                            ),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (value) {
-                                switch (value) {
-                                  case 'rename':
-                                    _updateFriendName(friend);
-                                    break;
-                                  case 'messenger':
-                                    _updateFriendMessenger(friend);
-                                    break;
-                                  case 'remove':
-                                    _removeFriend(friend);
-                                    break;
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem<String>(
-                                  value: 'rename',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 20),
-                                      SizedBox(width: 8),
-                                      Text('Namen ändern'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'messenger',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.chat, size: 20),
-                                      SizedBox(width: 8),
-                                      Text('Messenger ändern'),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem<String>(
-                                  value: 'remove',
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.person_remove,
-                                        size: 20,
-                                        color: Colors.red,
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Entfernen',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        return FriendCardWidget(
+                          friend: friend,
+                          onRename: () => _updateFriendName(friend),
+                          onChangeMessenger: () =>
+                              _updateFriendMessenger(friend),
+                          onRemove: () => _removeFriend(friend),
                         );
                       },
                     ),
