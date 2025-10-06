@@ -14,6 +14,8 @@ import '../../../sharing/presentation/services/shared_foods_loader_service.dart'
 import '../../../sharing/presentation/services/supabase_food_sync_service.dart';
 import 'food_event.dart';
 import 'food_state.dart';
+import 'food_sorting_helper.dart';
+import 'food_filter_helper.dart';
 
 class FoodBloc extends Bloc<FoodEvent, FoodState> {
   final GetAllFoods getAllFoods;
@@ -185,32 +187,17 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
 
-    List<Food> filtered = currentState.foods;
-
-    // Erst nach Namen filtern, falls Suchtext vorhanden
-    if (currentState.searchText.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (food) => food.name.toLowerCase().contains(
-              currentState.searchText.toLowerCase(),
-            ),
-          )
-          .toList();
-    }
-
-    // Dann nach Ablaufdatum filtern
-    if (event.daysUntilExpiry != null) {
-      filtered = filtered
-          .where((food) => food.expiresInDays(event.daysUntilExpiry!))
-          .toList();
-    }
-
     // Apply shared filter if specified in event, or keep current state
     final shouldShowOnlyShared =
         event.showOnlyShared ?? currentState.showOnlyShared;
-    if (shouldShowOnlyShared) {
-      filtered = filtered.where((food) => food.isShared).toList();
-    }
+
+    // Apply all filters using helper
+    final filtered = FoodFilterHelper.applyAllFilters(
+      currentState.foods,
+      searchText: currentState.searchText,
+      activeFilter: event.daysUntilExpiry,
+      showOnlyShared: shouldShowOnlyShared,
+    );
 
     emit(
       currentState.copyWith(
@@ -234,30 +221,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
 
-    List<Food> filtered = currentState.foods;
-
-    // Erst nach Namen filtern
-    if (event.searchText.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (food) => food.name.toLowerCase().contains(
-              event.searchText.toLowerCase(),
-            ),
-          )
-          .toList();
-    }
-
-    // Dann bestehenden Datumsfilter anwenden
-    if (currentState.activeFilter != null) {
-      filtered = filtered
-          .where((food) => food.expiresInDays(currentState.activeFilter!))
-          .toList();
-    }
-
-    // Apply shared filter if active
-    if (currentState.showOnlyShared) {
-      filtered = filtered.where((food) => food.isShared).toList();
-    }
+    // Apply all filters using helper
+    final filtered = FoodFilterHelper.applyAllFilters(
+      currentState.foods,
+      searchText: event.searchText,
+      activeFilter: currentState.activeFilter,
+      showOnlyShared: currentState.showOnlyShared,
+    );
 
     emit(
       currentState.copyWith(
@@ -409,31 +379,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
 
         final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
 
-        // Re-apply current filters
-        List<Food> filtered = sortedFoods;
-
-        // Apply search filter if active
-        if (currentState.searchText.isNotEmpty) {
-          filtered = filtered
-              .where(
-                (food) => food.name.toLowerCase().contains(
-                  currentState.searchText.toLowerCase(),
-                ),
-              )
-              .toList();
-        }
-
-        // Apply expiry filter if active
-        if (currentState.activeFilter != null) {
-          filtered = filtered
-              .where((food) => food.expiresInDays(currentState.activeFilter!))
-              .toList();
-        }
-
-        // Apply shared filter if active
-        if (currentState.showOnlyShared) {
-          filtered = filtered.where((food) => food.isShared).toList();
-        }
+        // Re-apply current filters using helper
+        final filtered = FoodFilterHelper.applyAllFilters(
+          sortedFoods,
+          searchText: currentState.searchText,
+          activeFilter: currentState.activeFilter,
+          showOnlyShared: currentState.showOnlyShared,
+        );
 
         emit(
           currentState.copyWith(foods: sortedFoods, filteredFoods: filtered),
@@ -484,31 +436,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
 
         final sortedFoods = _sortFoods(updatedFoods, currentState.sortOption);
 
-        // Re-apply current filters
-        List<Food> filtered = sortedFoods;
-
-        // Apply search filter if active
-        if (currentState.searchText.isNotEmpty) {
-          filtered = filtered
-              .where(
-                (food) => food.name.toLowerCase().contains(
-                  currentState.searchText.toLowerCase(),
-                ),
-              )
-              .toList();
-        }
-
-        // Apply expiry filter if active
-        if (currentState.activeFilter != null) {
-          filtered = filtered
-              .where((food) => food.expiresInDays(currentState.activeFilter!))
-              .toList();
-        }
-
-        // Apply shared filter if active
-        if (currentState.showOnlyShared) {
-          filtered = filtered.where((food) => food.isShared).toList();
-        }
+        // Re-apply current filters using helper
+        final filtered = FoodFilterHelper.applyAllFilters(
+          sortedFoods,
+          searchText: currentState.searchText,
+          activeFilter: currentState.activeFilter,
+          showOnlyShared: currentState.showOnlyShared,
+        );
 
         emit(
           currentState.copyWith(foods: sortedFoods, filteredFoods: filtered),
@@ -528,30 +462,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final isSharedSort = event.sortOption == SortOption.shared;
     final sortedFoods = _sortFoods(currentState.foods, event.sortOption);
 
-    List<Food> filteredFoods = sortedFoods;
-
-    // Apply search filter if active
-    if (currentState.searchText.isNotEmpty) {
-      filteredFoods = filteredFoods
-          .where(
-            (food) => food.name.toLowerCase().contains(
-              currentState.searchText.toLowerCase(),
-            ),
-          )
-          .toList();
-    }
-
-    // Apply expiry filter if active
-    if (currentState.activeFilter != null) {
-      filteredFoods = filteredFoods
-          .where((food) => food.expiresInDays(currentState.activeFilter!))
-          .toList();
-    }
-
-    // Apply shared filter only if this is shared sort
-    if (isSharedSort) {
-      filteredFoods = filteredFoods.where((food) => food.isShared).toList();
-    }
+    // Apply all filters using helper
+    final filteredFoods = FoodFilterHelper.applyAllFilters(
+      sortedFoods,
+      searchText: currentState.searchText,
+      activeFilter: currentState.activeFilter,
+      showOnlyShared: isSharedSort,
+    );
 
     emit(
       currentState.copyWith(
@@ -564,50 +481,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
   }
 
   List<Food> _sortFoods(List<Food> foods, SortOption sortOption) {
-    final sorted = List<Food>.from(foods);
-
-    switch (sortOption) {
-      case SortOption.alphabetical:
-        sorted.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
-        break;
-      case SortOption.date:
-        sorted.sort((a, b) {
-          // Foods without expiry date go to the end
-          if (a.expiryDate == null && b.expiryDate == null) return 0;
-          if (a.expiryDate == null) return 1;
-          if (b.expiryDate == null) return -1;
-          return a.expiryDate!.compareTo(b.expiryDate!);
-        });
-        break;
-      case SortOption.category:
-        sorted.sort((a, b) {
-          final categoryA = a.category ?? 'Sonstiges';
-          final categoryB = b.category ?? 'Sonstiges';
-          final categoryCompare = categoryA.compareTo(categoryB);
-          if (categoryCompare != 0) return categoryCompare;
-          // If same category, sort by name
-          return a.name.toLowerCase().compareTo(b.name.toLowerCase());
-        });
-        break;
-      case SortOption.shared:
-        // For shared sort, sort by date by default (shared foods first, then by expiry)
-        sorted.sort((a, b) {
-          // Shared foods first
-          if (a.isShared && !b.isShared) return -1;
-          if (!a.isShared && b.isShared) return 1;
-
-          // If both shared or both not shared, sort by expiry date
-          if (a.expiryDate == null && b.expiryDate == null) return 0;
-          if (a.expiryDate == null) return 1;
-          if (b.expiryDate == null) return -1;
-          return a.expiryDate!.compareTo(b.expiryDate!);
-        });
-        break;
-    }
-
-    return sorted;
+    return FoodSortingHelper.sortFoods(foods, sortOption);
   }
 
   Future<void> _onClearConsumedFoods(
@@ -655,30 +529,13 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
     final currentState = state;
     if (currentState is! FoodLoaded) return;
 
-    List<Food> filtered = currentState.foods;
-
-    // Apply search filter first if active
-    if (currentState.searchText.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (food) => food.name.toLowerCase().contains(
-              currentState.searchText.toLowerCase(),
-            ),
-          )
-          .toList();
-    }
-
-    // Apply expiry filter if active
-    if (currentState.activeFilter != null) {
-      filtered = filtered
-          .where((food) => food.expiresInDays(currentState.activeFilter!))
-          .toList();
-    }
-
-    // Apply shared filter
-    if (event.showOnlyShared) {
-      filtered = filtered.where((food) => food.isShared).toList();
-    }
+    // Apply all filters using helper
+    final filtered = FoodFilterHelper.applyAllFilters(
+      currentState.foods,
+      searchText: currentState.searchText,
+      activeFilter: currentState.activeFilter,
+      showOnlyShared: event.showOnlyShared,
+    );
 
     emit(
       currentState.copyWith(
