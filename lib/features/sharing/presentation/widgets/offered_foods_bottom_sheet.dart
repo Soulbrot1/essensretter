@@ -693,7 +693,7 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
                   final messenger = _friendConnection!.preferredMessenger!;
                   final message =
                       'Hallo! Ich interessiere mich für dein Angebot: ${widget.food.name}';
-                  final ctx = context;
+                  final currentContext = context;
 
                   AppLogger.debug(
                     'Messenger-Icon geklickt: ${messenger.displayName}',
@@ -708,7 +708,8 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
                   AppLogger.debug('Messenger öffnen: success=$success');
 
                   if (!success && mounted) {
-                    ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.maybeOf(currentContext)?.showSnackBar(
                       SnackBar(
                         content: Text(
                           '${messenger.displayName} konnte nicht geöffnet werden. Ist die App installiert?',
