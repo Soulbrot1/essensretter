@@ -67,9 +67,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
 
-    // DEBUG: Zum Testen immer Onboarding zeigen
-    await prefs.setBool('hasSeenOnboarding', false);
-
     setState(() {
       _shouldShowOnboarding = !hasSeenOnboarding;
       _isLoading = false;

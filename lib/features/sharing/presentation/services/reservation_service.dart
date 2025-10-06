@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'local_friend_names_service.dart';
 import 'simple_user_identity_service.dart';
 import 'supabase_food_sync_service.dart';
+import '../../../../core/utils/app_logger.dart';
 
 class FoodReservation {
   final String id;
@@ -251,12 +252,12 @@ class ReservationService {
     try {
       final currentUserId = await SimpleUserIdentityService.getCurrentUserId();
       if (currentUserId == null) {
-        print('DEBUG: currentUserId is null');
+        AppLogger.debug('currentUserId is null');
         return [];
       }
 
-      print(
-        'DEBUG: Getting reservations for user $userId, provider $currentUserId',
+      AppLogger.debug(
+        'Getting reservations for user $userId, provider $currentUserId',
       );
 
       // Get all reservations by this user for foods provided by current user
@@ -267,17 +268,17 @@ class ReservationService {
           .eq('provider_id', currentUserId)
           .order('reserved_at', ascending: false);
 
-      print('DEBUG: Raw data from query: $data');
+      AppLogger.debug('Raw data from query: $data');
 
       if ((data as List).isEmpty) {
-        print('DEBUG: No data returned from query');
+        AppLogger.debug('No data returned from query');
         return [];
       }
 
       final reservations = <FoodReservation>[];
 
       for (final item in (data as List)) {
-        print('DEBUG: Processing item: $item');
+        AppLogger.debug('Processing item: $item');
         final sharedFoodId = item['shared_food_id'] as String;
 
         // Get the food name from shared_foods table
@@ -288,7 +289,9 @@ class ReservationService {
             .maybeSingle();
 
         final foodName = foodData?['name'] as String?;
-        print('DEBUG: Extracted food name: $foodName for food $sharedFoodId');
+        AppLogger.debug(
+          'Extracted food name: $foodName for food $sharedFoodId',
+        );
 
         // Only add if food still exists (has a name)
         if (foodName != null) {
@@ -296,11 +299,13 @@ class ReservationService {
             FoodReservation.fromSupabase(item).copyWith(foodName: foodName),
           );
         } else {
-          print('DEBUG: Skipping reservation for deleted food $sharedFoodId');
+          AppLogger.debug(
+            'Skipping reservation for deleted food $sharedFoodId',
+          );
         }
       }
 
-      print('DEBUG: Created ${reservations.length} reservations');
+      AppLogger.debug('Created ${reservations.length} reservations');
 
       // Load local name for the user
       final localName = await LocalFriendNamesService.getFriendName(userId);
@@ -312,8 +317,11 @@ class ReservationService {
 
       return reservations;
     } catch (e, stackTrace) {
-      print('DEBUG: Error in getReservationsByUser: $e');
-      print('DEBUG: Stack trace: $stackTrace');
+      AppLogger.error(
+        'Error in getReservationsByUser',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }

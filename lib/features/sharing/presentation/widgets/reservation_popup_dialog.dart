@@ -7,6 +7,7 @@ import '../services/simple_user_identity_service.dart';
 import '../services/friend_service.dart';
 import '../services/messenger_service.dart';
 import '../services/messenger_type.dart';
+import '../../../../core/utils/app_logger.dart';
 
 class ReservationPopupDialog extends StatefulWidget {
   final Food food;
@@ -68,23 +69,25 @@ class _ReservationPopupDialogState extends State<ReservationPopupDialog> {
 
       // Get the first reservation for this food
       final reservation = reservations.first;
-      print('DEBUG Dialog: Current reservation by ${reservation.reservedBy}');
+      AppLogger.debug(
+        'Dialog: Current reservation by ${reservation.reservedBy}',
+      );
 
       // Load all other reservations by the same user
       final allUserReservations =
           await ReservationService.getReservationsByUser(
             reservation.reservedBy,
           );
-      print(
-        'DEBUG Dialog: Found ${allUserReservations.length} total reservations for user',
+      AppLogger.debug(
+        'Dialog: Found ${allUserReservations.length} total reservations for user',
       );
 
       // Filter out the current food
       final otherReservations = allUserReservations
           .where((r) => r.sharedFoodId != sharedFoodId)
           .toList();
-      print(
-        'DEBUG Dialog: Filtered to ${otherReservations.length} other reservations',
+      AppLogger.debug(
+        'Dialog: Filtered to ${otherReservations.length} other reservations',
       );
 
       setState(() {

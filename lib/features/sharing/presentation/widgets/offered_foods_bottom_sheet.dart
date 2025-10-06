@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
 import '../services/reservation_service.dart';
+import '../services/friend_service.dart';
+import '../services/messenger_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
 import '../pages/friends_page.dart';
+import '../../../../core/utils/app_logger.dart';
 
 class OfferedFoodsBottomSheet extends StatefulWidget {
   const OfferedFoodsBottomSheet({super.key});
@@ -436,11 +439,42 @@ class _OfferedFoodCard extends StatefulWidget {
 class _OfferedFoodCardState extends State<_OfferedFoodCard> {
   bool _isReserved = false;
   bool _isLoading = true;
+  FriendConnection? _friendConnection;
 
   @override
   void initState() {
     super.initState();
     _checkReservationStatus();
+    _loadFriendConnection();
+  }
+
+  Future<void> _loadFriendConnection() async {
+    final friendId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
+      widget.food.id,
+    );
+
+    if (friendId != null) {
+      try {
+        final friends = await FriendService.getFriends();
+        final friend = friends.firstWhere(
+          (f) => f.friendId == friendId,
+          orElse: () => FriendConnection(
+            userId: '',
+            friendId: friendId,
+            status: '',
+            createdAt: DateTime.now(),
+          ),
+        );
+
+        if (mounted) {
+          setState(() {
+            _friendConnection = friend;
+          });
+        }
+      } catch (e) {
+        // Fehler beim Laden - nicht kritisch
+      }
+    }
   }
 
   Future<void> _checkReservationStatus() async {
@@ -649,6 +683,51 @@ class _OfferedFoodCardState extends State<_OfferedFoodCard> {
                 ),
               ),
             ),
+
+            // Messenger icon (if available)
+            if (_friendConnection?.preferredMessenger != null &&
+                _friendConnection!.preferredMessenger!.icon != null) ...[
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () async {
+                  final messenger = _friendConnection!.preferredMessenger!;
+                  final message =
+                      'Hallo! Ich interessiere mich für dein Angebot: ${widget.food.name}';
+                  final ctx = context;
+
+                  AppLogger.debug(
+                    'Messenger-Icon geklickt: ${messenger.displayName}',
+                  );
+                  AppLogger.debug('Nachricht: $message');
+
+                  final success = await MessengerService.openMessenger(
+                    messenger,
+                    message: message,
+                  );
+
+                  AppLogger.debug('Messenger öffnen: success=$success');
+
+                  if (!success && mounted) {
+                    ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${messenger.displayName} konnte nicht geöffnet werden. Ist die App installiert?',
+                        ),
+                        backgroundColor: Colors.orange,
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                },
+                child: Icon(
+                  _friendConnection!.preferredMessenger!.icon,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+              ),
+            ],
+
+            const SizedBox(width: 12),
 
             // Expiry date as circle
             Container(
