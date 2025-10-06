@@ -23,7 +23,8 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
   @override
   void initState() {
     super.initState();
-    context.read<FoodBloc>().add(const LoadFoodsWithSharedEvent());
+    // Lade nur EIGENE lokale Lebensmittel, nicht die von Friends geteilten
+    context.read<FoodBloc>().add(const LoadFoodsEvent());
   }
 
   @override

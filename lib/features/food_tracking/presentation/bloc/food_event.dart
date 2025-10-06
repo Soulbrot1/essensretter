@@ -8,7 +8,9 @@ abstract class FoodEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadFoodsEvent extends FoodEvent {}
+class LoadFoodsEvent extends FoodEvent {
+  const LoadFoodsEvent();
+}
 
 class AddFoodFromTextEvent extends FoodEvent {
   final String text;

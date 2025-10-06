@@ -108,11 +108,11 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
         if (currentState is FoodLoaded) {
           emit(currentState);
         } else {
-          add(LoadFoodsEvent());
+          add(const LoadFoodsEvent());
         }
       },
       (addedFoods) async {
-        add(const LoadFoodsWithSharedEvent());
+        add(const LoadFoodsEvent());
       },
     );
   }
@@ -641,7 +641,7 @@ class FoodBloc extends Bloc<FoodEvent, FoodState> {
       }
 
       // Reload the foods list
-      add(const LoadFoodsWithSharedEvent());
+      add(const LoadFoodsEvent());
     } catch (e) {
       emit(FoodError('Fehler beim Löschen verbrauchter Lebensmittel: $e'));
       emit(currentState);
