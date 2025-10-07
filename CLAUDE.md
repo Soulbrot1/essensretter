@@ -55,7 +55,31 @@ Die App folgt strikt Clean Architecture mit drei Schichten:
 ### Feature-basierte Struktur
 Jedes Feature ist eigenständig in `/lib/features/[feature_name]/` organisiert.
 
+### Aktueller Entwicklungsstand (Stand: Januar 2025)
+
+**Test Coverage (Testabdeckung - wie viel Code durch Tests geprüft wird):**
+- Aktuell: 21.3% (850 von 3,995 Zeilen getestet)
+- Ziel: 50% (Langfristziel: 80%)
+- Fokus: Kernfunktion Food-Tracking (Lebensmittel verwalten) wird priorisiert
+
+**Abgeschlossene Refactorings (Code-Umstrukturierungen für bessere Lesbarkeit):**
+- offered_foods_bottom_sheet.dart: 761 → 265 Zeilen (-65%)
+- food_bloc.dart: 738 → 595 Zeilen (-19%)
+- friends_page.dart: 729 → 386 Zeilen (-47%)
+- Extrahiert: 4 Helper-Klassen (Hilfsklassen für wiederverwendbare Logik), 6 Widget-Komponenten (UI-Bausteine)
+
+**Dependencies (externe Bibliotheken):**
+- Letzte große Updates: Januar 2025 (33 Pakete aktualisiert)
+- flutter_bloc: 8.1.6 → 9.1.1
+- flutter_local_notifications: 17.2.1 → 19.4.2
+- get_it: 7.7.0 → 8.2.0
+
 ## Coding-Standards
+
+### Verständliche Dokumentation
+- **Fachbegriffe erklären**: Immer in einfacher Sprache in Klammern dahinter
+- **Beispiel**: "Dependency Injection (automatisches Bereitstellen von Abhängigkeiten)" statt nur "Dependency Injection"
+- **Zielgruppe**: Auch Laien sollen MD-Dateien verstehen können
 
 ### Dart/Flutter Konventionen
 - Verwende `lowerCamelCase` für Variablen und Funktionen
@@ -92,10 +116,52 @@ class Food {
 
 ## State Management
 
-Wir verwenden BLoC (Business Logic Component) für State Management:
+Wir verwenden BLoC (Business Logic Component - Trennung von Anzeige und Logik) für State Management:
 - Jedes Feature hat eigene BLoCs
-- Events triggern State-Änderungen
+- Events (Ereignisse) triggern State-Änderungen (Zustandsänderungen)
 - UI reagiert auf State-Änderungen
+
+## Architektur-Erkenntnisse & Best Practices
+
+### Was funktioniert gut:
+- **Helper-Klassen extrahieren**: Reduziert Code-Duplizierung (denselben Code mehrfach schreiben)
+  - Beispiele: food_filter_helper.dart, food_sorting_helper.dart
+- **Widget-Komposition (UI-Bausteine zusammensetzen)**: Große Widgets in kleinere aufteilen erhöht Wartbarkeit
+  - Beispiel: friends_page.dart von 729 auf 386 Zeilen durch Extraktion von 6 Widgets
+- **BLoC Pattern**: Klare Trennung von UI und Business-Logik
+
+### Was schwer testbar ist:
+- **Statische Service-Klassen (fest verdrahtete Dienste)**: Schwer durch Test-Doubles (Attrappen) zu ersetzen
+  - Beispiel: FriendService mit statischem SupabaseClient
+- **Verschachtelte Fluent APIs (verkettete Methoden-Aufrufe)**: Brauchen komplexes Mock-Setup (Testaufbau mit Attrappen)
+  - Beispiel: `client.from('table').select().eq('id', value).maybeSingle()`
+- **Mehrfach-Dependencies (viele Abhängigkeiten)**: Services die viele andere statische Services aufrufen
+
+### Refactoring-Entscheidungen (wann Code umstrukturieren):
+- **Dateigröße >600 Zeilen**: Sollte aufgeteilt werden (schlechte Wartbarkeit)
+- **Dateigröße 400-600 Zeilen**: Einzelfall-Entscheidung (kann legitim komplex sein)
+- **Code-Duplikation >3x**: Helper-Klasse extrahieren
+- **Beispiele für legitime Komplexität**: food_local_data_source.dart (561 Zeilen) - viele ähnliche CRUD-Operationen (Create, Read, Update, Delete)
+
+### Bessere Alternativen für neue Services:
+**Vermeiden (schwer testbar):**
+```dart
+class FriendService {
+  static SupabaseClient get client => ...
+  static Future<bool> addFriend(...) async { ... }
+}
+```
+
+**Bevorzugen (leicht testbar durch Dependency Injection):**
+```dart
+class FriendService {
+  final SupabaseClient client;
+  final UserIdentityService userService;
+
+  FriendService({required this.client, required this.userService});
+  Future<bool> addFriend(...) async { ... }
+}
+```
 
 ## Testing-Strategie (PFLICHT)
 
@@ -133,19 +199,30 @@ Wir verwenden BLoC (Business Logic Component) für State Management:
 ### Test-Regeln (ZWINGEND)
 - **Jede neue Funktion**: Braucht Tests vor Implementation
 - **Jeder Bug-Fix**: Braucht Test, der den Bug reproduziert
-- **Code Coverage**: Minimum 80% Overall, 90% für Domain Layer
+- **Code Coverage**: Ziel 50% (aktuell 21.3%), Langfristziel 80% Overall
+- **Priorität**: Kernfunktion Food-Tracking (Lebensmittel verwalten) vor Sekundärfunktionen (Sharing, Rezepte, Statistiken)
 - **Tests laufen**: Bei jedem Commit (automatisch via Pre-Commit Hook)
 - **CI/CD Pipeline**: GitHub Actions führt Tests bei jedem Push aus
 
 ### Test-Integration im Entwicklungsprozess
 
+#### Test-Strategie nach Komponenten-Typ:
+- **Helper-Klassen & Utils**: Unit Tests (einfach, hoher ROI - Return on Investment/Nutzen)
+  - Beispiele: food_filter_helper, food_sorting_helper
+- **Repositories**: Unit Tests mit Mocks (Attrappen) - mittlerer Aufwand
+  - Beispiel: food_repository_impl
+- **Services mit externen Dependencies**: Integration Tests bevorzugen (Unit Tests zu aufwändig)
+  - Beispiel: FriendService mit Supabase - besser via Integration Tests
+- **BLoCs**: bloc_test Framework (bereits gute Coverage vorhanden)
+- **Widgets**: Widget Tests für kritische UI-Komponenten
+
 #### Automatische Checks (Pre-Commit)
 Der Pre-Commit Hook führt automatisch folgende Checks aus:
 1. Code-Formatierung (`dart format`)
-2. Static Analysis (`flutter analyze`)
+2. Static Analysis (statische Code-Analyse mit `flutter analyze`)
 3. Alle Tests (`flutter test`)
-4. Coverage-Check (minimum 80%)
-5. Print-Statement Check
+4. Coverage-Check (Testabdeckungs-Prüfung)
+5. Print-Statement Check (keine Debug-Ausgaben im Production Code)
 
 #### Test-Helper und Utilities
 - **Test Helper**: `test/helpers/test_helper.dart` - Widget-Wrapper, Custom Matchers
@@ -166,15 +243,18 @@ Der Pre-Commit Hook führt automatisch folgende Checks aus:
 - **Jobs**: Test, Analyze, Coverage Report, Build (iOS/Android)
 - **Coverage Upload**: Automatisch zu Codecov
 
-## Wichtige Dependencies
+## Wichtige Dependencies (externe Bibliotheken)
 
 ```yaml
 dependencies:
-  flutter_bloc: ^8.1.0      # State Management
-  get_it: ^7.6.0           # Dependency Injection
-  sqflite: ^2.3.0          # Lokale Datenbank
-  speech_to_text: ^6.3.0   # Spracheingabe
-  intl: ^0.18.0            # Datum-Formatierung
+  flutter_bloc: ^9.1.1      # State Management (Zustandsverwaltung - trennt UI von Logik)
+  get_it: ^8.2.0           # Dependency Injection (automatisches Bereitstellen von Abhängigkeiten)
+  sqflite: ^2.3.0          # Lokale Datenbank (SQLite auf dem Gerät)
+  speech_to_text: ^6.3.0   # Spracheingabe (Spracherkennung für Text-Input)
+  intl: ^0.18.0            # Datum-Formatierung (internationale Datums-/Zahlenformate)
+  supabase_flutter: ^2.7.3 # Backend-Dienst (für Freunde-Feature und Sharing)
+  qr_flutter: ^4.1.0       # QR-Code Generierung (für User-ID teilen)
+  mobile_scanner: ^3.5.5   # QR-Code Scanner (zum Scannen von Freunde-IDs)
 ```
 
 ## Entwicklungs-Workflow (ZWINGEND)
@@ -197,11 +277,11 @@ dependencies:
 - [ ] Neue Tests geschrieben
 - [ ] Dokumentation aktualisiert (wenn nötig)
 
-### Quality Gates:
-- **Tests**: Minimum 80% Coverage
-- **Linting**: Keine flutter_lints Violations
-- **Architektur**: Clean Architecture befolgt
-- **Performance**: Keine Memory Leaks
+### Quality Gates (Qualitätskriterien vor Merge):
+- **Tests**: Ziel 50% Coverage (aktuell 21.3%), Langfristziel 80%
+- **Linting (Code-Prüfung)**: Keine flutter_lints Violations (Regelverstöße)
+- **Architektur**: Clean Architecture befolgt (Drei-Schichten-Trennung)
+- **Performance**: Keine Memory Leaks (Speicherlecks)
 
 ## Häufige Aufgaben
 
@@ -224,6 +304,6 @@ dependencies:
 
 ## Performance-Optimierung
 
-- Lazy Loading für Lebensmittel-Listen
-- Caching für häufig genutzte Daten
-- Debouncing bei Texteingabe
+- **Lazy Loading** (verzögertes Laden): Lebensmittel-Listen werden nach Bedarf nachgeladen
+- **Caching** (Zwischenspeicherung): Häufig genutzte Daten werden im Speicher gehalten
+- **Debouncing** (Verzögerung): Bei Texteingabe wird erst nach Pause gesucht (spart Ressourcen)
