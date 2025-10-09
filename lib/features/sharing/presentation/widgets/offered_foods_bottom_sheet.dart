@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
 import 'offered_foods_header.dart';
+import 'user_management_bar.dart';
 import 'offered_foods_filter_bar.dart';
 import 'offered_food_card.dart';
 import 'provider_header_widget.dart';
@@ -175,6 +176,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       child: Column(
         children: [
           const OfferedFoodsHeader(),
+          const UserManagementBar(),
           OfferedFoodsFilterBar(
             selectedFilter: _reservationFilter,
             availableCount: _availableCount,

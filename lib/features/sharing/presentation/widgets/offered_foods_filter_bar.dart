@@ -31,20 +31,32 @@ class OfferedFoodsFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
       ),
       child: Row(
         children: [
-          _buildFilterChip(context, 'Verfügbar', 'available', availableCount),
-          const SizedBox(width: 8),
-          _buildFilterChip(context, 'Reserviert', 'reserved', reservedCount),
+          _buildFilterChipWithBadge(
+            context,
+            'Verfügbar',
+            'available',
+            availableCount,
+          ),
+          const SizedBox(width: 6),
+          _buildFilterChipWithBadge(
+            context,
+            'Reserviert',
+            'reserved',
+            reservedCount,
+          ),
           const Spacer(),
           IconButton(
-            icon: Icon(Icons.refresh, color: Colors.grey.shade600),
+            icon: const Icon(Icons.refresh, size: 22),
             onPressed: onRefresh,
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(),
             tooltip: 'Aktualisieren',
           ),
           _buildSortMenu(context),
@@ -53,59 +65,50 @@ class OfferedFoodsFilterBar extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterChip(
+  Widget _buildFilterChipWithBadge(
     BuildContext context,
     String label,
     String value,
     int? badgeCount,
   ) {
     final isSelected = selectedFilter == value;
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          if (badgeCount != null && badgeCount > 0) ...[
-            const SizedBox(width: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.green.shade700
-                    : Colors.grey.shade400,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                badgeCount.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ],
+
+    return Badge(
+      isLabelVisible: badgeCount != null && badgeCount > 0,
+      label: Text(
+        badgeCount.toString(),
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
       ),
-      selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          onFilterChanged(value);
-        }
-      },
-      showCheckmark: false,
-      selectedColor: Colors.green.shade100,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.green.shade700 : Colors.grey.shade700,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      backgroundColor: isSelected
+          ? Colors.green.shade700
+          : Colors.grey.shade500,
+      offset: const Offset(4, -4),
+      child: FilterChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) {
+          if (selected) {
+            onFilterChanged(value);
+          }
+        },
+        showCheckmark: false,
+        selectedColor: Colors.green.shade100,
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.green.shade700 : Colors.grey.shade700,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontSize: 13,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
 
   Widget _buildSortMenu(BuildContext context) {
     return PopupMenuButton<SortOption>(
-      icon: Icon(Icons.sort, color: Colors.grey.shade600),
+      icon: const Icon(Icons.sort, size: 22),
       tooltip: 'Sortieren',
+      padding: const EdgeInsets.all(8),
       onSelected: onSortChanged,
       itemBuilder: (context) => [
         PopupMenuItem<SortOption>(
