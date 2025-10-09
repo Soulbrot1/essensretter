@@ -10,7 +10,7 @@ import '../bloc/food_ui_state.dart';
 import '../bloc/food_bloc_coordinator.dart';
 import '../widgets/food_card.dart';
 import '../widgets/food_preview_dialog.dart';
-import '../widgets/recipe_generation_button.dart';
+import '../widgets/main_bottom_navigation.dart';
 import '../widgets/food_filter_bar.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
@@ -229,7 +229,7 @@ class _FoodTrackingPageV2State extends State<FoodTrackingPageV2> {
           if (index == foods.length) {
             return const Padding(
               padding: EdgeInsets.only(top: 16, bottom: 32),
-              child: RecipeGenerationButton(),
+              child: MainBottomNavigation(),
             );
           }
 
@@ -259,7 +259,7 @@ class _FoodTrackingPageV2State extends State<FoodTrackingPageV2> {
           if (index == groupedFoods.keys.length) {
             return const Padding(
               padding: EdgeInsets.only(top: 16, bottom: 32),
-              child: RecipeGenerationButton(),
+              child: MainBottomNavigation(),
             );
           }
 

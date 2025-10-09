@@ -4,7 +4,6 @@ import '../../../recipes/presentation/bloc/recipe_bloc.dart';
 import '../../../recipes/presentation/bloc/recipe_event.dart';
 import '../../../recipes/presentation/pages/recipes_page.dart';
 import '../../../recipes/presentation/pages/bookmarked_recipes_page.dart';
-import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../../../sharing/presentation/widgets/offered_foods_bottom_sheet.dart';
 import '../bloc/food_bloc.dart';
 import '../bloc/food_state.dart';
@@ -12,8 +11,8 @@ import '../bloc/food_event.dart';
 import 'dictation_text_field.dart';
 import '../../../../injection_container.dart' as di;
 
-class RecipeGenerationButton extends StatelessWidget {
-  const RecipeGenerationButton({super.key});
+class MainBottomNavigation extends StatelessWidget {
+  const MainBottomNavigation({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -71,16 +70,6 @@ class RecipeGenerationButton extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                   ),
                   tooltip: 'Gespeicherte Rezepte',
-                ),
-                // Statistik Button
-                IconButton(
-                  onPressed: () => _showStatistics(context),
-                  icon: const Icon(Icons.bar_chart, size: 28),
-                  style: IconButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.all(8),
-                  ),
-                  tooltip: 'Statistiken',
                 ),
                 // Angebotene Lebensmittel Button
                 IconButton(
@@ -179,29 +168,6 @@ class RecipeGenerationButton extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: foodBloc,
         child: const AddFoodBottomSheet(),
-      ),
-    );
-  }
-
-  void _showStatistics(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: const StatisticsPage(),
-        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../sharing/presentation/services/simple_user_identity_service.dart';
+import '../../../statistics/presentation/pages/statistics_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -247,6 +248,41 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                   ),
+                const Divider(height: 32),
+
+                // Statistiken - Öffnet als Modal Bottom Sheet
+                ListTile(
+                  title: const Text(
+                    'Lebensmittel-Statistiken',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text(
+                    'Verschwendungsstatistiken und Trends anzeigen',
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => DraggableScrollableSheet(
+                        initialChildSize: 0.9,
+                        minChildSize: 0.5,
+                        maxChildSize: 0.95,
+                        builder: (context, scrollController) => Container(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
+                          ),
+                          child: const StatisticsPage(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ],
             );
           }
