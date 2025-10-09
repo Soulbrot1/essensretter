@@ -176,7 +176,6 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       child: Column(
         children: [
           const OfferedFoodsHeader(),
-          const UserManagementBar(),
           OfferedFoodsFilterBar(
             selectedFilter: _reservationFilter,
             availableCount: _availableCount,
@@ -192,6 +191,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
             onRefresh: _loadOfferedFoods,
           ),
           Expanded(child: _buildBody()),
+          const UserManagementBar(),
         ],
       ),
     );
