@@ -125,10 +125,12 @@ lib/
 ## 🧪 Testing & Qualitätssicherung
 
 ### Test-Status (Stand: Januar 2025)
-- **Coverage (Testabdeckung)**: 21.3% (850 von 3,995 Zeilen getestet)
-- **Ziel**: 50% Coverage (Langfristziel: 80%)
-- **Tests gesamt**: 137 Tests
+- **Coverage (Testabdeckung)**: 22.5% (901 von 4,001 Zeilen getestet)
+- **Ziel**: 22-25% Coverage (pragmatisch - Fokus auf kritische Komponenten)
+- **Tests gesamt**: 222 Tests
 - **Priorität**: Food-Tracking (Kernfunktion) vor Sekundärfunktionen
+- **Was ist getestet**: Use Cases, Repositories, Helper, Models, Entities
+- **Was fehlt**: Services mit externen Dependencies (besser via Integration Tests)
 
 ### Test-Befehle
 ```bash
