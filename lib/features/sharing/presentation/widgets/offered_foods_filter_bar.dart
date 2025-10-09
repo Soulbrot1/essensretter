@@ -6,6 +6,7 @@ enum SortOption { provider, alphabetical }
 ///
 /// Enthält:
 /// - Filter Chips (Verfügbar/Reserviert) mit Badge Counts
+/// - Refresh Button
 /// - Sort Menu (Nach Anbieter/Alphabetisch)
 class OfferedFoodsFilterBar extends StatelessWidget {
   final String selectedFilter;
@@ -14,6 +15,7 @@ class OfferedFoodsFilterBar extends StatelessWidget {
   final SortOption sortOption;
   final Function(String) onFilterChanged;
   final Function(SortOption) onSortChanged;
+  final VoidCallback onRefresh;
 
   const OfferedFoodsFilterBar({
     super.key,
@@ -23,6 +25,7 @@ class OfferedFoodsFilterBar extends StatelessWidget {
     required this.sortOption,
     required this.onFilterChanged,
     required this.onSortChanged,
+    required this.onRefresh,
   });
 
   @override
@@ -39,6 +42,11 @@ class OfferedFoodsFilterBar extends StatelessWidget {
           const SizedBox(width: 8),
           _buildFilterChip(context, 'Reserviert', 'reserved', reservedCount),
           const Spacer(),
+          IconButton(
+            icon: Icon(Icons.refresh, color: Colors.grey.shade600),
+            onPressed: onRefresh,
+            tooltip: 'Aktualisieren',
+          ),
           _buildSortMenu(context),
         ],
       ),
@@ -85,8 +93,8 @@ class OfferedFoodsFilterBar extends StatelessWidget {
           onFilterChanged(value);
         }
       },
+      showCheckmark: false,
       selectedColor: Colors.green.shade100,
-      checkmarkColor: Colors.green.shade700,
       labelStyle: TextStyle(
         color: isSelected ? Colors.green.shade700 : Colors.grey.shade700,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,

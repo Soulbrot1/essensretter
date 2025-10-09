@@ -5,14 +5,9 @@ import '../pages/friends_page.dart';
 ///
 /// Enthält:
 /// - Handle bar für Bottom Sheet
-/// - Close Button
-/// - Icon
 /// - Friends Button
-/// - Refresh Button
 class OfferedFoodsHeader extends StatelessWidget {
-  final VoidCallback onRefresh;
-
-  const OfferedFoodsHeader({super.key, required this.onRefresh});
+  const OfferedFoodsHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,15 +29,9 @@ class OfferedFoodsHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Title
+          // Friends Button
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.pop(context),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.handshake, color: Colors.blue, size: 28),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.people),
@@ -56,7 +45,6 @@ class OfferedFoodsHeader extends StatelessWidget {
                 },
                 tooltip: 'Friends verwalten',
               ),
-              IconButton(icon: const Icon(Icons.refresh), onPressed: onRefresh),
             ],
           ),
         ],

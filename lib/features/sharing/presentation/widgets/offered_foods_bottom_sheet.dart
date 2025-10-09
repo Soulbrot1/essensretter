@@ -174,7 +174,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
       ),
       child: Column(
         children: [
-          OfferedFoodsHeader(onRefresh: _loadOfferedFoods),
+          const OfferedFoodsHeader(),
           OfferedFoodsFilterBar(
             selectedFilter: _reservationFilter,
             availableCount: _availableCount,
@@ -187,6 +187,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
                 _filteredFoods = _sortFoods(_filteredFoods);
               });
             },
+            onRefresh: _loadOfferedFoods,
           ),
           Expanded(child: _buildBody()),
         ],
