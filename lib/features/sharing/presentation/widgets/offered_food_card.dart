@@ -176,46 +176,48 @@ class _OfferedFoodCardState extends State<OfferedFoodCard> {
       elevation: 2,
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         child: Row(
           children: [
             // Reservation Checkbox
             GestureDetector(
               onTap: _isLoading ? null : _toggleReservation,
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _isLoading
+                          ? Colors.grey.shade300
+                          : _isReserved
+                          ? Colors.green
+                          : Colors.grey.shade400,
+                      width: 1.5,
+                    ),
                     color: _isLoading
-                        ? Colors.grey.shade300
+                        ? Colors.grey.shade100
                         : _isReserved
                         ? Colors.green
-                        : Colors.grey.shade400,
-                    width: 1.5,
+                        : Colors.transparent,
                   ),
-                  color: _isLoading
-                      ? Colors.grey.shade100
+                  child: _isLoading
+                      ? SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: Colors.grey.shade600,
+                          ),
+                        )
                       : _isReserved
-                      ? Colors.green
-                      : Colors.transparent,
+                      ? const Icon(Icons.check, color: Colors.white, size: 12)
+                      : null,
                 ),
-                child: _isLoading
-                    ? SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: Colors.grey.shade600,
-                        ),
-                      )
-                    : _isReserved
-                    ? const Icon(Icons.check, color: Colors.white, size: 14)
-                    : null,
               ),
             ),
-            const SizedBox(width: 12),
 
             // Food name with provider in parentheses
             Expanded(
@@ -244,7 +246,7 @@ class _OfferedFoodCardState extends State<OfferedFoodCard> {
               ),
             ),
 
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
 
             // Expiry date as circle
             Container(
