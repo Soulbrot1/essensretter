@@ -4,6 +4,7 @@ import '../../../food_tracking/domain/entities/food.dart';
 import 'offered_foods_header.dart';
 import 'offered_foods_filter_bar.dart';
 import 'offered_food_card.dart';
+import 'provider_header_widget.dart';
 
 class OfferedFoodsBottomSheet extends StatefulWidget {
   const OfferedFoodsBottomSheet({super.key});
@@ -242,6 +243,12 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   }
 
   Widget _buildFlatList() {
+    // In "Reserviert"-Ansicht: Nach Provider gruppieren
+    if (_reservationFilter == 'reserved') {
+      return _buildGroupedByProviderList();
+    }
+
+    // In "Verfügbar"-Ansicht: Normale Liste
     return RefreshIndicator(
       onRefresh: _loadOfferedFoods,
       child: ListView.builder(
@@ -254,8 +261,61 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
             child: OfferedFoodCard(
               key: ValueKey(food.id),
               food: food,
-              showProvider: true, // Now show provider on each card
+              showProvider: true, // Show provider in "Verfügbar"
+              isReservedView: false,
               onReservationChanged: _refreshFilterSilently,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildGroupedByProviderList() {
+    // Gruppiere Foods nach Provider
+    final groupedFoods = <String, List<Food>>{};
+    for (final food in _filteredFoods) {
+      final providerName = _extractProviderName(food);
+      groupedFoods.putIfAbsent(providerName, () => []).add(food);
+    }
+
+    // Sortiere Provider alphabetisch
+    final sortedProviders = groupedFoods.keys.toList()..sort();
+
+    return RefreshIndicator(
+      onRefresh: _loadOfferedFoods,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: sortedProviders.length,
+        itemBuilder: (context, providerIndex) {
+          final providerName = sortedProviders[providerIndex];
+          final providerFoods = groupedFoods[providerName]!;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Provider Header mit Messenger-Icon
+                ProviderHeaderWidget(
+                  providerName: providerName,
+                  foods: providerFoods,
+                ),
+                const SizedBox(height: 8),
+                // Lebensmittel-Liste ohne Provider-Namen
+                ...providerFoods.map(
+                  (food) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: OfferedFoodCard(
+                      key: ValueKey(food.id),
+                      food: food,
+                      showProvider: false, // Kein Provider in Reserviert
+                      isReservedView: true,
+                      onReservationChanged: _refreshFilterSilently,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },

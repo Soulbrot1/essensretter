@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
 import '../services/reservation_service.dart';
-import '../services/friend_service.dart';
-import '../services/messenger_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
-import '../../../../core/utils/app_logger.dart';
 
 /// Widget für einzelne Food Card in der Shared Foods Liste
 ///
 /// Zeigt:
 /// - Reservierungs-Checkbox
 /// - Lebensmittel-Name mit Anbieter
-/// - Messenger-Icon (wenn verfügbar)
 /// - Ablaufdatum als Kreis
 class OfferedFoodCard extends StatefulWidget {
   final Food food;
   final bool showProvider;
+  final bool isReservedView;
   final VoidCallback? onReservationChanged;
 
   const OfferedFoodCard({
     super.key,
     required this.food,
     this.showProvider = true,
+    this.isReservedView = false,
     this.onReservationChanged,
   });
 
@@ -32,42 +30,11 @@ class OfferedFoodCard extends StatefulWidget {
 class _OfferedFoodCardState extends State<OfferedFoodCard> {
   bool _isReserved = false;
   bool _isLoading = true;
-  FriendConnection? _friendConnection;
 
   @override
   void initState() {
     super.initState();
     _checkReservationStatus();
-    _loadFriendConnection();
-  }
-
-  Future<void> _loadFriendConnection() async {
-    final friendId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
-      widget.food.id,
-    );
-
-    if (friendId != null) {
-      try {
-        final friends = await FriendService.getFriends();
-        final friend = friends.firstWhere(
-          (f) => f.friendId == friendId,
-          orElse: () => FriendConnection(
-            userId: '',
-            friendId: friendId,
-            status: '',
-            createdAt: DateTime.now(),
-          ),
-        );
-
-        if (mounted) {
-          setState(() {
-            _friendConnection = friend;
-          });
-        }
-      } catch (e) {
-        // Fehler beim Laden - nicht kritisch
-      }
-    }
   }
 
   Future<void> _checkReservationStatus() async {
@@ -109,59 +76,6 @@ class _OfferedFoodCardState extends State<OfferedFoodCard> {
       final parts = foodId.split('_');
       if (parts.length >= 3) {
         return parts[1]; // The original supabase ID
-      }
-    }
-    return null;
-  }
-
-  /// Lädt alle reservierten Lebensmittel vom gleichen Provider
-  Future<List<String>> _getReservedFoodsFromSameProvider() async {
-    final providerId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
-      widget.food.id,
-    );
-
-    if (providerId == null) {
-      return [];
-    }
-
-    try {
-      // Lade alle geteilten Foods von diesem Provider
-      final allSharedFoods =
-          await SharedFoodsLoaderService.loadSharedFoodsFromFriends();
-
-      // Filtere nach diesem Provider
-      final providerFoods = allSharedFoods.where((food) {
-        final foodProviderId =
-            SharedFoodsLoaderService.getFriendIdFromSharedFood(food.id);
-        return foodProviderId == providerId;
-      }).toList();
-
-      // Prüfe welche davon reserviert sind
-      final reservedFoodNames = <String>[];
-      for (final food in providerFoods) {
-        final sharedFoodId = _getSharedFoodIdFromFood(food.id);
-        if (sharedFoodId != null) {
-          final isReserved = await ReservationService.isReservedByCurrentUser(
-            sharedFoodId,
-          );
-          if (isReserved) {
-            reservedFoodNames.add(food.name);
-          }
-        }
-      }
-
-      return reservedFoodNames;
-    } catch (e) {
-      AppLogger.error('Fehler beim Laden reservierter Foods', error: e);
-      return [];
-    }
-  }
-
-  String? _getSharedFoodIdFromFood(String foodId) {
-    if (foodId.startsWith('shared_')) {
-      final parts = foodId.split('_');
-      if (parts.length >= 3) {
-        return parts[1];
       }
     }
     return null;
@@ -329,69 +243,6 @@ class _OfferedFoodCardState extends State<OfferedFoodCard> {
                 ),
               ),
             ),
-
-            // Messenger icon (nur wenn reserviert)
-            if (_isReserved &&
-                _friendConnection?.preferredMessenger != null &&
-                _friendConnection!.preferredMessenger!.icon != null) ...[
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: () async {
-                  final messenger = _friendConnection!.preferredMessenger!;
-                  final currentContext = context;
-
-                  // Sammle alle reservierten Lebensmittel von diesem Provider
-                  final reservedFoods =
-                      await _getReservedFoodsFromSameProvider();
-
-                  // Erstelle Draft-Nachricht mit allen reservierten Lebensmitteln
-                  String message;
-                  if (reservedFoods.isEmpty) {
-                    message =
-                        'Hallo! Ich interessiere mich für deine Lebensmittel.';
-                  } else if (reservedFoods.length == 1) {
-                    message =
-                        'Hallo! Ich habe reserviert:\n- ${reservedFoods[0]}';
-                  } else {
-                    final foodList = reservedFoods
-                        .map((name) => '- $name')
-                        .join('\n');
-                    message =
-                        'Hallo! Ich habe folgende Lebensmittel reserviert:\n$foodList';
-                  }
-
-                  AppLogger.debug(
-                    'Messenger-Icon geklickt: ${messenger.displayName}',
-                  );
-                  AppLogger.debug('Nachricht: $message');
-
-                  final success = await MessengerService.openMessenger(
-                    messenger,
-                    message: message,
-                  );
-
-                  AppLogger.debug('Messenger öffnen: success=$success');
-
-                  if (!success && mounted) {
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.maybeOf(currentContext)?.showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${messenger.displayName} konnte nicht geöffnet werden. Ist die App installiert?',
-                        ),
-                        backgroundColor: Colors.orange,
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                },
-                child: Icon(
-                  _friendConnection!.preferredMessenger!.icon,
-                  color: Colors.blue,
-                  size: 20,
-                ),
-              ),
-            ],
 
             const SizedBox(width: 12),
 
