@@ -114,7 +114,7 @@ class _FriendsPageState extends State<FriendsPage> {
     );
 
     if (result == true) {
-      _loadFriends(); // Reload friends list
+      await _loadFriends(); // Reload friends list
     }
   }
 
@@ -127,7 +127,7 @@ class _FriendsPageState extends State<FriendsPage> {
     if (confirmed) {
       try {
         await FriendService.removeFriend(friend.friendId);
-        _loadFriends();
+        await _loadFriends();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -160,7 +160,7 @@ class _FriendsPageState extends State<FriendsPage> {
     if (newName != null) {
       try {
         await FriendService.updateFriendName(friend.friendId, newName);
-        _loadFriends();
+        await _loadFriends();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -194,7 +194,7 @@ class _FriendsPageState extends State<FriendsPage> {
           friend.friendId,
           newMessenger,
         );
-        _loadFriends();
+        await _loadFriends();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -238,7 +238,7 @@ class _FriendsPageState extends State<FriendsPage> {
           result['name']!,
           result['messenger'],
         );
-        _loadFriends();
+        await _loadFriends();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

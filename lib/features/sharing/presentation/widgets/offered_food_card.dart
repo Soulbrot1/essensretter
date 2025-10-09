@@ -114,6 +114,59 @@ class _OfferedFoodCardState extends State<OfferedFoodCard> {
     return null;
   }
 
+  /// Lädt alle reservierten Lebensmittel vom gleichen Provider
+  Future<List<String>> _getReservedFoodsFromSameProvider() async {
+    final providerId = SharedFoodsLoaderService.getFriendIdFromSharedFood(
+      widget.food.id,
+    );
+
+    if (providerId == null) {
+      return [];
+    }
+
+    try {
+      // Lade alle geteilten Foods von diesem Provider
+      final allSharedFoods =
+          await SharedFoodsLoaderService.loadSharedFoodsFromFriends();
+
+      // Filtere nach diesem Provider
+      final providerFoods = allSharedFoods.where((food) {
+        final foodProviderId =
+            SharedFoodsLoaderService.getFriendIdFromSharedFood(food.id);
+        return foodProviderId == providerId;
+      }).toList();
+
+      // Prüfe welche davon reserviert sind
+      final reservedFoodNames = <String>[];
+      for (final food in providerFoods) {
+        final sharedFoodId = _getSharedFoodIdFromFood(food.id);
+        if (sharedFoodId != null) {
+          final isReserved = await ReservationService.isReservedByCurrentUser(
+            sharedFoodId,
+          );
+          if (isReserved) {
+            reservedFoodNames.add(food.name);
+          }
+        }
+      }
+
+      return reservedFoodNames;
+    } catch (e) {
+      AppLogger.error('Fehler beim Laden reservierter Foods', error: e);
+      return [];
+    }
+  }
+
+  String? _getSharedFoodIdFromFood(String foodId) {
+    if (foodId.startsWith('shared_')) {
+      final parts = foodId.split('_');
+      if (parts.length >= 3) {
+        return parts[1];
+      }
+    }
+    return null;
+  }
+
   Future<void> _toggleReservation() async {
     if (_isLoading) {
       return;
@@ -277,16 +330,35 @@ class _OfferedFoodCardState extends State<OfferedFoodCard> {
               ),
             ),
 
-            // Messenger icon (if available)
-            if (_friendConnection?.preferredMessenger != null &&
+            // Messenger icon (nur wenn reserviert)
+            if (_isReserved &&
+                _friendConnection?.preferredMessenger != null &&
                 _friendConnection!.preferredMessenger!.icon != null) ...[
               const SizedBox(width: 12),
               GestureDetector(
                 onTap: () async {
                   final messenger = _friendConnection!.preferredMessenger!;
-                  final message =
-                      'Hallo! Ich interessiere mich für dein Angebot: ${widget.food.name}';
                   final currentContext = context;
+
+                  // Sammle alle reservierten Lebensmittel von diesem Provider
+                  final reservedFoods =
+                      await _getReservedFoodsFromSameProvider();
+
+                  // Erstelle Draft-Nachricht mit allen reservierten Lebensmitteln
+                  String message;
+                  if (reservedFoods.isEmpty) {
+                    message =
+                        'Hallo! Ich interessiere mich für deine Lebensmittel.';
+                  } else if (reservedFoods.length == 1) {
+                    message =
+                        'Hallo! Ich habe reserviert:\n- ${reservedFoods[0]}';
+                  } else {
+                    final foodList = reservedFoods
+                        .map((name) => '- $name')
+                        .join('\n');
+                    message =
+                        'Hallo! Ich habe folgende Lebensmittel reserviert:\n$foodList';
+                  }
 
                   AppLogger.debug(
                     'Messenger-Icon geklickt: ${messenger.displayName}',
