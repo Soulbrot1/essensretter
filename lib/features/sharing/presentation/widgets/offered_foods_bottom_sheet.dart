@@ -24,6 +24,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
   int _reservedCount = 0;
   int _availableCount = 0;
   SortOption _sortOption = SortOption.provider;
+  int _rebuildCounter = 0; // Counter to force rebuild of provider headers
 
   @override
   void initState() {
@@ -165,6 +166,15 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
     }
   }
 
+  /// Trigger rebuild of provider headers (e.g., after messenger change)
+  void _rebuildProviderHeaders() {
+    if (mounted) {
+      setState(() {
+        _rebuildCounter++;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -191,7 +201,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
             onRefresh: _loadOfferedFoods,
           ),
           Expanded(child: _buildBody()),
-          const UserManagementBar(),
+          UserManagementBar(onFriendsChanged: _rebuildProviderHeaders),
         ],
       ),
     );
@@ -301,6 +311,7 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
               children: [
                 // Provider Header mit Messenger-Icon
                 ProviderHeaderWidget(
+                  key: ValueKey('${providerName}_$_rebuildCounter'),
                   providerName: providerName,
                   foods: providerFoods,
                 ),

@@ -13,7 +13,9 @@ import '../services/friend_service.dart';
 /// - Button zum Nutzer hinzufügen (QR-Scanner)
 /// - Button zum Nutzer verwalten
 class UserManagementBar extends StatelessWidget {
-  const UserManagementBar({super.key});
+  final VoidCallback? onFriendsChanged;
+
+  const UserManagementBar({super.key, this.onFriendsChanged});
 
   Future<void> _showOwnQrCode(BuildContext context) async {
     final userId = await SimpleUserIdentityService.getCurrentUserId();
@@ -102,11 +104,14 @@ class UserManagementBar extends StatelessWidget {
     }
   }
 
-  void _openFriendsManagement(BuildContext context) {
-    Navigator.push(
+  Future<void> _openFriendsManagement(BuildContext context) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const FriendsPage()),
     );
+
+    // Trigger reload after returning from Friends page
+    onFriendsChanged?.call();
   }
 
   @override
