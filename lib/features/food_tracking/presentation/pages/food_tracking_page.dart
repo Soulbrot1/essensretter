@@ -60,7 +60,7 @@ class _FoodTrackingPageState extends State<FoodTrackingPage> {
             ),
             const SizedBox(width: 8),
             const Text(
-              'Food Rescue',
+              'Essensretter',
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

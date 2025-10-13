@@ -37,7 +37,7 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
     // Entferne den nativen Splash sofort
     FlutterNativeSplash.remove();
 
-    // Setup Title Animation (Food Rescue)
+    // Setup Title Animation (Essensretter)
     _titleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -174,7 +174,7 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
             ),
           ),
 
-          // Food Rescue - Über dem Logo mit Scale und Pulse
+          // Essensretter - Über dem Logo mit Scale und Pulse
           Positioned(
             top: topTextPosition,
             left: 0,
@@ -210,7 +210,7 @@ class _ModernSplashScreenState extends State<ModernSplashScreen>
                         borderRadius: BorderRadius.circular(30),
                       ),
                       child: Text(
-                        'Food Rescue',
+                        'Essensretter',
                         style: TextStyle(
                           fontSize: 45,
                           fontWeight: FontWeight.w800,

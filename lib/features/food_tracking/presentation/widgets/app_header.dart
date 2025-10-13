@@ -57,7 +57,7 @@ class AppHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Food Rescue',
+                  'Essensretter',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

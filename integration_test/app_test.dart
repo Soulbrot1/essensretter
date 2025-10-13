@@ -14,7 +14,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // assert
-      expect(find.text('Food Rescue'), findsOneWidget);
+      expect(find.text('Essensretter'), findsOneWidget);
       expect(find.byType(AppBar), findsOneWidget);
     });
 
