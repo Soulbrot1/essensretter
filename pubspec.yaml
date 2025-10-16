@@ -85,6 +85,9 @@ dependencies:
   # URL Launcher (für Messenger-Integration)
   url_launcher: ^6.3.1
 
+  # Native Share Sheet (für RetterId teilen)
+  share_plus: ^10.1.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

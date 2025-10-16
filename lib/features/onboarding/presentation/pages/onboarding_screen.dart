@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../sharing/presentation/widgets/retter_id_onboarding_dialog.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final Widget child;
@@ -81,6 +82,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       setState(() {
         _shouldShowOnboarding = false;
       });
+
+      // Zeige RetterIdOnboardingDialog beim allerersten Start
+      await _showRetterIdOnboardingIfNeeded();
+    }
+  }
+
+  Future<void> _showRetterIdOnboardingIfNeeded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenRetterIdOnboarding =
+          prefs.getBool('hasSeenRetterIdOnboarding') ?? false;
+
+      if (!mounted) return;
+
+      // Nur beim allerersten Start zeigen
+      if (!hasSeenRetterIdOnboarding) {
+        // Kurze Verzögerung für sanften Übergang
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        if (!mounted) return;
+
+        await showDialog(
+          context: context,
+          barrierDismissible: false, // User muss Dialog bestätigen
+          builder: (context) => const RetterIdOnboardingDialog(),
+        );
+
+        // Markiere als gesehen
+        await prefs.setBool('hasSeenRetterIdOnboarding', true);
+      }
+    } catch (e) {
+      // Fehler ignorieren - nicht kritisch für App-Start
     }
   }
 
