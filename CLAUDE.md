@@ -262,6 +262,12 @@ dependencies:
 
 ## Entwicklungs-Workflow (ZWINGEND)
 
+### Git Workflow
+- **WICHTIG**: Claude soll NIEMALS selbst committen
+- Nur Änderungen vorbereiten und Status melden
+- User übernimmt `git add` / `git commit` / `git push` manuell
+- Claude führt nur Tests und Code-Analyse aus
+
 ### Für jede neue Funktion:
 1. **Branch erstellen**: `git checkout -b feature/neue-funktion`
 2. **Tests schreiben**: TDD befolgen - Tests zuerst!
