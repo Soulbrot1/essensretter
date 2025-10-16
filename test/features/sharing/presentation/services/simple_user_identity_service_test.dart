@@ -1,11 +1,48 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:essensretter/features/sharing/presentation/services/simple_user_identity_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  // Mock storage for flutter_secure_storage
+  final Map<String, String> secureStorageData = {};
+  const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+
   group('SimpleUserIdentityService', () {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
+      secureStorageData.clear();
+
+      // Mock flutter_secure_storage MethodChannel using new API
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+            switch (methodCall.method) {
+              case 'read':
+                final key = methodCall.arguments['key'] as String;
+                return secureStorageData[key];
+              case 'write':
+                final key = methodCall.arguments['key'] as String;
+                final value = methodCall.arguments['value'] as String;
+                secureStorageData[key] = value;
+                return null;
+              case 'delete':
+                final key = methodCall.arguments['key'] as String;
+                secureStorageData.remove(key);
+                return null;
+              case 'readAll':
+                return secureStorageData;
+              default:
+                return null;
+            }
+          });
+    });
+
+    tearDown(() {
+      // Reset mock after each test
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
     });
 
     test('should generate and save new User-ID on first call', () async {
@@ -67,20 +104,23 @@ void main() {
       expect(userId, isNull);
     });
 
-    test('should generate unique User-IDs', () async {
-      // arrange - Clear any existing data
-      SharedPreferences.setMockInitialValues({});
-
-      // act - Generate multiple IDs
+    test('should generate unique User-IDs when storage is cleared', () async {
+      // This test verifies that the random ID generation produces unique IDs
+      // We need to clear BOTH storages between iterations
       final userIds = <String>{};
+
       for (int i = 0; i < 10; i++) {
-        SharedPreferences.setMockInitialValues({}); // Reset for each iteration
+        // Clear both storages completely
+        SharedPreferences.setMockInitialValues({});
+        secureStorageData.clear();
+
+        // Generate new ID
         final userId = await SimpleUserIdentityService.ensureUserIdentity();
         userIds.add(userId);
       }
 
-      // assert
-      expect(userIds.length, equals(10)); // All should be unique
+      // assert - All IDs should be unique due to random generation
+      expect(userIds.length, equals(10));
     });
 
     test('should persist User-ID across service calls', () async {
