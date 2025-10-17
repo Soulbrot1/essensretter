@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/speech_service.dart';
 import 'features/food_tracking/data/datasources/food_local_data_source.dart';
@@ -43,6 +44,11 @@ import 'features/notification/domain/usecases/schedule_daily_notification.dart';
 import 'features/statistics/data/datasources/statistics_local_data_source.dart';
 import 'features/statistics/data/repositories/statistics_repository_impl.dart';
 import 'features/statistics/domain/repositories/statistics_repository.dart';
+import 'features/backup/data/datasources/backup_remote_data_source.dart';
+import 'features/backup/data/repositories/backup_repository_impl.dart';
+import 'features/backup/domain/repositories/backup_repository.dart';
+import 'features/backup/presentation/services/snapshot_backup_service.dart';
+import 'features/backup/presentation/services/app_lifecycle_observer.dart';
 
 final sl = GetIt.instance;
 
@@ -51,9 +57,21 @@ Future<void> init() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
 
+  // Supabase client (singleton - single instance shared across app)
+  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+
   // Services
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => SpeechService());
+
+  // Backup Services
+  sl.registerLazySingleton<SnapshotBackupService>(
+    () => SnapshotBackupService(backupRepository: sl(), foodRepository: sl()),
+  );
+
+  sl.registerLazySingleton<AppLifecycleObserver>(
+    () => AppLifecycleObserver(backupService: sl()),
+  );
   // BLoCs - Old monolithic FoodBloc (deprecated, will be removed)
   sl.registerFactory(
     () => FoodBloc(
@@ -160,6 +178,10 @@ Future<void> init() async {
     () => StatisticsRepositoryImpl(localDataSource: sl()),
   );
 
+  sl.registerLazySingleton<BackupRepository>(
+    () => BackupRepositoryImpl(remoteDataSource: sl()),
+  );
+
   // Data sources
   sl.registerLazySingleton<FoodLocalDataSource>(
     () => FoodLocalDataSourceImpl(),
@@ -183,5 +205,8 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<StatisticsLocalDataSource>(
     () => StatisticsLocalDataSourceImpl(),
+  );
+  sl.registerLazySingleton<BackupRemoteDataSource>(
+    () => BackupRemoteDataSourceImpl(supabaseClient: sl()),
   );
 }

@@ -1,7 +1,15 @@
--- ESSENSRETTER SIMPLE SCHEMA
--- Version 2.0.0 - Simplified for single-user sharing
+-- ============================================================================
+-- ESSENSRETTER INITIAL SCHEMA
+-- ============================================================================
+-- Version: 2.0.0 - Simplified for single-user sharing
+-- Date: 2024-10-09
+-- Description: Base tables for users, shared foods, access keys, and sessions
+-- ============================================================================
 
--- 1. USERS TABLE (Main table for each app installation)
+-- ============================================================================
+-- 1. USERS TABLE
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS users (
   user_id TEXT PRIMARY KEY,
   display_name TEXT,
@@ -15,7 +23,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX idx_users_last_active ON users(last_active_at);
 
--- 2. SHARED_FOODS TABLE (Foods shared by a user)
+COMMENT ON TABLE users IS 'Base user table for app installations, identified by RetterId';
+
+-- ============================================================================
+-- 2. SHARED_FOODS TABLE
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS shared_foods (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -35,7 +48,12 @@ CREATE INDEX idx_shared_foods_user ON shared_foods(user_id);
 CREATE INDEX idx_shared_foods_expiry ON shared_foods(expiry_date) WHERE status = 'active';
 CREATE INDEX idx_shared_foods_status ON shared_foods(status);
 
--- 3. ACCESS_KEYS TABLE (For QR-Code sharing)
+COMMENT ON TABLE shared_foods IS 'Foods shared by users with friends';
+
+-- ============================================================================
+-- 3. ACCESS_KEYS TABLE
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS access_keys (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -51,7 +69,12 @@ CREATE TABLE IF NOT EXISTS access_keys (
 CREATE INDEX idx_access_keys_key ON access_keys(access_key) WHERE is_active = true;
 CREATE INDEX idx_access_keys_user ON access_keys(user_id);
 
--- 4. SHARED_SESSIONS TABLE (Active sharing sessions)
+COMMENT ON TABLE access_keys IS 'QR-Code based sharing access keys';
+
+-- ============================================================================
+-- 4. SHARED_SESSIONS TABLE
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS shared_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_user_id TEXT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
@@ -66,9 +89,13 @@ CREATE INDEX idx_sessions_owner ON shared_sessions(owner_user_id);
 CREATE INDEX idx_sessions_viewer ON shared_sessions(viewer_user_id);
 CREATE INDEX idx_sessions_active ON shared_sessions(is_active);
 
--- 5. FUNCTIONS
+COMMENT ON TABLE shared_sessions IS 'Active sharing sessions between users';
 
--- Update timestamp trigger
+-- ============================================================================
+-- 5. FUNCTIONS
+-- ============================================================================
+
+-- Update timestamp trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -77,6 +104,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Trigger for shared_foods
 CREATE TRIGGER update_shared_foods_updated_at BEFORE UPDATE ON shared_foods
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -123,27 +151,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 6. ROW LEVEL SECURITY
-
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE shared_foods ENABLE ROW LEVEL SECURITY;
-ALTER TABLE access_keys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE shared_sessions ENABLE ROW LEVEL SECURITY;
-
--- Basic policies
-CREATE POLICY "Anyone can register/update user" ON users
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Users can manage their foods" ON shared_foods
-  FOR ALL USING (true) WITH CHECK (true);
-
-CREATE POLICY "Access keys are public readable when active" ON access_keys
-  FOR SELECT USING (is_active = true);
-
-CREATE POLICY "Sessions are readable" ON shared_sessions
-  FOR SELECT USING (true);
-
--- Test function
+-- Test function to verify schema readiness
 CREATE OR REPLACE FUNCTION test_schema_ready() RETURNS BOOLEAN AS $$
 BEGIN
   RETURN EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')
@@ -152,5 +160,34 @@ BEGIN
     AND EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'shared_sessions');
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- 6. ROW LEVEL SECURITY
+-- ============================================================================
+
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shared_foods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE access_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE shared_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Users policies (permissive for now)
+CREATE POLICY "Anyone can register/update user" ON users
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Shared foods policies
+CREATE POLICY "Users can manage their foods" ON shared_foods
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Access keys policies
+CREATE POLICY "Access keys are public readable when active" ON access_keys
+  FOR SELECT USING (is_active = true);
+
+-- Sessions policies
+CREATE POLICY "Sessions are readable" ON shared_sessions
+  FOR SELECT USING (true);
+
+-- ============================================================================
+-- SCHEMA VERSION
+-- ============================================================================
 
 COMMENT ON SCHEMA public IS 'EssensRetter Simple Schema v2.0.0';

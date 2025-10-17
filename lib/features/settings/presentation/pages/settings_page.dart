@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../sharing/presentation/services/simple_user_identity_service.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
+import '../../../backup/presentation/services/snapshot_backup_service.dart';
+import '../../../../injection_container.dart' as di;
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -15,6 +17,53 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool _notificationsExpanded = false;
   bool _userIdExpanded = false;
+  bool _backupExpanded = false;
+  bool _isBackupInProgress = false;
+  String? _lastBackupResult;
+
+  Future<void> _triggerManualBackup() async {
+    setState(() {
+      _isBackupInProgress = true;
+      _lastBackupResult = null;
+    });
+
+    try {
+      final backupService = di.sl<SnapshotBackupService>();
+      final success = await backupService.createBackup();
+
+      if (!mounted) return;
+
+      setState(() {
+        _isBackupInProgress = false;
+        _lastBackupResult = success
+            ? 'Backup erfolgreich erstellt!'
+            : 'Backup übersprungen (keine Änderungen)';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_lastBackupResult!),
+          backgroundColor: success ? Colors.green : Colors.orange,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isBackupInProgress = false;
+        _lastBackupResult = 'Fehler: $e';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Backup fehlgeschlagen: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -283,6 +332,186 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                   },
                 ),
+                const Divider(height: 32),
+
+                // Backup & Wiederherstellung - Collapsible
+                ListTile(
+                  title: const Text(
+                    'Backup & Wiederherstellung',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      _backupExpanded ? Icons.expand_less : Icons.expand_more,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _backupExpanded = !_backupExpanded;
+                      });
+                    },
+                  ),
+                ),
+                if (_backupExpanded)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Info über automatisches Backup
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.blue.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blue[700],
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Automatisches Backup ist aktiv. Deine Daten werden gesichert, wenn die App in den Hintergrund geht.',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.blue[900],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Manueller Backup-Button
+                            ElevatedButton.icon(
+                              onPressed: _isBackupInProgress
+                                  ? null
+                                  : _triggerManualBackup,
+                              icon: _isBackupInProgress
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.cloud_upload),
+                              label: Text(
+                                _isBackupInProgress
+                                    ? 'Backup läuft...'
+                                    : 'Manuelles Backup erstellen',
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+
+                            // Letztes Backup-Ergebnis
+                            if (_lastBackupResult != null) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                _lastBackupResult!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      _lastBackupResult!.contains('erfolgreich')
+                                      ? Colors.green[700]
+                                      : _lastBackupResult!.contains(
+                                          'übersprungen',
+                                        )
+                                      ? Colors.orange[700]
+                                      : Colors.red[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+
+                            const SizedBox(height: 16),
+
+                            // Backup-Status-Info
+                            FutureBuilder<bool>(
+                              future: di
+                                  .sl<SnapshotBackupService>()
+                                  .hasBackup(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Prüfe Backup-Status...',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                final hasBackup = snapshot.data ?? false;
+
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      hasBackup
+                                          ? Icons.check_circle
+                                          : Icons.cloud_off,
+                                      size: 16,
+                                      color: hasBackup
+                                          ? Colors.green
+                                          : Colors.grey,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      hasBackup
+                                          ? 'Cloud-Backup vorhanden'
+                                          : 'Noch kein Cloud-Backup',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // Erklärung
+                            Text(
+                              'Was wird gesichert?\n'
+                              '• Alle Lebensmittel\n'
+                              '• Freunde und Verbindungen\n'
+                              '• Lokale Einstellungen',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             );
           }

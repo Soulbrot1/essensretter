@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'features/food_tracking/presentation/bloc/food_bloc.dart';
 import 'features/food_tracking/presentation/pages/food_tracking_page.dart';
 import 'features/recipes/presentation/bloc/recipe_bloc.dart';
@@ -12,6 +13,7 @@ import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
 import 'features/sharing/presentation/services/simple_user_identity_service.dart';
 import 'features/sharing/presentation/services/supabase_user_service.dart';
+import 'features/backup/presentation/services/app_lifecycle_observer.dart';
 import 'injection_container.dart' as di;
 import 'modern_splash_screen.dart';
 import 'features/onboarding/presentation/pages/onboarding_screen.dart';
@@ -22,6 +24,12 @@ void main() async {
 
   // Lade Environment Variablen
   await dotenv.load(fileName: ".env");
+
+  // Initialisiere Supabase (MUSS vor di.init() passieren!)
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
 
   await di.init();
 
@@ -46,6 +54,10 @@ void main() async {
   // Plane tägliche Benachrichtigung basierend auf Einstellungen
   final scheduleDailyNotification = di.sl<ScheduleDailyNotification>();
   await scheduleDailyNotification(NoParams());
+
+  // Registriere Lifecycle Observer für automatisches Backup
+  final lifecycleObserver = di.sl<AppLifecycleObserver>();
+  lifecycleObserver.register();
 
   runApp(const MyApp());
 }
