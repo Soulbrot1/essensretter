@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class QrCodeDisplayDialog extends StatelessWidget {
-  final String userId;
+  final String shareCode;
 
-  const QrCodeDisplayDialog({super.key, required this.userId});
+  const QrCodeDisplayDialog({super.key, required this.shareCode});
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +43,7 @@ class QrCodeDisplayDialog extends StatelessWidget {
                 ),
               ),
               child: QrImageView(
-                data: userId,
+                data: shareCode,
                 version: QrVersions.auto,
                 size: 250,
                 backgroundColor: Colors.white,
@@ -59,11 +59,12 @@ class QrCodeDisplayDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              userId,
+              shareCode,
               style: const TextStyle(
                 fontFamily: 'monospace',
-                fontSize: 16,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 4,
               ),
             ),
             const SizedBox(height: 8),

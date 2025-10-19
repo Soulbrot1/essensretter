@@ -49,6 +49,10 @@ import 'features/backup/data/repositories/backup_repository_impl.dart';
 import 'features/backup/domain/repositories/backup_repository.dart';
 import 'features/backup/presentation/services/snapshot_backup_service.dart';
 import 'features/backup/presentation/services/app_lifecycle_observer.dart';
+import 'features/sharing/data/datasources/share_code_remote_data_source.dart';
+import 'features/sharing/data/repositories/share_code_repository_impl.dart';
+import 'features/sharing/domain/repositories/share_code_repository.dart';
+import 'features/sharing/presentation/services/shared_foods_cleanup_service.dart';
 
 final sl = GetIt.instance;
 
@@ -133,6 +137,7 @@ Future<void> init() async {
       foodRepository: sl(),
       statisticsRepository: sl(),
       updateRecipesAfterFoodDeletion: sl(),
+      sharedFoodsCleanupService: sl(),
     ),
   );
   sl.registerLazySingleton(() => UpdateFood(sl()));
@@ -182,6 +187,10 @@ Future<void> init() async {
     () => BackupRepositoryImpl(remoteDataSource: sl()),
   );
 
+  sl.registerLazySingleton<ShareCodeRepository>(
+    () => ShareCodeRepositoryImpl(remoteDataSource: sl()),
+  );
+
   // Data sources
   sl.registerLazySingleton<FoodLocalDataSource>(
     () => FoodLocalDataSourceImpl(),
@@ -208,5 +217,13 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<BackupRemoteDataSource>(
     () => BackupRemoteDataSourceImpl(supabaseClient: sl()),
+  );
+  sl.registerLazySingleton<ShareCodeRemoteDataSource>(
+    () => ShareCodeRemoteDataSourceImpl(supabaseClient: sl()),
+  );
+
+  // Shared Foods Cleanup Service
+  sl.registerLazySingleton<SharedFoodsCleanupService>(
+    () => SharedFoodsCleanupService(supabaseClient: sl(), foodRepository: sl()),
   );
 }

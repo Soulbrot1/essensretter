@@ -13,6 +13,7 @@ import 'core/services/notification_service.dart';
 import 'core/usecases/usecase.dart';
 import 'features/sharing/presentation/services/simple_user_identity_service.dart';
 import 'features/sharing/presentation/services/supabase_user_service.dart';
+import 'features/sharing/presentation/services/shared_foods_cleanup_service.dart';
 import 'features/backup/presentation/services/app_lifecycle_observer.dart';
 import 'injection_container.dart' as di;
 import 'modern_splash_screen.dart';
@@ -36,14 +37,35 @@ void main() async {
   // Initialisiere User Identity (Sharing Feature)
   try {
     final userId = await SimpleUserIdentityService.ensureUserIdentity();
+    print('✅ User Identity initialisiert: $userId');
 
     // Registriere User bei Supabase (wenn möglich)
     try {
       await SupabaseUserService.registerUser(userId);
+      print('✅ User bei Supabase registriert');
     } catch (e) {
+      print('⚠️  Supabase Registrierung fehlgeschlagen: $e');
       // Nicht kritisch - App funktioniert auch offline
     }
-  } catch (e) {
+
+    // Bereinige verwaiste shared_foods Einträge
+    try {
+      print('🧹 Starte Cleanup von verwaisten shared_foods...');
+      final cleanupService = di.sl<SharedFoodsCleanupService>();
+      final deletedCount = await cleanupService.cleanupOrphanedSharedFoods();
+      if (deletedCount > 0) {
+        print('✅ Cleanup: $deletedCount verwaiste Einträge gelöscht');
+      } else {
+        print('✅ Cleanup: Keine verwaisten Einträge gefunden');
+      }
+    } catch (e, stackTrace) {
+      print('❌ Cleanup fehlgeschlagen: $e');
+      print('Stack trace: $stackTrace');
+      // Nicht kritisch - Cleanup kann auch später erfolgen
+    }
+  } catch (e, stackTrace) {
+    print('❌ User Identity Initialisierung fehlgeschlagen: $e');
+    print('Stack trace: $stackTrace');
     // App kann trotzdem starten, nur Sharing-Features sind nicht verfügbar
   }
 

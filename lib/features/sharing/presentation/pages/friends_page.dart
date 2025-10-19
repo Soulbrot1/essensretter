@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../domain/repositories/share_code_repository.dart';
+import '../../../../injection_container.dart' as di;
 import '../services/friend_service.dart';
 import '../services/local_friend_messenger_service.dart';
 import '../widgets/add_friend_dialog.dart';
@@ -218,10 +220,10 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
-  Future<void> _showQrCode(String userId) async {
+  Future<void> _showQrCode(String shareCode) async {
     await showDialog(
       context: context,
-      builder: (context) => QrCodeDisplayDialog(userId: userId),
+      builder: (context) => QrCodeDisplayDialog(shareCode: shareCode),
     );
   }
 
@@ -257,20 +259,37 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
-  Future<void> _copyUserId() async {
+  Future<void> _copyShareCode() async {
     try {
-      final userId = await SimpleUserIdentityService.getCurrentUserId();
-      if (userId != null) {
-        await Clipboard.setData(ClipboardData(text: userId));
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Deine User-ID wurde kopiert!'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      }
+      final retterId = await SimpleUserIdentityService.getCurrentUserId();
+      if (retterId == null) return;
+
+      final repository = di.sl<ShareCodeRepository>();
+      final result = await repository.getShareCode(retterId);
+
+      result.fold(
+        (failure) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Fehler: ${failure.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        (shareCode) async {
+          await Clipboard.setData(ClipboardData(text: shareCode));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Dein Share-Code wurde kopiert!'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -315,7 +334,7 @@ class _FriendsPageState extends State<FriendsPage> {
                   children: [
                     Icon(Icons.edit, size: 20),
                     SizedBox(width: 12),
-                    Text('ID eingeben'),
+                    Text('Code eingeben'),
                   ],
                 ),
               ),
@@ -325,10 +344,10 @@ class _FriendsPageState extends State<FriendsPage> {
       ),
       body: Column(
         children: [
-          // Your User-ID Section
+          // Your Share-Code Section
           UserIdSectionWidget(
             onShowQrCode: _showQrCode,
-            onCopyUserId: _copyUserId,
+            onCopyShareCode: _copyShareCode,
           ),
 
           // Friends List Section

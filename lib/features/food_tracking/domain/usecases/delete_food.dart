@@ -5,16 +5,19 @@ import '../../../../core/usecases/usecase.dart';
 import '../repositories/food_repository.dart';
 import '../../../statistics/domain/repositories/statistics_repository.dart';
 import '../../../recipes/domain/usecases/update_recipes_after_food_deletion.dart';
+import '../../../sharing/presentation/services/shared_foods_cleanup_service.dart';
 
 class DeleteFood implements UseCase<void, DeleteFoodParams> {
   final FoodRepository foodRepository;
   final StatisticsRepository statisticsRepository;
   final UpdateRecipesAfterFoodDeletion updateRecipesAfterFoodDeletion;
+  final SharedFoodsCleanupService? sharedFoodsCleanupService;
 
   DeleteFood({
     required this.foodRepository,
     required this.statisticsRepository,
     required this.updateRecipesAfterFoodDeletion,
+    this.sharedFoodsCleanupService,
   });
 
   @override
@@ -49,6 +52,19 @@ class DeleteFood implements UseCase<void, DeleteFoodParams> {
 
         // Lebensmittel löschen
         final deleteResult = await foodRepository.deleteFood(params.id);
+
+        // Cleanup shared_foods in Supabase (falls vorhanden)
+        deleteResult.fold(
+          (failure) {}, // Bei Fehler nichts tun
+          (_) async {
+            try {
+              await sharedFoodsCleanupService?.cleanupSingleFood(params.id);
+            } catch (e) {
+              // Cleanup-Fehler ignorieren - Lebensmittel ist bereits gelöscht
+            }
+          },
+        );
+
         return deleteResult;
       },
     );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../domain/repositories/share_code_repository.dart';
+import '../../../../injection_container.dart' as di;
 import '../pages/friends_page.dart';
 import '../widgets/qr_code_display_dialog.dart';
 import '../widgets/qr_scanner_dialog.dart';
@@ -18,13 +20,51 @@ class UserManagementBar extends StatelessWidget {
   const UserManagementBar({super.key, this.onFriendsChanged});
 
   Future<void> _showOwnQrCode(BuildContext context) async {
-    final userId = await SimpleUserIdentityService.getCurrentUserId();
-    if (userId != null && context.mounted) {
-      await showDialog(
-        context: context,
-        builder: (context) => QrCodeDisplayDialog(userId: userId),
-      );
-    }
+    final retterId = await SimpleUserIdentityService.getCurrentUserId();
+    if (retterId == null) return;
+
+    final repository = di.sl<ShareCodeRepository>();
+
+    // Versuche Share-Code abzurufen
+    var result = await repository.getShareCode(retterId);
+
+    // Falls kein Share-Code existiert, erstelle einen neuen
+    await result.fold(
+      (failure) async {
+        // Versuche neuen Share-Code zu erstellen
+        final createResult = await repository.createShareCode(retterId);
+
+        await createResult.fold(
+          (createFailure) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Fehler: ${createFailure.message}'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          },
+          (newShareCode) async {
+            if (context.mounted) {
+              await showDialog(
+                context: context,
+                builder: (context) =>
+                    QrCodeDisplayDialog(shareCode: newShareCode),
+              );
+            }
+          },
+        );
+      },
+      (shareCode) async {
+        if (context.mounted) {
+          await showDialog(
+            context: context,
+            builder: (context) => QrCodeDisplayDialog(shareCode: shareCode),
+          );
+        }
+      },
+    );
   }
 
   Future<void> _showAddFriendOptions(BuildContext context) async {
@@ -42,7 +82,7 @@ class UserManagementBar extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.edit),
-              title: const Text('ID manuell eingeben'),
+              title: const Text('Code manuell eingeben'),
               onTap: () => Navigator.pop(context, 'manual'),
             ),
           ],
@@ -125,12 +165,12 @@ class UserManagementBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Eigene ID/QR-Code anzeigen
+          // Eigenen Share-Code/QR-Code anzeigen
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () => _showOwnQrCode(context),
               icon: const Icon(Icons.qr_code, size: 18),
-              label: const Text('Meine ID', style: TextStyle(fontSize: 12)),
+              label: const Text('Mein Code', style: TextStyle(fontSize: 12)),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 minimumSize: const Size(0, 36),

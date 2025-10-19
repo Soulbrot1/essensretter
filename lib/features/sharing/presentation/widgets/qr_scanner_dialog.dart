@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../domain/repositories/share_code_repository.dart';
+import '../../../../injection_container.dart' as di;
 import '../services/friend_service.dart';
 import '../services/messenger_type.dart';
 
@@ -27,14 +29,39 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
       _isProcessing = true;
     });
 
-    // Validiere User-ID Format
-    if (!FriendService.isValidUserId(code)) {
+    // Validiere Share-Code Format (6 Zeichen)
+    final shareCode = code.trim().toUpperCase();
+    if (shareCode.length != 6 ||
+        !RegExp(r'^[A-Z0-9]{6}$').hasMatch(shareCode)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Ungültiger QR-Code'),
+            content: Text(
+              'Ungültiger QR-Code (Erwarte 6-stelligen Share-Code)',
+            ),
             backgroundColor: Colors.red,
           ),
+        );
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+      return;
+    }
+
+    // Löse Share-Code zu RetterId auf
+    String retterId;
+    try {
+      final repository = di.sl<ShareCodeRepository>();
+      final result = await repository.getRetterIdByShareCode(shareCode);
+
+      retterId = result.fold((failure) {
+        throw Exception('Share-Code ungültig oder nicht gefunden');
+      }, (id) => id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
         );
         setState(() {
           _isProcessing = false;
@@ -46,7 +73,7 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
     // Prüfe ob Verbindung bereits besteht
     try {
       final friends = await FriendService.getFriends();
-      final alreadyConnected = friends.any((f) => f.friendId == code);
+      final alreadyConnected = friends.any((f) => f.friendId == retterId);
 
       if (alreadyConnected) {
         if (mounted) {
@@ -79,10 +106,10 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
 
     // Zeige Name-Eingabe und Messenger-Auswahl Dialog
     if (mounted) {
-      final result = await _showNameInputDialog(code);
+      final result = await _showNameInputDialog(shareCode);
       if (result != null && mounted) {
         Navigator.of(context).pop({
-          'userId': code,
+          'userId': retterId, // Gib RetterId zurück für FriendService
           'name': result['name'],
           'messenger': result['messenger'],
         });
@@ -94,7 +121,7 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
     }
   }
 
-  Future<Map<String, dynamic>?> _showNameInputDialog(String userId) async {
+  Future<Map<String, dynamic>?> _showNameInputDialog(String shareCode) async {
     final controller = TextEditingController();
     MessengerType selectedMessenger = MessengerType.whatsapp;
     bool nameEntered = false;
@@ -110,11 +137,13 @@ class _QrScannerDialogState extends State<QrScannerDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'User-ID: $userId',
+                'Share-Code: $shareCode',
                 style: const TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 12,
-                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                  letterSpacing: 2,
                 ),
               ),
               const SizedBox(height: 16),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/shared_foods_loader_service.dart';
+import '../services/shared_foods_cleanup_service.dart';
 import '../../../food_tracking/domain/entities/food.dart';
+import '../../../../injection_container.dart' as di;
 import 'offered_foods_header.dart';
 import 'user_management_bar.dart';
 import 'offered_foods_filter_bar.dart';
@@ -39,6 +41,20 @@ class _OfferedFoodsBottomSheetState extends State<OfferedFoodsBottomSheet> {
     });
 
     try {
+      // WICHTIG: Cleanup VOR dem Laden - entfernt verwaiste shared_foods
+      try {
+        print('🧹 [OfferedFoodsBottomSheet] Starte Cleanup...');
+        final cleanupService = di.sl<SharedFoodsCleanupService>();
+        final deletedCount = await cleanupService.cleanupOrphanedSharedFoods();
+        print(
+          '✅ [OfferedFoodsBottomSheet] Cleanup: $deletedCount Einträge gelöscht',
+        );
+      } catch (e, stackTrace) {
+        print('❌ [OfferedFoodsBottomSheet] Cleanup fehlgeschlagen: $e');
+        print('Stack trace: $stackTrace');
+        // Cleanup-Fehler ignorieren - Laden trotzdem fortsetzen
+      }
+
       final sharedFoods =
           await SharedFoodsLoaderService.loadSharedFoodsFromFriends();
 

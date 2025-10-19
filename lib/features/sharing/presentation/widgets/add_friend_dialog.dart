@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../domain/repositories/share_code_repository.dart';
+import '../../../../injection_container.dart' as di;
 import '../services/friend_service.dart';
 import '../services/messenger_type.dart';
 
@@ -38,23 +40,30 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
     });
 
     try {
-      final code = _codeController.text.trim().toUpperCase();
+      final shareCode = _codeController.text.trim().toUpperCase();
 
-      // Schritt 1: Code validieren
+      // Schritt 1: Share-Code validieren und zu RetterId auflösen
       if (!_codeValidated) {
-        if (!FriendService.isValidUserId(code)) {
-          throw Exception('Ungültiges Code-Format. Erwarte: ER-XXXXXXXX');
+        // Share-Code Format validieren (6 Zeichen: 0-9, A-Z)
+        if (shareCode.length != 6 ||
+            !RegExp(r'^[A-Z0-9]{6}$').hasMatch(shareCode)) {
+          throw Exception(
+            'Ungültiges Code-Format. Erwarte: 6-stelligen Code (z.B. A3F9B2)',
+          );
         }
 
-        // Optional: Prüfe ob User existiert
-        // final exists = await FriendService.userExists(code);
-        // if (!exists) {
-        //   throw Exception('Dieser Code existiert nicht');
-        // }
+        // Share-Code zu RetterId auflösen
+        final repository = di.sl<ShareCodeRepository>();
+        final result = await repository.getRetterIdByShareCode(shareCode);
+
+        final retterId = result.fold(
+          (failure) => throw Exception('Code ungültig oder nicht gefunden'),
+          (id) => id,
+        );
 
         setState(() {
           _codeValidated = true;
-          _validatedCode = code;
+          _validatedCode = retterId; // Speichere die aufgelöste RetterId
         });
         return;
       }
@@ -141,15 +150,15 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
           children: [
             if (!_codeValidated) ...[
               const Text(
-                'Gib den Zugangscode deines Friends ein:',
+                'Gib den Share-Code deines Friends ein:',
                 style: TextStyle(fontSize: 14),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _codeController,
                 decoration: InputDecoration(
-                  labelText: 'Zugangscode',
-                  hintText: 'ER-XXXXXXXX',
+                  labelText: 'Share-Code',
+                  hintText: 'A3F9B2',
                   prefixIcon: const Icon(Icons.qr_code),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -159,15 +168,17 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                 ),
                 textCapitalization: TextCapitalization.characters,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9-]')),
-                  LengthLimitingTextInputFormatter(11), // ER-XXXXXXXX
+                  FilteringTextInputFormatter.allow(RegExp(r'[A-Z0-9]')),
+                  LengthLimitingTextInputFormatter(6), // 6 Zeichen Share-Code
                 ],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Bitte Code eingeben';
                   }
-                  if (!FriendService.isValidUserId(value.toUpperCase())) {
-                    return 'Ungültiges Format (ER-XXXXXXXX)';
+                  final shareCode = value.toUpperCase();
+                  if (shareCode.length != 6 ||
+                      !RegExp(r'^[A-Z0-9]{6}$').hasMatch(shareCode)) {
+                    return 'Ungültiges Format (6 Zeichen: 0-9, A-Z)';
                   }
                   return null;
                 },
