@@ -84,7 +84,7 @@ class SharedFoodsLoaderService {
 
       // Notes mit Friend-Info erweitern
       String? notes = foodData['notes'];
-      final String friendName = friend.friendName ?? friend.friendId;
+      final String friendName = friend.friendName ?? 'Unbekannt';
       final String sharedFromText = 'Geteilt von: $friendName';
 
       if (notes != null && notes.isNotEmpty) {

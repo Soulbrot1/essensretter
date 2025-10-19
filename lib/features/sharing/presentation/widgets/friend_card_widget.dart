@@ -66,10 +66,22 @@ class FriendCardWidget extends StatelessWidget {
               ),
           ],
         ),
-        subtitle: Text(
-          friend.friendId,
-          style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-        ),
+        subtitle: friend.preferredMessenger != null
+            ? Row(
+                children: [
+                  Icon(
+                    friend.preferredMessenger!.icon,
+                    size: 14,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    friend.preferredMessenger!.displayName,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              )
+            : null,
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
             switch (value) {

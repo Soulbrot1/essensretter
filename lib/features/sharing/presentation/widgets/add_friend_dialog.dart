@@ -206,7 +206,7 @@ class _AddFriendDialogState extends State<AddFriendDialog> {
                             style: TextStyle(fontSize: 12, color: Colors.green),
                           ),
                           Text(
-                            _validatedCode!,
+                            _codeController.text.trim().toUpperCase(),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontFamily: 'monospace',
