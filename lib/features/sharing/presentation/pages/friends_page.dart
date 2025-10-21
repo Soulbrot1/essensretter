@@ -1,20 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../../domain/repositories/share_code_repository.dart';
-import '../../../../injection_container.dart' as di;
 import '../services/friend_service.dart';
 import '../services/local_friend_messenger_service.dart';
-import '../widgets/add_friend_dialog.dart';
-import '../widgets/qr_code_display_dialog.dart';
-import '../widgets/qr_scanner_dialog.dart';
 import '../widgets/friend_card_widget.dart';
-import '../widgets/user_id_section_widget.dart';
 import '../widgets/friends_empty_state_widget.dart';
 import '../widgets/friends_error_widget.dart';
 import '../widgets/unnamed_friends_banner_widget.dart';
 import '../helpers/friends_dialog_helpers.dart';
-import '../services/simple_user_identity_service.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -106,17 +98,6 @@ class _FriendsPageState extends State<FriendsPage> {
         _error = e.toString();
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _showAddFriendDialog() async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => const AddFriendDialog(),
-    );
-
-    if (result == true) {
-      await _loadFriends(); // Reload friends list
     }
   }
 
@@ -220,85 +201,6 @@ class _FriendsPageState extends State<FriendsPage> {
     }
   }
 
-  Future<void> _showQrCode(String shareCode) async {
-    await showDialog(
-      context: context,
-      builder: (context) => QrCodeDisplayDialog(shareCode: shareCode),
-    );
-  }
-
-  Future<void> _showQrScanner() async {
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => const QrScannerDialog(),
-    );
-
-    if (result != null && mounted) {
-      try {
-        await FriendService.addFriend(
-          result['userId']!,
-          result['name']!,
-          result['messenger'],
-        );
-        await _loadFriends();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${result['name']} wurde hinzugefügt'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _copyShareCode() async {
-    try {
-      final retterId = await SimpleUserIdentityService.getCurrentUserId();
-      if (retterId == null) return;
-
-      final repository = di.sl<ShareCodeRepository>();
-      final result = await repository.getShareCode(retterId);
-
-      result.fold(
-        (failure) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Fehler: ${failure.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        },
-        (shareCode) async {
-          await Clipboard.setData(ClipboardData(text: shareCode));
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Dein Share-Code wurde kopiert!'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-        },
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -306,50 +208,9 @@ class _FriendsPageState extends State<FriendsPage> {
         title: const Text('Friends'),
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
-        actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.person_add),
-            tooltip: 'Friend hinzufügen',
-            onSelected: (value) {
-              if (value == 'qr') {
-                _showQrScanner();
-              } else if (value == 'manual') {
-                _showAddFriendDialog();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'qr',
-                child: Row(
-                  children: [
-                    Icon(Icons.qr_code_scanner, size: 20),
-                    SizedBox(width: 12),
-                    Text('QR-Code scannen'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'manual',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit, size: 20),
-                    SizedBox(width: 12),
-                    Text('Code eingeben'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Your Share-Code Section
-          UserIdSectionWidget(
-            onShowQrCode: _showQrCode,
-            onCopyShareCode: _copyShareCode,
-          ),
-
           // Friends List Section
           Expanded(
             child: _isLoading
@@ -357,7 +218,7 @@ class _FriendsPageState extends State<FriendsPage> {
                 : _error != null
                 ? FriendsErrorWidget(error: _error!, onRetry: _loadFriends)
                 : _friends.isEmpty
-                ? FriendsEmptyStateWidget(onAddFriend: _showAddFriendDialog)
+                ? const FriendsEmptyStateWidget()
                 : RefreshIndicator(
                     onRefresh: _loadFriends,
                     child: ListView.builder(

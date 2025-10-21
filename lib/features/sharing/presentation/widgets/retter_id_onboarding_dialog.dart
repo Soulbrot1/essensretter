@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 import '../services/simple_user_identity_service.dart';
 
 /// Onboarding-Dialog für neue User zur Vorstellung der RetterId
 ///
 /// Zeigt beim ersten App-Start die generierte RetterId und erklärt:
-/// - Wofür die RetterId benötigt wird (Sharing, Restore)
+/// - Dass die RetterId geheim bleiben sollte
+/// - Wofür die RetterId benötigt wird (Datenwiederherstellung)
+/// - Dass der Share-Code für Friends genutzt werden soll
 /// - Dass automatisches Backup aktiv ist (iCloud/Google)
 /// - Optionale externe Speicherung möglich ist
 ///
 /// Ermöglicht:
-/// - Native Share-Sheet zum Teilen der ID
-/// - Kopieren der ID in Zwischenablage
+/// - Kopieren der ID in Zwischenablage (für Backup-Zwecke)
 class RetterIdOnboardingDialog extends StatefulWidget {
   const RetterIdOnboardingDialog({super.key});
 
@@ -42,27 +42,6 @@ class _RetterIdOnboardingDialogState extends State<RetterIdOnboardingDialog> {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  Future<void> _shareRetterId() async {
-    if (_retterId == null) return;
-
-    try {
-      await Share.share(
-        'Meine EssensRetter-ID: $_retterId\n\n'
-        'Füge mich als Friend hinzu um Lebensmittel zu teilen!',
-        subject: 'Meine EssensRetter RetterId',
-      );
-    } catch (e) {
-      // Fehler beim Teilen - ignorieren oder Snackbar zeigen
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Teilen fehlgeschlagen'),
-          backgroundColor: Colors.orange,
-        ),
-      );
     }
   }
 
@@ -160,7 +139,7 @@ class _RetterIdOnboardingDialogState extends State<RetterIdOnboardingDialog> {
 
                   // Erklärung: Wofür wird die ID gebraucht?
                   Text(
-                    'Diese ID brauchst du um:',
+                    'Wichtig zu wissen:',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -168,9 +147,14 @@ class _RetterIdOnboardingDialogState extends State<RetterIdOnboardingDialog> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildBulletPoint('🤝 Lebensmittel mit Freunden zu teilen'),
                   _buildBulletPoint(
-                    '📱 Deine Daten auf neuen Geräten wiederherzustellen',
+                    '🔐 Diese ID ist deine persönliche Kennung und sollte geheim bleiben',
+                  ),
+                  _buildBulletPoint(
+                    '📱 Du brauchst sie um deine Daten auf neuen Geräten wiederherzustellen',
+                  ),
+                  _buildBulletPoint(
+                    '🤝 Zum Teilen mit Freunden nutzt du deinen Share-Code (findest du in der Friends-Seite)',
                   ),
                   const SizedBox(height: 16),
 
@@ -243,14 +227,9 @@ class _RetterIdOnboardingDialogState extends State<RetterIdOnboardingDialog> {
               ),
             ),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Verstanden'),
-        ),
-        FilledButton.icon(
-          onPressed: _isLoading ? null : _shareRetterId,
-          icon: const Icon(Icons.share),
-          label: const Text('ID teilen'),
         ),
       ],
     );
