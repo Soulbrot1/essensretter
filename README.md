@@ -302,3 +302,4 @@ Bei Fragen oder Problemen:
 ---
 
 **Entwickelt mit ❤️ und Flutter**
+_Test-Änderung aus der Claude-Cloud-Umgebung (Branch-Demo)._
